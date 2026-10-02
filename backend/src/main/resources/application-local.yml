@@ -10,6 +10,6 @@ spring:
   flyway:
     enabled: true
     # Direto no Postgres, como dono das tabelas.
-    url: jdbc:postgresql://localhost:5432/moveup
+    url: jdbc:postgresql://localhost:15432/moveup
     user: moveup_owner
     password: ${DB_OWNER_PASSWORD}

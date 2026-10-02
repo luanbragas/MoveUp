@@ -14,7 +14,9 @@ services:
       DB_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:?defina no .env}
       DB_REPORT_PASSWORD: ${DB_REPORT_PASSWORD:?defina no .env}
     ports:
-      - "127.0.0.1:5432:5432" # acesso direto: só Flyway (dono das tabelas) e depuração
+      # acesso direto: só Flyway (dono das tabelas) e depuração. 15432 no host para não colidir
+      # com um Postgres instalado na máquina.
+      - "127.0.0.1:15432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/local/postgres/init:/docker-entrypoint-initdb.d:ro

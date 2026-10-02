@@ -30,6 +30,7 @@ public final class PostgresTestDatabase {
               .asCompatibleSubstituteFor("postgres"));
 
   private static volatile boolean migrated;
+  private static IllegalStateException setupFailure;
 
   private PostgresTestDatabase() {}
 
@@ -38,20 +39,41 @@ public final class PostgresTestDatabase {
     if (migrated) {
       return;
     }
+    // Se o preparo falhou para uma classe de teste, as próximas recebem o mesmo erro em vez de
+    // tentar recriar papéis que já existem.
+    if (setupFailure != null) {
+      throw setupFailure;
+    }
+    try {
+      prepareAndMigrate();
+      migrated = true;
+    } catch (RuntimeException e) {
+      setupFailure = new IllegalStateException("falha ao preparar o banco de teste", e);
+      throw setupFailure;
+    }
+  }
+
+  /**
+   * Espelha o {@code infra/local/postgres/init}: papéis da aplicação já existem antes da V12, que
+   * roda como {@code moveup_owner} (sem permissão de criar papel).
+   */
+  private static void prepareAndMigrate() {
     CONTAINER.start();
     try (Connection c = superuserConnection(CONTAINER.getDatabaseName());
         Statement st = c.createStatement()) {
       st.execute("create role " + OWNER + " login password '" + OWNER_PASSWORD + "'");
+      st.execute("create role app_api nologin nobypassrls");
+      st.execute("create role app_worker nologin nobypassrls");
+      st.execute("create role app_report nologin nobypassrls");
       st.execute("create database " + DATABASE + " owner " + OWNER);
     } catch (SQLException e) {
-      throw new IllegalStateException("falha ao preparar o banco de teste", e);
+      throw new IllegalStateException(e);
     }
     Flyway.configure()
         .dataSource(jdbcUrl(), OWNER, OWNER_PASSWORD)
         .locations("classpath:db/migration")
         .load()
         .migrate();
-    migrated = true;
   }
 
   public static String jdbcUrl() {
