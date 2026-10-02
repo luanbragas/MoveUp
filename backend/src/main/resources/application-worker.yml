@@ -1,0 +1,8 @@
+# Perfil WORKER: sem HTTP; outbox, jobs, push, fotos (Fase 4).
+# Conecta como app_worker, que lê todo dado de saúde: credencial própria e restrita.
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    username: ${DB_WORKER_USER:app_worker}
+    password: ${DB_WORKER_PASSWORD}

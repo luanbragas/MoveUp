@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+backend/
+packages/api-client/src/generated/
+coverage/
+docs/
+*.md

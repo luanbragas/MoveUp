@@ -1,0 +1,80 @@
+# Ambiente LOCAL de desenvolvimento. Nada aqui vai para staging/produção.
+# Pré-requisito: copiar .env.example para .env (valores só locais).
+name: moveup
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?defina no .env}
+      POSTGRES_DB: postgres
+      DB_OWNER_PASSWORD: ${DB_OWNER_PASSWORD:?defina no .env}
+      DB_API_PASSWORD: ${DB_API_PASSWORD:?defina no .env}
+      DB_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:?defina no .env}
+      DB_REPORT_PASSWORD: ${DB_REPORT_PASSWORD:?defina no .env}
+    ports:
+      - "127.0.0.1:5432:5432" # acesso direto: só Flyway (dono das tabelas) e depuração
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/local/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d moveup"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_API_PASSWORD: ${DB_API_PASSWORD:?defina no .env}
+      DB_WORKER_PASSWORD: ${DB_WORKER_PASSWORD:?defina no .env}
+      DB_REPORT_PASSWORD: ${DB_REPORT_PASSWORD:?defina no .env}
+    # userlist gerado a partir do .env na subida (senhas nunca versionadas)
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        printf '"app_api" "%s"\n"app_worker" "%s"\n"app_report" "%s"\n' \
+          "$$DB_API_PASSWORD" "$$DB_WORKER_PASSWORD" "$$DB_REPORT_PASSWORD" > /tmp/userlist.txt
+        exec pgbouncer /etc/pgbouncer/pgbouncer.ini
+    volumes:
+      - ./infra/local/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+    ports:
+      - "127.0.0.1:6432:6432" # a API e o worker conectam por aqui
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina no .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina no .env}
+    ports:
+      - "127.0.0.1:9000:9000" # API S3
+      - "127.0.0.1:9001:9001" # console
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina no .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina no .env}
+    volumes:
+      - ./infra/local/minio-init.sh:/minio-init.sh:ro
+    entrypoint: ["/bin/sh", "/minio-init.sh"]
+
+volumes:
+  pgdata:
+  miniodata:

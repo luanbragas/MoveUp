@@ -1,0 +1,15 @@
+# Perfil LOCAL: lê as senhas do .env da raiz do repositório (o mesmo do docker compose).
+spring:
+  config:
+    import: optional:file:../.env[.properties]
+  datasource:
+    # Via PgBouncer (modo transaction), como em produção.
+    url: jdbc:postgresql://localhost:6432/moveup
+    username: app_api
+    password: ${DB_API_PASSWORD}
+  flyway:
+    enabled: true
+    # Direto no Postgres, como dono das tabelas.
+    url: jdbc:postgresql://localhost:5432/moveup
+    user: moveup_owner
+    password: ${DB_OWNER_PASSWORD}
