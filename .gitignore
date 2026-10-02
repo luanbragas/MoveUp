@@ -22,3 +22,6 @@ Thumbs.db
 
 # logs
 *.log
+
+# Configuração do Firebase do app (repositório público: fica fora do git; ver docs/FIREBASE-SETUP.md)
+apps/mobile/firebase/

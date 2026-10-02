@@ -30,7 +30,7 @@ Em **Configurações do projeto → Seus apps**:
 1. **Android**: nome do pacote `br.com.moveup`. Baixe o `google-services.json`.
 2. **iOS**: ID do pacote `br.com.moveup`. Baixe o `GoogleService-Info.plist`.
 
-Salve os dois em `apps/mobile/firebase/` (a pasta será criada na Fase 1, PR F1-4).
+Salve os dois em `apps/mobile/firebase/`. A pasta está no `.gitignore`: o repositório é público e os arquivos trazem a chave de API do app (não é segredo de servidor, mas em repositório público alguém poderia consumir a cota do projeto). Nos builds na nuvem (EAS) eles entram como *secrets* de arquivo.
 
 ## 4. Ligar a API ao projeto
 
@@ -44,4 +44,4 @@ A API só aceita tokens cujo `aud` seja esse ID e cujo emissor seja `https://sec
 
 ## 5. Avisar no chat
 
-Basta mandar o **ID do projeto** (não é segredo). Com ele, o PR F1-4 liga o login do app.
+Feito em 02/10/2026: projeto `moveup-9b809`, arquivos salvos localmente.
