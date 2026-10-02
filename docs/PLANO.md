@@ -69,8 +69,8 @@ Tudo o que as outras fases assumem que já existe.
 - [x] Plano de teste/gratuito semeado e assinatura `trialing` criada para toda organização nova.
 - [x] Inativar, reativar (com checagem de limite) e encerrar vínculo.
 - [x] Escolha de perfil no cadastro (profissional ou aluno via convite) e navegação separada por perfil no mesmo app.
-- [ ] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno). *Código pronto e testado com fakes (02/10/2026); marcar depois do teste no aparelho (Expo Go, iPhone e Android).*
-- [ ] Universal links / app links do convite (`site/` com `apple-app-site-association` e `assetlinks.json`).
+- [x] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno).
+- [ ] Universal links / app links do convite (`site/` com `apple-app-site-association` e `assetlinks.json`). *Código pronto (02/10/2026): página `/i/<código>`, geração dos dois arquivos no build e `associatedDomains`/`intentFilters` no app. Falta, fora do código: domínio `moveup.com.br` no Cloudflare Pages, Team ID da Apple (exige conta Apple Developer) e SHA-256 do certificado Android (primeiro build EAS). Marcar quando o link abrir o app num build de desenvolvimento.*
 
 **Pronto quando:** dois profissionais e três alunos em teste E2E mostram isolamento completo (RLS + autorização no caso de uso), e o limite do plano barra o aceite excedente.
 

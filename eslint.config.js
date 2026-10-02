@@ -18,4 +18,9 @@ export default [
     appDir: `${import.meta.dirname}/apps/mobile`,
     files: ["apps/mobile/**/*.{ts,tsx,js}"],
   }),
+  {
+    // página do convite: roda no navegador, sem bundler
+    files: ["site/static/**/*.js"],
+    languageOptions: { globals: { window: "readonly", document: "readonly" } },
+  },
 ];

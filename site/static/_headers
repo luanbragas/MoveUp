@@ -1,0 +1,9 @@
+# Cloudflare Pages: cabeçalhos de segurança e tipo do arquivo da Apple (não tem extensão)
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/.well-known/apple-app-site-association
+  Content-Type: application/json

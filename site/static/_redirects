@@ -1,0 +1,2 @@
+# Cloudflare Pages: todo /i/<código> mostra a página do convite (o código é lido no navegador)
+/i/:code  /i/  200

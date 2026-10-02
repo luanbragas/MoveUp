@@ -10,7 +10,8 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "br.com.moveup",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:moveup.com.br"]
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +21,21 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "br.com.moveup"
+      "package": "br.com.moveup",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "moveup.com.br",
+              "pathPrefix": "/i/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-router",
