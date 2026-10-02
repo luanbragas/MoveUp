@@ -28,6 +28,14 @@
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
+    <!--
+      Correções de segurança (dependency-check de 02/10/2026) sobre as versões do Boot 3.5,
+      que saiu do suporte. Spring Framework 6.2 e Spring Security 6.5 não têm versão corrigida
+      pública: só a migração para o Boot 4 resolve. Remover estes overrides ao migrar.
+    -->
+    <tomcat.version>10.1.60</tomcat.version>
+    <postgresql.version>42.7.13</postgresql.version>
+    <log4j2.version>2.26.1</log4j2.version>
     <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
     <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
   </properties>
