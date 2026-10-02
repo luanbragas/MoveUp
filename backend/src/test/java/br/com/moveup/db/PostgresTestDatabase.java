@@ -89,6 +89,14 @@ public final class PostgresTestDatabase {
     return OWNER_PASSWORD;
   }
 
+  public static String superuserUser() {
+    return CONTAINER.getUsername();
+  }
+
+  public static String superuserPassword() {
+    return CONTAINER.getPassword();
+  }
+
   /** Conexão de superusuário no banco {@code moveup}: só para seed e asserções de catálogo. */
   public static Connection superuser() throws SQLException {
     return superuserConnection(DATABASE);

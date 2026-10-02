@@ -23,6 +23,13 @@ server:
     include-message: never
     include-binding-errors: never
 
+# Logs em JSON (formato Logstash) com o MDC, onde o Micrometer Tracing põe traceId/spanId.
+# Nunca logar corpo de requisição, token, e-mail, nome de aluno ou dado de saúde (CLAUDE.md, regra 7).
+logging:
+  structured:
+    format:
+      console: logstash
+
 management:
   endpoints:
     web:

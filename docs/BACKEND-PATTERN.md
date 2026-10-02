@@ -169,7 +169,7 @@ public record Reps(int min, int max) {
 
 - Um caso de uso = uma transação. `@Transactional` **só** na implementação do caso de uso (`application/usecase`), nunca em controller ou repositório.
 - **Nenhuma chamada externa dentro da transação** (S3, push, KMS remoto, gateway de pagamento). Efeito externo = evento no outbox, executado pelo worker.
-- Toda transação começa com `set_config('app.user_id', ?, true)`. Isso é feito **uma vez** pela infraestrutura (`RlsTransactionListener` em `shared`); caso de uso nunca chama isso à mão.
+- Toda transação começa com `set_config('app.user_id', ?, true)`. Isso é feito **uma vez** pela infraestrutura (`RlsTransactionManager` em `shared`, subclasse do gerenciador de transações do Spring: toda transação, inclusive do jOOQ, passa por ele); caso de uso nunca chama isso à mão.
 - Autorização em duas camadas:
   1. no caso de uso: "este usuário pode fazer isto com este aluno?" (vínculo ativo, dono do recurso);
   2. no banco: RLS (defesa em profundidade). Nunca contar só com a segunda.
@@ -186,7 +186,7 @@ Toda resposta de erro é `application/problem+json`, montada num único `@RestCo
 
 ```json
 {
-  "type": "https://api.<dominio>/problems/plan-limit-reached",
+  "type": "https://api.moveup.com.br/problems/plan-limit-reached",
   "title": "Limite de alunos do plano atingido",
   "status": 409,
   "detail": "O plano atual permite até 10 alunos ativos.",
@@ -244,11 +244,11 @@ class GlobalProblemHandler extends ResponseEntityExceptionHandler {
 
   private ProblemDetail problem(HttpStatus s, String code, String detail, HttpServletRequest req) {
     var pd = ProblemDetail.forStatusAndDetail(s, detail);
-    pd.setType(URI.create("https://api.<dominio>/problems/" + code));
+    pd.setType(URI.create("https://api.moveup.com.br/problems/" + code));
     pd.setTitle(Titles.of(code));
     pd.setInstance(URI.create(req.getRequestURI()));
     pd.setProperty("code", code);
-    pd.setProperty("traceId", Tracing.currentTraceId());
+    pd.setProperty("traceId", traceIds.current());
     return pd;
   }
 }

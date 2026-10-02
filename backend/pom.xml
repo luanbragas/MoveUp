@@ -39,6 +39,16 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- traceId nos logs e no ProblemDetail (ARQUITETURA: Micrometer + OpenTelemetry) -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-bridge-otel</artifactId>
+    </dependency>
+    <!-- Bean Validation nos DTOs (erro validation-failed) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
 
     <!-- Banco: DataSource/transações + jOOQ (código gerado no build, ver codegen/) e migrations -->
     <dependency>

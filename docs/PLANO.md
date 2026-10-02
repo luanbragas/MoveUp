@@ -50,7 +50,7 @@ Tudo o que as outras fases assumem que já existe.
 - [ ] Teste `scenarios.sql` portado para Testcontainers (RLS, FK composta, worker, limite do plano).
 - [ ] Geração do jOOQ a partir das migrations no build.
 - [ ] Módulos vazios com a estrutura `api/domain/application/infrastructure` e regras **ArchUnit** ligadas.
-- [ ] `shared`: `IdGenerator` (UUIDv7), `Clock`, `DomainException`, `GlobalProblemHandler` (RFC 9457), `PostgresErrorTranslator`, `RlsTransactionListener` (`set_config` por transação), logger sem PII.
+- [ ] `shared`: `IdGenerator` (UUIDv7), `Clock`, `DomainException`, `GlobalProblemHandler` (RFC 9457), `PostgresErrorTranslator`, `RlsTransactionManager` (`set_config` por transação), logger sem PII.
 - [ ] Spring Security como resource server (JWKS do provedor) + resolução `sub` → `auth_identity` → `app_user`.
 - [ ] springdoc + `openapi.yaml` commitado + diff no CI; Orval gerando `packages/api-client`.
 - [ ] Frontend: tsconfig strict, ESLint (com boundaries) e Prettier, providers base, `shared/lib/http` com `AppError`, `env.ts` com Zod.
