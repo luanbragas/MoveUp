@@ -74,10 +74,10 @@ export function whatsappLink(phone: string, message: string): string | null {
 }
 
 /**
- * Base do link do convite; igual a `moveup.invite.link-base-url` do backend (provisória até o
- * site do convite, F1-6). A lista de alunos traz só o código, então o link é montado aqui.
+ * Base do link do convite; igual a `moveup.invite.link-base-url` do backend (troca de domínio:
+ * ver site/README.md). A lista de alunos traz só o código, então o link é montado aqui.
  */
-const INVITE_BASE_URL = "https://moveup.com.br/i/";
+const INVITE_BASE_URL = "https://moveup-site.pages.dev/i/";
 
 export function inviteUrl(code: string): string {
   return `${INVITE_BASE_URL}${code}`;

@@ -12,7 +12,8 @@ record InvitationResponse(
     @Schema(requiredMode = REQUIRED) UUID clientId,
     @Schema(requiredMode = REQUIRED) UUID linkId,
     @Schema(requiredMode = REQUIRED, example = "K7M2QX9P") String code,
-    @Schema(requiredMode = REQUIRED, example = "https://moveup.com.br/i/K7M2QX9P") String url,
+    @Schema(requiredMode = REQUIRED, example = "https://moveup-site.pages.dev/i/K7M2QX9P")
+        String url,
     @Schema(requiredMode = REQUIRED) Instant expiresAt) {
 
   static InvitationResponse from(Invitation invitation) {

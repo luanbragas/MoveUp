@@ -1,5 +1,6 @@
 // Monta site/dist: copia static/ e gera os arquivos de universal links / app links.
-//   node build.mjs            produção: falha se faltar MOVEUP_APPLE_TEAM_ID ou MOVEUP_ANDROID_SHA256
+//   node build.mjs            produção: falha sem MOVEUP_ANDROID_SHA256; o da Apple é opcional
+//                             (sem conta Apple Developer não há universal link no iPhone)
 //   node build.mjs --preview  prévia: gera só os arquivos que tiverem valor
 import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -19,10 +20,10 @@ const missing = [
   sha256 === "" ? "MOVEUP_ANDROID_SHA256" : null,
 ].filter((name) => name !== null);
 
-if (missing.length > 0 && !preview) {
+if (sha256 === "" && !preview) {
   process.stderr.write(
-    `Faltam ${missing.join(" e ")}: sem eles o link do convite não abre o app.\n` +
-      "Use --preview para montar o site sem esses arquivos (veja site/README.md).\n",
+    "Falta MOVEUP_ANDROID_SHA256: sem ele o link do convite não abre o app no Android.\n" +
+      "Use --preview para montar o site sem esse arquivo (veja site/README.md).\n",
   );
   process.exit(1);
 }
@@ -45,5 +46,5 @@ if (sha256 !== "") {
   );
 }
 
-const skipped = missing.length === 0 ? "" : ` (prévia, sem: ${missing.join(", ")})`;
+const skipped = missing.length === 0 ? "" : ` (sem: ${missing.join(", ")})`;
 process.stdout.write(`site/dist pronto${skipped}\n`);

@@ -48,7 +48,7 @@ moveup:
     ttl: P7D
     # Link compartilhado pelo profissional; o site estático abre o app (universal links, F1-6).
     # Provisório até o domínio definitivo do site.
-    link-base-url: https://moveup.com.br/i/
+    link-base-url: https://moveup-site.pages.dev/i/
   auth:
     firebase:
       # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>

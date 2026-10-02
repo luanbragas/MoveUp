@@ -32,13 +32,13 @@ describe("alunos do profissional", () => {
     const invitation = {
       linkId: "l" as LinkId,
       code: "K7M2QX9P",
-      url: "https://moveup.com.br/i/K7M2QX9P",
+      url: "https://moveup-site.pages.dev/i/K7M2QX9P",
       expiresAt: new Date(),
     };
     const message = inviteMessage("Ana", invitation);
 
     expect(message).toContain("K7M2QX9P");
-    expect(message).toContain("https://moveup.com.br/i/K7M2QX9P");
+    expect(message).toContain("https://moveup-site.pages.dev/i/K7M2QX9P");
     expect(whatsappLink("+55 (11) 98765-4321", message)).toBe(
       `https://wa.me/5511987654321?text=${encodeURIComponent(message)}`,
     );
@@ -48,7 +48,7 @@ describe("alunos do profissional", () => {
 
 describe("link e primeiro nome", () => {
   it("monta o link do convite e pega o primeiro nome", () => {
-    expect(inviteUrl("K7M2QX9P")).toBe("https://moveup.com.br/i/K7M2QX9P");
+    expect(inviteUrl("K7M2QX9P")).toBe("https://moveup-site.pages.dev/i/K7M2QX9P");
     expect(firstName("  Ana  Souza ")).toBe("Ana");
   });
 });

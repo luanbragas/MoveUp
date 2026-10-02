@@ -15,7 +15,7 @@ public final class InvitationIssuer {
   private final String linkBaseUrl;
 
   /**
-   * @param linkBaseUrl ex.: {@code https://moveup.com.br/i/}; o código vai no fim
+   * @param linkBaseUrl ex.: {@code https://moveup-site.pages.dev/i/}; o código vai no fim
    */
   public InvitationIssuer(Invites invites, Clock clock, Duration ttl, String linkBaseUrl) {
     if (ttl.isNegative() || ttl.isZero()) {

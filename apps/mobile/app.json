@@ -11,7 +11,7 @@
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "br.com.moveup",
       "supportsTablet": true,
-      "associatedDomains": ["applinks:moveup.com.br"]
+      "associatedDomains": ["applinks:moveup-site.pages.dev"]
     },
     "android": {
       "adaptiveIcon": {
@@ -29,7 +29,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "moveup.com.br",
+              "host": "moveup-site.pages.dev",
               "pathPrefix": "/i/"
             }
           ],

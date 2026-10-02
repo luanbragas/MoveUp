@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-// Código do convite que chegou pelo link (moveup.com.br/i/CODIGO) antes do login e do
+// Código do convite que chegou pelo link (moveup-site.pages.dev/i/CODIGO) antes do login e do
 // cadastro: fica guardado em memória até a casa do aluno usá-lo. Não é segredo de longo
 // prazo (o convite expira e é de uso único) e some ao fechar o app.
 

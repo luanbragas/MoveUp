@@ -18,7 +18,7 @@ app/
 ├── (auth)/
 │   ├── welcome.tsx                 "Sou personal" / "Tenho um convite"
 │   ├── sign-in.tsx                 Entrar (Google, Apple, e-mail)
-│   └── i/[code].tsx                Link do convite (moveup.com.br/i/CODIGO): guarda o código e segue a entrada
+│   └── i/[code].tsx                Link do convite (moveup-site.pages.dev/i/CODIGO): guarda o código e segue a entrada
 ├── (client)/                       PERFIL ALUNO
 │   ├── onboarding/{consent,accept-invite,anamnesis}.tsx
 │   ├── (tabs)/{home,training,history,progress,profile}.tsx

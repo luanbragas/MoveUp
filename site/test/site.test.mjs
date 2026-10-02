@@ -54,11 +54,20 @@ describe("build", () => {
     return { ...base, ...extra };
   };
 
-  it("produção falha sem os identificadores dos apps", async () => {
+  it("produção falha sem o certificado Android", async () => {
     await assert.rejects(
-      run("node", ["build.mjs"], { cwd: root, env: env({}) }),
-      /MOVEUP_APPLE_TEAM_ID/,
+      run("node", ["build.mjs"], { cwd: root, env: env({ MOVEUP_APPLE_TEAM_ID: "ABCDE12345" }) }),
+      /MOVEUP_ANDROID_SHA256/,
     );
+  });
+
+  it("sem conta Apple, gera só o arquivo do Android", async () => {
+    await run("node", ["build.mjs"], {
+      cwd: root,
+      env: env({ MOVEUP_ANDROID_SHA256: FINGERPRINT }),
+    });
+    assert.ok((await stat(join(root, "dist/.well-known/assetlinks.json"))).isFile());
+    await assert.rejects(stat(join(root, "dist/.well-known/apple-app-site-association")));
   });
 
   it("gera os dois arquivos com os identificadores", async () => {

@@ -627,7 +627,7 @@ components:
           format: uuid
         url:
           type: string
-          example: https://moveup.com.br/i/K7M2QX9P
+          example: https://moveup-site.pages.dev/i/K7M2QX9P
       required:
       - clientId
       - code
