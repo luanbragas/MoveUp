@@ -75,7 +75,7 @@ flowchart TB
 | Produto | **Um único app mobile** com dois perfis (aluno e profissional); **sem painel web** | montar treino no celular exige UX própria (seção de telas); tablet suportado |
 | Site estático | Página mínima (Cloudflare Pages) | universal/app links do convite, termos e política de privacidade (exigidos pelas lojas) |
 | Borda | Cloudflare (DNS, WAF, rate limit, DDoS) | também serve o R2 (mídia pública) |
-| Backend | Java 21, Spring Boot 3, Spring Security, **jOOQ** (persistência), springdoc-openapi | monolito modular, hexagonal + clean architecture, domínio rico sem anotações de framework (ver BACKEND-PATTERN.md) |
+| Backend | Java 21, Spring Boot 4 (Spring 7), Spring Security 7, **jOOQ** (persistência), springdoc-openapi | monolito modular, hexagonal + clean architecture, domínio rico sem anotações de framework (ver BACKEND-PATTERN.md) |
 | Migrations | Flyway | uma migration por mudança, nunca editar as antigas |
 | Banco | PostgreSQL 16 gerenciado (RDS, Cloud SQL, Neon ou Supabase) | PITR desde o início; Multi-AZ com clientes pagantes |
 | Pool de conexões | HikariCP + PgBouncer ≥ 1.21 (modo transaction) | RDS Proxy/Supavisor só depois de testar *pinning* (**Validar**) |

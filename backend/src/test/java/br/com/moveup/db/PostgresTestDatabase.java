@@ -5,7 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.flywaydb.core.Flyway;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -25,8 +25,8 @@ public final class PostgresTestDatabase {
   private static final String API_PASSWORD = "test-only-api";
 
   @SuppressWarnings("resource") // vive até o fim da JVM de testes (Ryuk derruba o container)
-  private static final PostgreSQLContainer<?> CONTAINER =
-      new PostgreSQLContainer<>(
+  private static final PostgreSQLContainer CONTAINER =
+      new PostgreSQLContainer(
           DockerImageName.parse(
                   System.getProperty("moveup.test.postgres-image", "postgres:16-alpine"))
               .asCompatibleSubstituteFor("postgres"));

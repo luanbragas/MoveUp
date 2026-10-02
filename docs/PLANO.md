@@ -44,7 +44,7 @@ flowchart LR
 
 Tudo o que as outras fases assumem que já existe.
 
-- [x] Monorepo: `backend/` (Maven, Java 21, Spring Boot 3), `apps/mobile` (Expo, app único com os dois perfis), `site/` (estático: convite, termos, privacidade), `packages/{api-client,domain,config}` (pnpm).
+- [x] Monorepo: `backend/` (Maven, Java 21, Spring Boot 4 — migrado do 3.5 em 02/10/2026 por segurança), `apps/mobile` (Expo, app único com os dois perfis), `site/` (estático: convite, termos, privacidade), `packages/{api-client,domain,config}` (pnpm).
 - [x] `docker compose` local: PostgreSQL 16, PgBouncer ≥ 1.21, RustFS (S3 local; substituiu o MinIO, que deixou de publicar imagens).
 - [x] Migrations V1 a V12 no Flyway + **V13** (`V13__client_keys_tombstones.sql`): tabela `client_key` e `deleted_at` nas tabelas que o app baixa (treinos, programas, restrições).
 - [x] Teste `scenarios.sql` portado para Testcontainers (RLS, FK composta, worker, limite do plano).

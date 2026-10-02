@@ -9,7 +9,7 @@ import org.jooq.meta.jaxb.Generate;
 import org.jooq.meta.jaxb.Generator;
 import org.jooq.meta.jaxb.Jdbc;
 import org.jooq.meta.jaxb.Target;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -40,7 +40,7 @@ public final class JooqCodegen {
     var packageName = args[2];
     var image = DockerImageName.parse(args[3]).asCompatibleSubstituteFor("postgres");
 
-    try (var container = new PostgreSQLContainer<>(image)) {
+    try (var container = new PostgreSQLContainer(image)) {
       container.start();
       prepare(container);
       var url =
@@ -109,7 +109,7 @@ public final class JooqCodegen {
   }
 
   /** Espelha o {@code infra/local/postgres/init}. */
-  private static void prepare(PostgreSQLContainer<?> container) throws Exception {
+  private static void prepare(PostgreSQLContainer container) throws Exception {
     try (var c =
             DriverManager.getConnection(
                 container.getJdbcUrl(), container.getUsername(), container.getPassword());

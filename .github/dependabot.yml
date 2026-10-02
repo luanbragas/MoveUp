@@ -8,7 +8,7 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     ignore:
-      # Spring Boot 4 / springdoc 3 é migração planejada (muda o BACKEND-PATTERN), não PR automático
+      # salto de versão maior do Boot/springdoc é migração planejada (muda o BACKEND-PATTERN)
       - dependency-name: "org.springframework.boot:*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "org.springdoc:*"

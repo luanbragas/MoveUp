@@ -23,8 +23,11 @@ public class TraceIds {
 
   public String current() {
     var active = tracer.getIfAvailable();
-    if (active != null && active.currentSpan() != null) {
-      return active.currentSpan().context().traceId();
+    var span = active == null ? null : active.currentSpan();
+    var traceId = span == null ? null : span.context().traceId();
+    // tracer no-op (ex.: testes, tracing desligado) devolve id vazio ou só zeros
+    if (traceId != null && !traceId.isBlank() && !traceId.chars().allMatch(c -> c == '0')) {
+      return traceId;
     }
     var bytes = new byte[16];
     RANDOM.nextBytes(bytes);

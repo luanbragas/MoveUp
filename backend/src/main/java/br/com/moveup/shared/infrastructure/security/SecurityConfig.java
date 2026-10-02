@@ -1,7 +1,6 @@
 package br.com.moveup.shared.infrastructure.security;
 
 import br.com.moveup.shared.infrastructure.web.Problems;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Clock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -15,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * API stateless protegida por JWT do Firebase (ARQUITETURA, seção 8): sem sessão, sem CSRF (não há
@@ -27,9 +27,9 @@ class SecurityConfig {
 
   @Bean
   SecurityFilterChain apiSecurity(
-      HttpSecurity http, AppUserResolver resolver, Problems problems, ObjectMapper objectMapper)
+      HttpSecurity http, AppUserResolver resolver, Problems problems, JsonMapper jsonMapper)
       throws Exception {
-    var handlers = new ProblemSecurityHandlers(problems, objectMapper);
+    var handlers = new ProblemSecurityHandlers(problems, jsonMapper);
     return http.csrf(AbstractHttpConfigurer::disable)
         .cors(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)

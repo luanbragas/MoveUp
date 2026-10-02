@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.16</version>
+    <version>4.1.1</version>
     <relativePath/>
   </parent>
 
@@ -24,18 +24,10 @@
     <google-java-format.version>1.28.0</google-java-format.version>
     <jacoco.version>0.8.15</jacoco.version>
     <archunit.version>1.5.1</archunit.version>
-    <springdoc.version>2.9.1</springdoc.version>
+    <springdoc.version>3.1.1</springdoc.version>
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
-    <!--
-      Correções de segurança (dependency-check de 02/10/2026) sobre as versões do Boot 3.5,
-      que saiu do suporte. Spring Framework 6.2 e Spring Security 6.5 não têm versão corrigida
-      pública: só a migração para o Boot 4 resolve. Remover estes overrides ao migrar.
-    -->
-    <tomcat.version>10.1.60</tomcat.version>
-    <postgresql.version>42.7.13</postgresql.version>
-    <log4j2.version>2.26.1</log4j2.version>
     <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
     <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
   </properties>
@@ -44,7 +36,7 @@
     <!-- Web + observabilidade básica (health) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -52,13 +44,17 @@
     </dependency>
     <!-- traceId nos logs e no ProblemDetail (ARQUITETURA: Micrometer + OpenTelemetry) -->
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-micrometer-tracing-opentelemetry</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-tracing-bridge-otel</artifactId>
     </dependency>
     <!-- Resource server: valida o JWT do Firebase Auth via JWKS (ARQUITETURA, seção 8) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+      <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
     </dependency>
     <!-- OpenAPI (contrato em backend/openapi/openapi.yaml) e Swagger UI só fora de produção -->
     <dependency>
@@ -78,8 +74,8 @@
       <artifactId>spring-boot-starter-jooq</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-flyway</artifactId>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -98,18 +94,23 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.testcontainers</groupId>
-      <artifactId>postgresql</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security-test</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
-      <artifactId>junit-jupiter</artifactId>
+      <artifactId>testcontainers-postgresql</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-test</artifactId>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
     <!-- Camadas e fronteiras de módulo (BACKEND-PATTERN, seção 12) -->

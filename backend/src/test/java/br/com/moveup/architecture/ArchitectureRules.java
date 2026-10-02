@@ -43,6 +43,7 @@ final class ArchitectureRules {
             "org.jooq..",
             "jakarta..",
             "com.fasterxml..",
+            "tools.jackson..",
             "..application..",
             "..infrastructure..")
         .because("o domínio é Java puro")

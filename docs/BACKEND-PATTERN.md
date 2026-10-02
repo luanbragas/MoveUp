@@ -2,7 +2,7 @@
 
 Regras obrigatórias para todo código em `backend/`. Quando uma regra daqui conflitar com conveniência, vale a regra. Quando uma regra precisar mudar, muda **este arquivo primeiro**, no mesmo PR.
 
-**Stack:** Java 21 · Spring Boot 3 · Spring Security (resource server) · jOOQ · Flyway · PostgreSQL 16 · springdoc-openapi · JUnit 5 · AssertJ · Testcontainers · ArchUnit.
+**Stack:** Java 21 · Spring Boot 4 (Spring 7, Jackson 3) · Spring Security 7 (resource server) · jOOQ · Flyway · PostgreSQL 16 · springdoc-openapi · JUnit 6 · AssertJ · Testcontainers 2 · ArchUnit.
 
 > Pacote base: `br.com.moveup` (produto **MoveUp**, decidido em 01/10/2026).
 
@@ -355,7 +355,7 @@ Exceções de domínio carregam só `code` e mensagem segura. Título legível v
 @ArchTest static final ArchRule domainIsPure =
   noClasses().that().resideInAPackage("..domain..")
     .should().dependOnClassesThat().resideInAnyPackage(
-      "org.springframework..", "org.jooq..", "jakarta..", "com.fasterxml..",
+      "org.springframework..", "org.jooq..", "jakarta..", "com.fasterxml..", "tools.jackson..",
       "..application..", "..infrastructure..");
 
 @ArchTest static final ArchRule applicationIgnoresInfrastructure =
