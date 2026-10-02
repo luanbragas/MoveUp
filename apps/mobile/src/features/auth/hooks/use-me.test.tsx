@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/native";
 import type { ReactNode } from "react";
 import { RepositoriesProvider, createRepositories } from "../../../providers/repositories";
+import { createFakeSession } from "../data/fakes/fake-session";
 import { toAppError } from "../../../shared/lib/http";
 import { useMe } from "./use-me";
 
@@ -56,14 +57,16 @@ function wrapper({ children }: { readonly children: ReactNode }) {
   });
   return (
     <QueryClientProvider client={queryClient}>
-      <RepositoriesProvider repositories={createRepositories()}>{children}</RepositoriesProvider>
+      <RepositoriesProvider repositories={createRepositories(createFakeSession())}>
+        {children}
+      </RepositoriesProvider>
     </QueryClientProvider>
   );
 }
 
 describe("useMe", () => {
   it("busca a conta com o token e entrega no formato do domínio", async () => {
-    const { result } = await renderHook(() => useMe(), { wrapper });
+    const { result } = await renderHook(() => useMe("uid-teste"), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
@@ -100,7 +103,7 @@ describe("useMe", () => {
       ),
     );
 
-    const { result } = await renderHook(() => useMe(), { wrapper });
+    const { result } = await renderHook(() => useMe("uid-teste"), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
@@ -116,7 +119,7 @@ describe("useMe", () => {
   it("resposta fora do contrato não chega à UI", async () => {
     server.use(http.get(`${API}/v1/me`, () => HttpResponse.json({ ...meDto, id: "nao-e-uuid" })));
 
-    const { result } = await renderHook(() => useMe(), { wrapper });
+    const { result } = await renderHook(() => useMe("uid-teste"), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);

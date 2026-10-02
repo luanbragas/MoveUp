@@ -1,6 +1,11 @@
 import { Stack } from "expo-router";
+import { RoleGate } from "../../features/auth";
 
-// Perfil aluno. Fase 1: só entra quem tem papel de aluno (o layout raiz redireciona).
+// Perfil aluno: só entra quem tem papel de aluno e terminou o onboarding.
 export default function ClientLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <RoleGate home="client-home">
+      <Stack screenOptions={{ headerShown: false }} />
+    </RoleGate>
+  );
 }

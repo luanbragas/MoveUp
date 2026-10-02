@@ -1,6 +1,11 @@
 import { Stack } from "expo-router";
+import { RoleGate } from "../../features/auth";
 
-// Perfil profissional. Fase 1: só entra quem tem papel de profissional (o layout raiz redireciona).
+// Perfil profissional: só entra quem tem papel de profissional e terminou o onboarding.
 export default function ProfessionalLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <RoleGate home="professional-home">
+      <Stack screenOptions={{ headerShown: false }} />
+    </RoleGate>
+  );
 }
