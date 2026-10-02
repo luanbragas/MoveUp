@@ -24,7 +24,7 @@
     <google-java-format.version>1.28.0</google-java-format.version>
     <jacoco.version>0.8.15</jacoco.version>
     <archunit.version>1.5.1</archunit.version>
-    <springdoc.version>2.9.1</springdoc.version>
+    <springdoc.version>3.1.1</springdoc.version>
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
