@@ -28,9 +28,27 @@
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
+    <!--
+      Correções de segurança acima das versões do Boot 4.1.1 (dependency-check de 02/10/2026).
+      Remover cada override quando o Boot passar a trazer versão igual ou maior.
+    -->
+    <tomcat.version>11.0.26</tomcat.version>
+    <opentelemetry.version>1.66.0</opentelemetry.version>
+    <swagger-ui.version>5.32.15</swagger-ui.version>
     <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
     <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- webjar do Swagger UI (vem pelo springdoc; só ativo no perfil local) -->
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>swagger-ui</artifactId>
+        <version>${swagger-ui.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Web + observabilidade básica (health) -->
