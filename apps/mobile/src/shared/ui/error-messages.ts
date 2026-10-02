@@ -22,6 +22,12 @@ const BY_CODE: Readonly<Record<string, string>> = {
   "guardian-consent-already-active": "O consentimento do seu responsável já está registrado.",
   "guardian-email-invalid": "Informe o e-mail do seu responsável, não o seu.",
   "relationship-invalid": "Escolha o parentesco do responsável.",
+  "link-state-invalid": "Esse aluno não está numa situação que permita isso agora.",
+  "onboarding-incomplete":
+    "Termine seu cadastro (termos e autorizações) antes de aceitar o convite.",
+  "invite-for-clients-only": "Convites são para contas de aluno.",
+  "phone-invalid": "Confira o WhatsApp, com DDD.",
+  "goal-invalid": "O objetivo pode ter até 500 caracteres.",
   "validation-failed": "Confira os campos destacados.",
   "malformed-request": "Não foi possível enviar os dados. Tente de novo.",
   "invite-expired": "Este convite não é mais válido. Peça um novo ao seu personal.",

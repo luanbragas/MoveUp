@@ -76,6 +76,305 @@ export const RegisterAccount422Response = zod.object({
 
 
 /**
+ * Pendentes, ativos e inativos, do mais novo ao mais antigo, por cursor.
+ * @summary Alunos do profissional
+ */
+export const listClientsQueryLimitDefault = 50;
+
+export const ListClientsQueryParams = zod.object({
+  "cursor": zod.uuid().optional(),
+  "limit": zod.int().default(listClientsQueryLimitDefault)
+})
+
+export const ListClients200Response = zod.object({
+  "items": zod.array(zod.object({
+  "clientId": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "pendingInvite": zod.object({
+  "code": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true})
+}).optional().describe('Só para pendentes com convite válido'),
+  "startedAt": zod.iso.datetime({"offset":true}).nullish(),
+  "status": zod.enum(['pending', 'active', 'inactive'])
+})),
+  "nextCursor": zod.uuid().nullish().describe('Passe em ?cursor= para a próxima página')
+})
+
+export const ListClients403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Cria aluno + vínculo pendente + convite (7 dias). Exige vaga no plano.
+ * @summary Pré-cadastra um aluno e gera o convite
+ */
+export const inviteClientBodyEmailMin = 0;
+export const inviteClientBodyEmailMax = 254;
+
+export const inviteClientBodyGoalMin = 0;
+export const inviteClientBodyGoalMax = 500;
+
+export const inviteClientBodyNameMin = 0;
+export const inviteClientBodyNameMax = 200;
+
+export const inviteClientBodyPhoneMin = 0;
+export const inviteClientBodyPhoneMax = 30;
+
+
+
+export const InviteClientBody = zod.object({
+  "email": zod.email().min(inviteClientBodyEmailMin).max(inviteClientBodyEmailMax).optional(),
+  "goal": zod.string().min(inviteClientBodyGoalMin).max(inviteClientBodyGoalMax).optional(),
+  "name": zod.string().min(inviteClientBodyNameMin).max(inviteClientBodyNameMax),
+  "phone": zod.string().min(inviteClientBodyPhoneMin).max(inviteClientBodyPhoneMax).optional().describe('WhatsApp com DDI e DDD')
+})
+
+export const InviteClient201Response = zod.object({
+  "clientId": zod.uuid(),
+  "code": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "linkId": zod.uuid(),
+  "url": zod.string()
+}).describe('Convite para compartilhar (link, código ou QR)')
+
+export const InviteClient403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const InviteClient409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const InviteClient422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Cancela o convite pendente
+ */
+export const CancelInviteParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const CancelInvite204Response = zod.void()
+
+export const CancelInvite403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Cancela o convite pendente e gera outro (o link anterior deixa de valer).
+ * @summary Reenvia o convite
+ */
+export const ResendInviteParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const ResendInvite200Response = zod.object({
+  "clientId": zod.uuid(),
+  "code": zod.string(),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "linkId": zod.uuid(),
+  "url": zod.string()
+}).describe('Convite para compartilhar (link, código ou QR)')
+
+export const ResendInvite403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ResendInvite409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Encerra o vínculo
+ */
+export const EndLinkParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const EndLink204Response = zod.void()
+
+export const EndLink403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const EndLink404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Libera a vaga do plano; o histórico continua visível para reativar.
+ * @summary Inativa o aluno
+ */
+export const InactivateLinkParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const InactivateLink204Response = zod.void()
+
+export const InactivateLink403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Reativa o aluno (exige vaga no plano)
+ */
+export const ReactivateLinkParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const ReactivateLink204Response = zod.void()
+
+export const ReactivateLink403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ReactivateLink409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * Cada aceite guarda a versão do texto, o IP e o app (prova do consentimento).
  * @summary Registra aceites
  */
@@ -194,6 +493,64 @@ export const DeclareGuardianConsent422Response = zod.object({
 
 
 /**
+ * "Ana Souza quer ser seu personal", antes de aceitar.
+ * @summary De quem é o convite
+ */
+export const PreviewInviteParams = zod.object({
+  "code": zod.string()
+})
+
+export const PreviewInvite200Response = zod.object({
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "organizationName": zod.string(),
+  "professionalName": zod.string()
+})
+
+export const PreviewInvite409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Exige conta de aluno com termos aceitos (e responsável, se menor). Troca de personal: o cadastro do aluno é reaproveitado.
+ * @summary Aceita o convite
+ */
+export const AcceptInviteParams = zod.object({
+  "code": zod.string()
+})
+
+export const AcceptInvite200Response = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const AcceptInvite409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * O app mostra estes textos e manda a versão aceita em POST /v1/consents.
  * @summary Versões vigentes dos textos legais
  */
@@ -237,6 +594,31 @@ export const GetMe401Response = zod.object({
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
 
 export const GetMe404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary O aluno encerra o próprio vínculo
+ */
+export const EndMyLinkParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const EndMyLink204Response = zod.void()
+
+export const EndMyLink404Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({

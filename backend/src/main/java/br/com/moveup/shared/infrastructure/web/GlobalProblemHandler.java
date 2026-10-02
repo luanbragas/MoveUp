@@ -2,6 +2,7 @@ package br.com.moveup.shared.infrastructure.web;
 
 import br.com.moveup.shared.domain.ConflictException;
 import br.com.moveup.shared.domain.DomainException;
+import br.com.moveup.shared.domain.Forbidden;
 import br.com.moveup.shared.domain.ResourceNotFound;
 import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
@@ -59,6 +60,11 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
     return problem(HttpStatus.NOT_FOUND, ex.code(), ex.getMessage(), request.getRequestURI());
   }
 
+  @ExceptionHandler(Forbidden.class)
+  ProblemDetail forbidden(Forbidden ex, HttpServletRequest request) {
+    return problem(HttpStatus.FORBIDDEN, ex.code(), ex.getMessage(), request.getRequestURI());
+  }
+
   @ExceptionHandler(ConflictException.class)
   ProblemDetail conflict(ConflictException ex, HttpServletRequest request) {
     return problem(HttpStatus.CONFLICT, ex.code(), ex.getMessage(), request.getRequestURI());
@@ -72,6 +78,21 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
 
   @ExceptionHandler(DataAccessException.class)
   ProblemDetail database(DataAccessException ex, HttpServletRequest request) {
+    return fromDatabase(ex, request);
+  }
+
+  @ExceptionHandler(Exception.class)
+  ProblemDetail unexpected(Exception ex, HttpServletRequest request) {
+    // Erro do banco que não veio como DataAccessException do Spring (ex.: exceção do próprio
+    // jOOQ ao chamar função): mesmo tratamento, sem logar a mensagem (tem SQL e valores).
+    if (sqlState(ex) != null) {
+      return fromDatabase(ex, request);
+    }
+    log.error("unexpected_error", ex); // sem payload da requisição
+    return internalError(request.getRequestURI());
+  }
+
+  private ProblemDetail fromDatabase(Exception ex, HttpServletRequest request) {
     var translated = PostgresErrorTranslator.translate(ex);
     if (translated.isPresent()) {
       var t = translated.get();
@@ -79,12 +100,6 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
     }
     // A mensagem do banco pode trazer valores (ex.: "Key (email)=(...)"): só SQLSTATE e tipo.
     log.error("database_error sqlState={} type={}", sqlState(ex), ex.getClass().getSimpleName());
-    return internalError(request.getRequestURI());
-  }
-
-  @ExceptionHandler(Exception.class)
-  ProblemDetail unexpected(Exception ex, HttpServletRequest request) {
-    log.error("unexpected_error", ex); // sem payload da requisição
     return internalError(request.getRequestURI());
   }
 

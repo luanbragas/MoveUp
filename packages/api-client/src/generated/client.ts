@@ -6,6 +6,47 @@
  * OpenAPI spec version: v1
  */
 import { apiFetch } from '../runtime/fetcher';
+export interface AcceptedInvite {
+  linkId: string;
+}
+
+export type ClientItemStatus = typeof ClientItemStatus[keyof typeof ClientItemStatus];
+
+
+export const ClientItemStatus = {
+  pending: 'pending',
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface ClientPendingInvite {
+  code: string;
+  expiresAt: string;
+}
+
+export interface ClientItem {
+  clientId: string;
+  linkId: string;
+  name: string;
+  /**
+     * Só para pendentes com convite válido
+     * @nullable
+     */
+  pendingInvite?: ClientPendingInvite;
+  /** @nullable */
+  startedAt?: string | null;
+  status: ClientItemStatus;
+}
+
+export interface ClientPage {
+  items: ClientItem[];
+  /**
+     * Passe em ?cursor= para a próxima página
+     * @nullable
+     */
+  nextCursor?: string | null;
+}
+
 /**
  * @minLength 1
  */
@@ -74,6 +115,23 @@ export interface GuardianConsent {
   guardianName: string;
   /** @minLength 1 */
   relationship: GuardianConsentRelationship;
+}
+
+/**
+ * Convite para compartilhar (link, código ou QR)
+ */
+export interface Invitation {
+  clientId: string;
+  code: string;
+  expiresAt: string;
+  linkId: string;
+  url: string;
+}
+
+export interface InvitePreview {
+  expiresAt: string;
+  organizationName: string;
+  professionalName: string;
 }
 
 /**
@@ -149,6 +207,30 @@ export interface Me {
   weightUnit: MeWeightUnit;
 }
 
+export interface NewClient {
+  /**
+     * @minLength 0
+     * @maxLength 254
+     */
+  email?: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  goal?: string;
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * WhatsApp com DDI e DDD
+     * @minLength 0
+     * @maxLength 30
+     */
+  phone?: string;
+}
+
 /**
  * Erro no formato RFC 9457 (application/problem+json)
  */
@@ -203,6 +285,11 @@ export interface RegisterAccount {
      */
   role: RegisterAccountRole;
 }
+
+export type ListClientsParams = {
+cursor?: string;
+limit?: number;
+};
 
 export type registerAccountResponse201 = {
   data: Me
@@ -262,6 +349,357 @@ return apiFetch<registerAccountResponse>(getRegisterAccountUrl(),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(registerAccountBody)
+  }
+);}
+
+
+
+export type listClientsResponse200 = {
+  data: ClientPage
+  status: 200
+}
+
+export type listClientsResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type listClientsResponseSuccess = (listClientsResponse200) & {
+  headers: Headers;
+};
+export type listClientsResponseError = (listClientsResponse403) & {
+  headers: Headers;
+};
+
+export type listClientsResponse = (listClientsResponseSuccess | listClientsResponseError)
+
+export const getListClientsUrl = (params?: ListClientsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/clients?${stringifiedParams}` : `/v1/clients`
+}
+
+/**
+ * Pendentes, ativos e inativos, do mais novo ao mais antigo, por cursor.
+ * @summary Alunos do profissional
+ */
+export const listClients = async (params?: ListClientsParams, options?: Parameters<typeof apiFetch>[1]): Promise<listClientsResponse> => {
+
+  return apiFetch<listClientsResponse>(getListClientsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type inviteClientResponse201 = {
+  data: Invitation
+  status: 201
+}
+
+export type inviteClientResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type inviteClientResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type inviteClientResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type inviteClientResponseSuccess = (inviteClientResponse201) & {
+  headers: Headers;
+};
+export type inviteClientResponseError = (inviteClientResponse403 | inviteClientResponse409 | inviteClientResponse422) & {
+  headers: Headers;
+};
+
+export type inviteClientResponse = (inviteClientResponseSuccess | inviteClientResponseError)
+
+export const getInviteClientUrl = () => {
+
+
+
+
+  return `/v1/clients`
+}
+
+/**
+ * Cria aluno + vínculo pendente + convite (7 dias). Exige vaga no plano.
+ * @summary Pré-cadastra um aluno e gera o convite
+ */
+export const inviteClient = async (newClient: NewClient, options?: Parameters<typeof apiFetch>[1]): Promise<inviteClientResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<inviteClientResponse>(getInviteClientUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(newClient)
+  }
+);}
+
+
+
+export type cancelInviteResponse204 = {
+  data: void
+  status: 204
+}
+
+export type cancelInviteResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type cancelInviteResponseSuccess = (cancelInviteResponse204) & {
+  headers: Headers;
+};
+export type cancelInviteResponseError = (cancelInviteResponse403) & {
+  headers: Headers;
+};
+
+export type cancelInviteResponse = (cancelInviteResponseSuccess | cancelInviteResponseError)
+
+export const getCancelInviteUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/invite`
+}
+
+/**
+ * @summary Cancela o convite pendente
+ */
+export const cancelInvite = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<cancelInviteResponse> => {
+
+  return apiFetch<cancelInviteResponse>(getCancelInviteUrl(linkId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type resendInviteResponse200 = {
+  data: Invitation
+  status: 200
+}
+
+export type resendInviteResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type resendInviteResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type resendInviteResponseSuccess = (resendInviteResponse200) & {
+  headers: Headers;
+};
+export type resendInviteResponseError = (resendInviteResponse403 | resendInviteResponse409) & {
+  headers: Headers;
+};
+
+export type resendInviteResponse = (resendInviteResponseSuccess | resendInviteResponseError)
+
+export const getResendInviteUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/invite`
+}
+
+/**
+ * Cancela o convite pendente e gera outro (o link anterior deixa de valer).
+ * @summary Reenvia o convite
+ */
+export const resendInvite = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<resendInviteResponse> => {
+
+  return apiFetch<resendInviteResponse>(getResendInviteUrl(linkId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type endLinkResponse204 = {
+  data: void
+  status: 204
+}
+
+export type endLinkResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type endLinkResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type endLinkResponseSuccess = (endLinkResponse204) & {
+  headers: Headers;
+};
+export type endLinkResponseError = (endLinkResponse403 | endLinkResponse404) & {
+  headers: Headers;
+};
+
+export type endLinkResponse = (endLinkResponseSuccess | endLinkResponseError)
+
+export const getEndLinkUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/coaching-links/${linkId}/end`
+}
+
+/**
+ * @summary Encerra o vínculo
+ */
+export const endLink = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<endLinkResponse> => {
+
+  return apiFetch<endLinkResponse>(getEndLinkUrl(linkId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type inactivateLinkResponse204 = {
+  data: void
+  status: 204
+}
+
+export type inactivateLinkResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type inactivateLinkResponseSuccess = (inactivateLinkResponse204) & {
+  headers: Headers;
+};
+export type inactivateLinkResponseError = (inactivateLinkResponse403) & {
+  headers: Headers;
+};
+
+export type inactivateLinkResponse = (inactivateLinkResponseSuccess | inactivateLinkResponseError)
+
+export const getInactivateLinkUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/coaching-links/${linkId}/inactivate`
+}
+
+/**
+ * Libera a vaga do plano; o histórico continua visível para reativar.
+ * @summary Inativa o aluno
+ */
+export const inactivateLink = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<inactivateLinkResponse> => {
+
+  return apiFetch<inactivateLinkResponse>(getInactivateLinkUrl(linkId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type reactivateLinkResponse204 = {
+  data: void
+  status: 204
+}
+
+export type reactivateLinkResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type reactivateLinkResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type reactivateLinkResponseSuccess = (reactivateLinkResponse204) & {
+  headers: Headers;
+};
+export type reactivateLinkResponseError = (reactivateLinkResponse403 | reactivateLinkResponse409) & {
+  headers: Headers;
+};
+
+export type reactivateLinkResponse = (reactivateLinkResponseSuccess | reactivateLinkResponseError)
+
+export const getReactivateLinkUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/coaching-links/${linkId}/reactivate`
+}
+
+/**
+ * @summary Reativa o aluno (exige vaga no plano)
+ */
+export const reactivateLink = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<reactivateLinkResponse> => {
+
+  return apiFetch<reactivateLinkResponse>(getReactivateLinkUrl(linkId),
+  {
+    ...options,
+    method: 'POST'
+
+
   }
 );}
 
@@ -430,6 +868,94 @@ return apiFetch<declareGuardianConsentResponse>(getDeclareGuardianConsentUrl(),
 
 
 
+export type previewInviteResponse200 = {
+  data: InvitePreview
+  status: 200
+}
+
+export type previewInviteResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type previewInviteResponseSuccess = (previewInviteResponse200) & {
+  headers: Headers;
+};
+export type previewInviteResponseError = (previewInviteResponse409) & {
+  headers: Headers;
+};
+
+export type previewInviteResponse = (previewInviteResponseSuccess | previewInviteResponseError)
+
+export const getPreviewInviteUrl = (code: string,) => {
+
+
+
+
+  return `/v1/invites/${code}`
+}
+
+/**
+ * "Ana Souza quer ser seu personal", antes de aceitar.
+ * @summary De quem é o convite
+ */
+export const previewInvite = async (code: string, options?: Parameters<typeof apiFetch>[1]): Promise<previewInviteResponse> => {
+
+  return apiFetch<previewInviteResponse>(getPreviewInviteUrl(code),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type acceptInviteResponse200 = {
+  data: AcceptedInvite
+  status: 200
+}
+
+export type acceptInviteResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type acceptInviteResponseSuccess = (acceptInviteResponse200) & {
+  headers: Headers;
+};
+export type acceptInviteResponseError = (acceptInviteResponse409) & {
+  headers: Headers;
+};
+
+export type acceptInviteResponse = (acceptInviteResponseSuccess | acceptInviteResponseError)
+
+export const getAcceptInviteUrl = (code: string,) => {
+
+
+
+
+  return `/v1/invites/${code}/accept`
+}
+
+/**
+ * Exige conta de aluno com termos aceitos (e responsável, se menor). Troca de personal: o cadastro do aluno é reaproveitado.
+ * @summary Aceita o convite
+ */
+export const acceptInvite = async (code: string, options?: Parameters<typeof apiFetch>[1]): Promise<acceptInviteResponse> => {
+
+  return apiFetch<acceptInviteResponse>(getAcceptInviteUrl(code),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
 export type getLegalVersionsResponse200 = {
   data: LegalVersions
   status: 200
@@ -509,6 +1035,49 @@ export const getMe = async ( options?: Parameters<typeof apiFetch>[1]): Promise<
   {
     ...options,
     method: 'GET'
+
+
+  }
+);}
+
+
+
+export type endMyLinkResponse204 = {
+  data: void
+  status: 204
+}
+
+export type endMyLinkResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type endMyLinkResponseSuccess = (endMyLinkResponse204) & {
+  headers: Headers;
+};
+export type endMyLinkResponseError = (endMyLinkResponse404) & {
+  headers: Headers;
+};
+
+export type endMyLinkResponse = (endMyLinkResponseSuccess | endMyLinkResponseError)
+
+export const getEndMyLinkUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/me/coaching-links/${linkId}/end`
+}
+
+/**
+ * @summary O aluno encerra o próprio vínculo
+ */
+export const endMyLink = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<endMyLinkResponse> => {
+
+  return apiFetch<endMyLinkResponse>(getEndMyLinkUrl(linkId),
+  {
+    ...options,
+    method: 'POST'
 
 
   }

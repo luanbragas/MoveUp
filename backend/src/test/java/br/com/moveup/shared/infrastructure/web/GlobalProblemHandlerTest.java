@@ -73,6 +73,14 @@ class GlobalProblemHandlerTest {
           "falha", new SQLException("Key (email)=(ana@example.test) already exists", sqlState));
     }
 
+    /** Como a exceção do jOOQ ao chamar função do banco: não é DataAccessException do Spring. */
+    @GetMapping("/test/raw-db/{sqlState}")
+    String rawDatabase(@PathVariable String sqlState) {
+      throw new IllegalStateException(
+          "SQL [select * from end_link_as_client(?)]; ERROR: dado-sigiloso",
+          new SQLException("dado-sigiloso", sqlState));
+    }
+
     @GetMapping("/test/boom")
     String boom() {
       throw new IllegalStateException("select answers from anamnesis where client_id = ...");
@@ -126,6 +134,15 @@ class GlobalProblemHandlerTest {
     expectProblem(mvc.perform(get("/test/db/" + sqlState)), status, code)
         .andExpect(content().string(not(containsString("ana@example.test"))))
         .andExpect(content().string(not(containsString("Key ("))));
+  }
+
+  @Test
+  void erroDoBancoForaDoSpringTambemEhTraduzido() throws Exception {
+    expectProblem(mvc.perform(get("/test/raw-db/28000")), 404, "resource-not-found")
+        .andExpect(content().string(not(containsString("dado-sigiloso"))));
+    expectProblem(mvc.perform(get("/test/raw-db/P0003")), 409, "plan-limit-reached");
+    expectProblem(mvc.perform(get("/test/raw-db/XX000")), 500, "internal-error")
+        .andExpect(content().string(not(containsString("dado-sigiloso"))));
   }
 
   @Test

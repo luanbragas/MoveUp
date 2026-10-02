@@ -13,6 +13,10 @@ tags:
   name: accounts
 - description: Consentimentos do usuário (LGPD)
   name: consents
+- description: Convite do ponto de vista do aluno
+  name: invites
+- description: Alunos e vínculos do profissional
+  name: clients
 paths:
   /v1/accounts:
     post:
@@ -50,6 +54,213 @@ paths:
       summary: Cria a conta do usuário logado
       tags:
       - accounts
+  /v1/clients:
+    get:
+      description: "Pendentes, ativos e inativos, do mais novo ao mais antigo, por\
+        \ cursor."
+      operationId: listClients
+      parameters:
+      - in: query
+        name: cursor
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientPage"
+          description: Página de alunos
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Alunos do profissional
+      tags:
+      - clients
+    post:
+      description: Cria aluno + vínculo pendente + convite (7 dias). Exige vaga no
+        plano.
+      operationId: inviteClient
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewClient"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invitation"
+          description: Convite criado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Plano sem vaga (`plan-limit-reached`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`name-invalid`, `email-invalid`, `phone-invalid`, `goal-invalid`"
+      summary: Pré-cadastra um aluno e gera o convite
+      tags:
+      - clients
+  /v1/clients/{linkId}/invite:
+    delete:
+      operationId: cancelInvite
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Convite cancelado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Cancela o convite pendente
+      tags:
+      - clients
+    post:
+      description: Cancela o convite pendente e gera outro (o link anterior deixa
+        de valer).
+      operationId: resendInvite
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invitation"
+          description: Convite novo
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Vínculo não está pendente (`link-state-invalid`)
+      summary: Reenvia o convite
+      tags:
+      - clients
+  /v1/coaching-links/{linkId}/end:
+    post:
+      operationId: endLink
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Encerrado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Vínculo de outro profissional ou inexistente (`resource-not-found`)
+      summary: Encerra o vínculo
+      tags:
+      - clients
+  /v1/coaching-links/{linkId}/inactivate:
+    post:
+      description: Libera a vaga do plano; o histórico continua visível para reativar.
+      operationId: inactivateLink
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Inativado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Inativa o aluno
+      tags:
+      - clients
+  /v1/coaching-links/{linkId}/reactivate:
+    post:
+      operationId: reactivateLink
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Reativado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`plan-limit-reached` ou `link-state-invalid`'
+      summary: Reativa o aluno (exige vaga no plano)
+      tags:
+      - clients
   /v1/consents:
     post:
       description: "Cada aceite guarda a versão do texto, o IP e o app (prova do consentimento)."
@@ -124,6 +335,60 @@ paths:
       summary: Consentimento do responsável pelo aluno menor
       tags:
       - consents
+  /v1/invites/{code}:
+    get:
+      description: "\"Ana Souza quer ser seu personal\", antes de aceitar."
+      operationId: previewInvite
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitePreview"
+          description: Convite válido
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "Inválido, usado, cancelado ou expirado (`invite-expired`)"
+      summary: De quem é o convite
+      tags:
+      - invites
+  /v1/invites/{code}/accept:
+    post:
+      description: "Exige conta de aluno com termos aceitos (e responsável, se menor).\
+        \ Troca de personal: o cadastro do aluno é reaproveitado."
+      operationId: acceptInvite
+      parameters:
+      - in: path
+        name: code
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedInvite"
+          description: Vínculo ativo
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`invite-expired`, `plan-limit-reached`, `client-already-linked`,\
+            \ `onboarding-incomplete`, `invite-for-clients-only`"
+      summary: Aceita o convite
+      tags:
+      - invites
   /v1/legal-documents:
     get:
       description: O app mostra estes textos e manda a versão aceita em POST /v1/consents.
@@ -165,8 +430,95 @@ paths:
       summary: Conta do usuário autenticado
       tags:
       - accounts
+  /v1/me/coaching-links/{linkId}/end:
+    post:
+      operationId: endMyLink
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Encerrado
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "Vínculo inexistente, de outro aluno ou já encerrado (`resource-not-found`)"
+      summary: O aluno encerra o próprio vínculo
+      tags:
+      - invites
 components:
   schemas:
+    AcceptedInvite:
+      type: object
+      properties:
+        linkId:
+          type: string
+          format: uuid
+      required:
+      - linkId
+    ClientItem:
+      type: object
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        linkId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pendingInvite:
+          type: "null"
+          $ref: "#/components/schemas/ClientPendingInvite"
+          description: Só para pendentes com convite válido
+        startedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - inactive
+      required:
+      - clientId
+      - linkId
+      - name
+      - status
+    ClientPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientItem"
+        nextCursor:
+          type:
+          - string
+          - "null"
+          format: uuid
+          description: Passe em ?cursor= para a próxima página
+      required:
+      - items
+    ClientPendingInvite:
+      type: object
+      properties:
+        code:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+      - code
+      - expiresAt
     ConsentGrant:
       type: object
       properties:
@@ -240,6 +592,47 @@ components:
       - guardianEmail
       - guardianName
       - relationship
+    Invitation:
+      type: object
+      description: "Convite para compartilhar (link, código ou QR)"
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: K7M2QX9P
+        expiresAt:
+          type: string
+          format: date-time
+        linkId:
+          type: string
+          format: uuid
+        url:
+          type: string
+          example: https://moveup.com.br/i/K7M2QX9P
+      required:
+      - clientId
+      - code
+      - expiresAt
+      - linkId
+      - url
+    InvitePreview:
+      type: object
+      properties:
+        expiresAt:
+          type: string
+          format: date-time
+        organizationName:
+          type: string
+          example: Studio Fit
+        professionalName:
+          type: string
+          example: Ana Souza
+      required:
+      - expiresAt
+      - organizationName
+      - professionalName
     LegalVersions:
       type: object
       properties:
@@ -317,6 +710,30 @@ components:
       - name
       - timezone
       - weightUnit
+    NewClient:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+        goal:
+          type: string
+          maxLength: 500
+          minLength: 0
+        name:
+          type: string
+          maxLength: 200
+          minLength: 0
+        phone:
+          type: string
+          description: WhatsApp com DDI e DDD
+          example: +55 11 98765-4321
+          maxLength: 30
+          minLength: 0
+      required:
+      - name
     Problem:
       type: object
       description: Erro no formato RFC 9457 (application/problem+json)

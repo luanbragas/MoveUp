@@ -1,7 +1,10 @@
 package br.com.moveup.billing.infrastructure.config;
 
+import br.com.moveup.billing.api.PlanLimits;
 import br.com.moveup.billing.api.StartTrial;
+import br.com.moveup.billing.application.port.out.SubscriptionLimits;
 import br.com.moveup.billing.application.port.out.TrialSubscriptions;
+import br.com.moveup.billing.application.usecase.PlanLimitsService;
 import br.com.moveup.billing.application.usecase.StartTrialUseCase;
 import java.time.Clock;
 import java.time.Duration;
@@ -11,6 +14,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration(proxyBeanMethods = false)
 class BillingModuleConfig {
+
+  @Bean
+  PlanLimits planLimits(SubscriptionLimits limits) {
+    return new PlanLimitsService(limits);
+  }
 
   @Bean
   StartTrial startTrial(
