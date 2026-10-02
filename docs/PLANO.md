@@ -30,9 +30,9 @@ flowchart LR
 |---|---|---|---|
 | Fotos fora do Brasil (R2) ou S3 sa-east-1 | Fase 6 | Jurídico | Aberta (padrão: S3 sa-east-1) |
 | Prazos de retenção (anamnese, fotos, audit, backups) e RIPD | Fases 7 e 9 | Jurídico | Aberta |
-| Novo personal vê o histórico do aluno com o anterior? | Fase 1 (policies de leitura) | Produto | Aberta (hoje: vê) |
+| Novo personal vê o histórico do aluno com o anterior? | Fase 1 (policies de leitura) | Produto | **Decidida (02/10/2026): vê** (o histórico acompanha o aluno; informado no consentimento) |
 | Provedor de login (Cognito, Auth0, Clerk, Firebase) | Fase 0 | Técnico | **Decidida (01/10/2026): Firebase Auth** |
-| Alunos menores de idade no MVP | Fase 1 | Produto + jurídico | Aberta |
+| Alunos menores de idade no MVP | Fase 1 | Produto + jurídico | **Decidida (02/10/2026): aceitos com consentimento do responsável** (revisão jurídica antes do lançamento, Fase 9) |
 | Preço dos planos e plano gratuito | Fase 8 | Produto | Aberta |
 | Cobrança dentro do app: compra da loja (IAP / Google Play Billing) ou pagamento alternativo/link externo | Fase 8 | Produto + técnico | Aberta (ver Fase 8) |
 | Nome do produto e pacote base | Fase 0 | Produto | **Decidida (01/10/2026): MoveUp, `br.com.moveup`** |

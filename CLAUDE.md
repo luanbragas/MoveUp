@@ -11,6 +11,7 @@ SaaS para personal trainers em **um único app mobile** (iOS e Android), sem pai
 | Infra, banco, segurança, sync, fotos | `docs/ARQUITETURA.md` |
 | Telas, rotas, navegação, estados de tela | `docs/SCREEN-FLOWS.md` |
 | "O que fazer agora?" / escopo de uma tarefa | `docs/PLANO.md` |
+| Login / projeto do Firebase | `docs/FIREBASE-SETUP.md` |
 
 Os padrões desses documentos são obrigatórios. Se uma regra impedir a tarefa, **não contorne**: explique o conflito e proponha a mudança no documento.
 
