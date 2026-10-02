@@ -35,7 +35,7 @@ docs/                         Arquitetura, padrões e plano
 
 ```bash
 cp .env.example .env                       # uma vez; senhas só locais (o .env nunca é commitado)
-docker compose up -d                       # Postgres 16 (15432 no host), PgBouncer (6432), MinIO (9000/9001)
+docker compose up -d                       # Postgres 16 (15432 no host), PgBouncer (6432), S3 local/RustFS (9000/9001)
 
 # backend (precisa de Docker para Testcontainers)
 cd backend && ./mvnw verify                # build + todos os testes + ArchUnit + Spotless check + cobertura
