@@ -83,7 +83,7 @@ br.com.moveup.<modulo>/
 - Porta de saída (`port/out`): interface pensada pelo lado da aplicação, não do banco: `WorkoutRepository`, `PhotoStorage`, `PushSender`, `Clock`, `FieldCipher`.
 - Adaptador: implementa uma porta e fica em `infrastructure`. Trocar S3 por R2 = escrever outro adaptador de `PhotoStorage`.
 
-**Composição sem acoplar a aplicação ao Spring:** casos de uso são classes Java puras (sem `@Service`). Os beans são criados em `infrastructure/config`:
+**Composição sem acoplar a aplicação ao Spring:** casos de uso são classes Java puras (sem `@Service`). Os adaptadores jOOQ são beans (`@Repository`) no próprio `infrastructure/persistence`, porque o jOOQ não pode sair desse pacote (ArchUnit). Os casos de uso são montados em `infrastructure/config`:
 
 ```java
 @Configuration

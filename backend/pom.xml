@@ -44,6 +44,11 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-tracing-bridge-otel</artifactId>
     </dependency>
+    <!-- Resource server: valida o JWT do Firebase Auth via JWKS (ARQUITETURA, seção 8) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
     <!-- Bean Validation nos DTOs (erro validation-failed) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -83,6 +88,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
       <scope>test</scope>
     </dependency>
     <!-- Camadas e fronteiras de módulo (BACKEND-PATTERN, seção 12) -->

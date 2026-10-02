@@ -15,6 +15,7 @@ public final class Titles {
           Map.entry("validation-failed", "Dados inválidos"),
           Map.entry("malformed-request", "Requisição malformada"),
           Map.entry("resource-not-found", "Recurso não encontrado"),
+          Map.entry("account-not-registered", "Conta não cadastrada"),
           Map.entry("method-not-allowed", "Método não permitido"),
           Map.entry("unsupported-media-type", "Formato de conteúdo não suportado"),
           Map.entry("not-acceptable", "Formato de resposta não suportado"),

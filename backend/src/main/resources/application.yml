@@ -23,6 +23,12 @@ server:
     include-message: never
     include-binding-errors: never
 
+moveup:
+  auth:
+    firebase:
+      # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>
+      project-id: ${FIREBASE_PROJECT_ID}
+
 # Logs em JSON (formato Logstash) com o MDC, onde o Micrometer Tracing põe traceId/spanId.
 # Nunca logar corpo de requisição, token, e-mail, nome de aluno ou dado de saúde (CLAUDE.md, regra 7).
 logging:

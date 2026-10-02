@@ -3,7 +3,6 @@ package br.com.moveup.shared.infrastructure.web;
 import br.com.moveup.shared.domain.DomainException;
 import br.com.moveup.shared.domain.ResourceNotFound;
 import jakarta.servlet.http.HttpServletRequest;
-import java.net.URI;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +35,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
 
-  static final String TYPE_BASE = "https://api.moveup.com.br/problems/";
-
   private static final Logger log = LoggerFactory.getLogger(GlobalProblemHandler.class);
 
   /** Erros do próprio Spring MVC, por status. */
@@ -50,10 +47,10 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
           413, "payload-too-large",
           415, "unsupported-media-type");
 
-  private final TraceIds traceIds;
+  private final Problems problems;
 
-  public GlobalProblemHandler(TraceIds traceIds) {
-    this.traceIds = traceIds;
+  public GlobalProblemHandler(Problems problems) {
+    this.problems = problems;
   }
 
   @ExceptionHandler(ResourceNotFound.class)
@@ -187,15 +184,7 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
   }
 
   private ProblemDetail problem(HttpStatusCode status, String code, String detail, String path) {
-    var pd = ProblemDetail.forStatusAndDetail(status, detail);
-    pd.setType(URI.create(TYPE_BASE + code));
-    pd.setTitle(Titles.of(code));
-    if (path != null) {
-      pd.setInstance(URI.create(path));
-    }
-    pd.setProperty("code", code);
-    pd.setProperty("traceId", traceIds.current());
-    return pd;
+    return problems.create(status, code, detail, path);
   }
 
   @Nullable

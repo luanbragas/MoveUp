@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,8 +37,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Todo {@code code} de erro tem teste (BACKEND-PATTERN, seção 12). */
 @WebMvcTest(controllers = GlobalProblemHandlerTest.ProblemController.class)
+@AutoConfigureMockMvc(addFilters = false) // segurança tem teste próprio; aqui só o handler
 @Import({
   GlobalProblemHandler.class,
+  Problems.class,
   TraceIds.class,
   GlobalProblemHandlerTest.ProblemController.class
 })
@@ -180,7 +183,7 @@ class GlobalProblemHandlerTest {
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.status").value(status))
         .andExpect(jsonPath("$.code").value(code))
-        .andExpect(jsonPath("$.type").value(GlobalProblemHandler.TYPE_BASE + code))
+        .andExpect(jsonPath("$.type").value(Problems.TYPE_BASE + code))
         .andExpect(jsonPath("$.traceId", matchesPattern("[0-9a-f]{32}")));
   }
 }

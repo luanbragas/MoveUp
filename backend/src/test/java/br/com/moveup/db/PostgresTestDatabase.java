@@ -21,6 +21,8 @@ public final class PostgresTestDatabase {
   private static final String OWNER = "moveup_owner";
   private static final String OWNER_PASSWORD = "test-only-owner";
   private static final String DATABASE = "moveup";
+  private static final String API_USER = "app_api";
+  private static final String API_PASSWORD = "test-only-api";
 
   @SuppressWarnings("resource") // vive até o fim da JVM de testes (Ryuk derruba o container)
   private static final PostgreSQLContainer<?> CONTAINER =
@@ -62,7 +64,8 @@ public final class PostgresTestDatabase {
     try (Connection c = superuserConnection(CONTAINER.getDatabaseName());
         Statement st = c.createStatement()) {
       st.execute("create role " + OWNER + " login password '" + OWNER_PASSWORD + "'");
-      st.execute("create role app_api nologin nobypassrls");
+      // app_api com login: os testes de ponta a ponta conectam a aplicação como em produção
+      st.execute("create role app_api login password '" + API_PASSWORD + "' nobypassrls");
       st.execute("create role app_worker nologin nobypassrls");
       st.execute("create role app_report nologin nobypassrls");
       st.execute("create database " + DATABASE + " owner " + OWNER);
@@ -87,6 +90,14 @@ public final class PostgresTestDatabase {
 
   public static String ownerPassword() {
     return OWNER_PASSWORD;
+  }
+
+  public static String apiUser() {
+    return API_USER;
+  }
+
+  public static String apiPassword() {
+    return API_PASSWORD;
   }
 
   public static String superuserUser() {

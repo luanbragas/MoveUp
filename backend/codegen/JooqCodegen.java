@@ -4,6 +4,7 @@ import org.flywaydb.core.Flyway;
 import org.jooq.codegen.GenerationTool;
 import org.jooq.meta.jaxb.Configuration;
 import org.jooq.meta.jaxb.Database;
+import org.jooq.meta.jaxb.ForcedType;
 import org.jooq.meta.jaxb.Generate;
 import org.jooq.meta.jaxb.Generator;
 import org.jooq.meta.jaxb.Jdbc;
@@ -67,7 +68,10 @@ public final class JooqCodegen {
                           new Database()
                               .withName("org.jooq.meta.postgres.PostgresDatabase")
                               .withInputSchema("public")
-                              .withExcludes(excludes))
+                              .withExcludes(excludes)
+                              // citext (e-mail) vira String; a comparação sem caixa fica no banco
+                              .withForcedTypes(
+                                  new ForcedType().withName("CLOB").withIncludeTypes("citext")))
                       .withGenerate(
                           new Generate()
                               .withJavaTimeTypes(true)
