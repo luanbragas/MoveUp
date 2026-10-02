@@ -210,6 +210,7 @@ Toda resposta de erro é `application/problem+json`, montada num único `@RestCo
 | Bean Validation no DTO (formato) | 400 | `validation-failed` |
 | JSON malformado | 400 | `malformed-request` |
 | `DomainException` (regra violada) | 422 | `reps-range-invalid`, `anamnesis-already-reviewed` |
+| `ConflictException` (subclasse: o estado atual impede) | 409 | `account-already-registered`, `consent-version-outdated` |
 | Não encontrado ou sem acesso | 404 | `resource-not-found` |
 | Sem autenticação | 401 | `unauthenticated` |
 | Autenticado sem papel exigido | 403 | `forbidden` |

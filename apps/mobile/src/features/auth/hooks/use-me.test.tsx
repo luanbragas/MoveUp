@@ -19,7 +19,10 @@ const meDto = {
   timezone: "America/Sao_Paulo",
   weightUnit: "kg",
   lengthUnit: "cm",
-  professional: true,
+  role: "professional",
+  minor: false,
+  missingConsents: ["terms"],
+  guardianConsentRequired: false,
 };
 
 let receivedAuthorization: string | null = null;
@@ -73,7 +76,9 @@ describe("useMe", () => {
       locale: "pt-BR",
       timezone: "America/Sao_Paulo",
       units: { weight: "kg", length: "cm" },
-      isProfessional: true,
+      role: "professional",
+      isMinor: false,
+      onboarding: { missingConsents: ["terms"], guardianConsentRequired: false },
     });
   });
 

@@ -16,7 +16,12 @@ export function toMe(dto: MeDto): Me {
     locale: dto.locale,
     timezone: dto.timezone,
     units: { weight: dto.weightUnit, length: dto.lengthUnit },
-    isProfessional: dto.professional,
+    role: dto.role ?? null,
+    isMinor: dto.minor,
+    onboarding: {
+      missingConsents: dto.missingConsents,
+      guardianConsentRequired: dto.guardianConsentRequired,
+    },
   };
 }
 

@@ -29,7 +29,10 @@ const me = {
   timezone: "America/Sao_Paulo",
   weightUnit: "kg",
   lengthUnit: "cm",
-  professional: true,
+  role: "professional",
+  minor: false,
+  missingConsents: ["terms"],
+  guardianConsentRequired: false,
 };
 
 describe("apiFetch", () => {

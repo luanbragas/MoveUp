@@ -33,6 +33,17 @@ springdoc:
   override-with-generic-response: false # erros documentados rota a rota, não todos em todas
 
 moveup:
+  # Versões vigentes dos textos legais. Trocar a versão = todos aceitam de novo no app.
+  # Rascunhos até a revisão jurídica (Fase 9).
+  legal:
+    versions:
+      terms: 2026-10-02-rascunho
+      privacy: 2026-10-02-rascunho
+      health-data: 2026-10-02-rascunho
+      photos: 2026-10-02-rascunho
+      guardian-consent: 2026-10-02-rascunho
+  billing:
+    trial-length: P14D # provisório até a decisão de preços (Fase 8)
   auth:
     firebase:
       # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>

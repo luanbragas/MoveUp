@@ -1,14 +1,11 @@
 package br.com.moveup.accounts.infrastructure.persistence;
 
 import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.APP_USER;
-import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.PROFESSIONAL_PROFILE;
 
-import br.com.moveup.accounts.application.port.in.MeView;
 import br.com.moveup.accounts.application.port.out.AccountReader;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -21,13 +18,7 @@ public class JooqAccountReader implements AccountReader {
   }
 
   @Override
-  public Optional<MeView> findMe(UUID userId) {
-    var isProfessional =
-        DSL.field(
-            DSL.exists(
-                DSL.selectOne()
-                    .from(PROFESSIONAL_PROFILE)
-                    .where(PROFESSIONAL_PROFILE.USER_ID.eq(APP_USER.ID))));
+  public Optional<AccountSummary> find(UUID userId) {
     return dsl.select(
             APP_USER.ID,
             APP_USER.NAME,
@@ -36,13 +27,14 @@ public class JooqAccountReader implements AccountReader {
             APP_USER.TIMEZONE,
             APP_USER.WEIGHT_UNIT,
             APP_USER.LENGTH_UNIT,
-            isProfessional)
+            APP_USER.ROLE,
+            APP_USER.BIRTH_DATE)
         .from(APP_USER)
         .where(APP_USER.ID.eq(userId))
         .and(APP_USER.ANONYMIZED_AT.isNull())
         .fetchOptional(
             r ->
-                new MeView(
+                new AccountSummary(
                     r.value1(),
                     r.value2(),
                     r.value3(),
@@ -50,6 +42,7 @@ public class JooqAccountReader implements AccountReader {
                     r.value5(),
                     r.value6(),
                     r.value7(),
-                    r.value8()));
+                    r.value8(),
+                    r.value9()));
   }
 }

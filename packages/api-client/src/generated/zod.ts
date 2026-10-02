@@ -8,19 +8,218 @@
 import * as zod from 'zod';
 
 /**
+ * Primeira chamada depois do login no provedor. O e-mail vem do token. Profissional ganha organização e período de teste; aluno informa a data de nascimento.
+ * @summary Cria a conta do usuário logado
+ */
+export const registerAccountBodyBusinessNameMin = 0;
+export const registerAccountBodyBusinessNameMax = 120;
+
+export const registerAccountBodyNameMin = 0;
+export const registerAccountBodyNameMax = 200;
+
+export const registerAccountBodyRegistryNumberMin = 0;
+export const registerAccountBodyRegistryNumberMax = 30;
+
+
+
+export const RegisterAccountBody = zod.object({
+  "birthDate": zod.iso.date().optional().describe('Obrigatória para aluno (decide se precisa do responsável)'),
+  "businessName": zod.string().min(registerAccountBodyBusinessNameMin).max(registerAccountBodyBusinessNameMax).optional().describe('Só profissional; vazio usa o nome da pessoa'),
+  "name": zod.string().min(registerAccountBodyNameMin).max(registerAccountBodyNameMax),
+  "registryNumber": zod.string().min(registerAccountBodyRegistryNumberMin).max(registerAccountBodyRegistryNumberMax).optional().describe('Só profissional; CREF'),
+  "role": zod.enum(['professional', 'client'])
+})
+
+export const RegisterAccount201Response = zod.object({
+  "email": zod.email(),
+  "guardianConsentRequired": zod.boolean().describe('Menor sem consentimento do responsável vigente: o app pede antes de seguir'),
+  "id": zod.uuid(),
+  "lengthUnit": zod.enum(['cm', 'in']),
+  "locale": zod.string(),
+  "minor": zod.boolean().describe('Menor de 18 anos'),
+  "missingConsents": zod.array(zod.enum(['terms', 'privacy', 'health_data', 'photos'])).describe('Consentimentos obrigatórios ainda não aceitos na versão vigente'),
+  "name": zod.string(),
+  "role": zod.union([zod.literal('professional'),zod.literal('client'),zod.literal(null)]).nullish().describe('Papel da conta; ausente se o cadastro não escolheu'),
+  "timezone": zod.string(),
+  "weightUnit": zod.enum(['kg', 'lb'])
+}).describe('Conta do usuário autenticado e o que falta no onboarding')
+
+export const RegisterAccount409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const RegisterAccount422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Cada aceite guarda a versão do texto, o IP e o app (prova do consentimento).
+ * @summary Registra aceites
+ */
+export const grantConsentsBodyGrantsItemDocVersionMin = 0;
+export const grantConsentsBodyGrantsItemDocVersionMax = 50;
+
+export const grantConsentsBodyGrantsMin = 0;
+export const grantConsentsBodyGrantsMax = 4;
+
+
+
+export const GrantConsentsBody = zod.object({
+  "grants": zod.array(zod.object({
+  "docVersion": zod.string().min(grantConsentsBodyGrantsItemDocVersionMin).max(grantConsentsBodyGrantsItemDocVersionMax),
+  "kind": zod.enum(['terms', 'privacy', 'health_data', 'photos'])
+})).min(grantConsentsBodyGrantsMin).max(grantConsentsBodyGrantsMax)
+})
+
+export const GrantConsents204Response = zod.void()
+
+export const GrantConsents404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const GrantConsents409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Direito do titular (LGPD). O histórico do aceite é mantido.
+ * @summary Revoga um aceite
+ */
+export const RevokeConsentParams = zod.object({
+  "kind": zod.string()
+})
+
+export const RevokeConsent204Response = zod.void()
+
+
+/**
+ * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). Os dados do responsável só são visíveis para o próprio aluno.
+ * @summary Consentimento do responsável pelo aluno menor
+ */
+export const declareGuardianConsentBodyDocVersionMin = 0;
+export const declareGuardianConsentBodyDocVersionMax = 50;
+
+export const declareGuardianConsentBodyGuardianEmailMin = 0;
+export const declareGuardianConsentBodyGuardianEmailMax = 254;
+
+export const declareGuardianConsentBodyGuardianNameMin = 0;
+export const declareGuardianConsentBodyGuardianNameMax = 200;
+
+
+
+export const DeclareGuardianConsentBody = zod.object({
+  "docVersion": zod.string().min(declareGuardianConsentBodyDocVersionMin).max(declareGuardianConsentBodyDocVersionMax),
+  "guardianEmail": zod.email().min(declareGuardianConsentBodyGuardianEmailMin).max(declareGuardianConsentBodyGuardianEmailMax),
+  "guardianName": zod.string().min(declareGuardianConsentBodyGuardianNameMin).max(declareGuardianConsentBodyGuardianNameMax),
+  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other'])
+})
+
+export const DeclareGuardianConsent204Response = zod.void()
+
+export const DeclareGuardianConsent409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const DeclareGuardianConsent422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * O app mostra estes textos e manda a versão aceita em POST /v1/consents.
+ * @summary Versões vigentes dos textos legais
+ */
+export const GetLegalVersions200Response = zod.object({
+  "consents": zod.record(zod.string(), zod.string()).describe('Versão vigente por tipo (terms, privacy, health_data, photos)'),
+  "guardianConsent": zod.string()
+})
+
+
+/**
  * Devolve a conta ligada ao token. Login válido sem cadastro no MoveUp responde 404 com `account-not-registered`: o app leva ao cadastro.
  * @summary Conta do usuário autenticado
  */
 export const GetMe200Response = zod.object({
   "email": zod.email(),
+  "guardianConsentRequired": zod.boolean().describe('Menor sem consentimento do responsável vigente: o app pede antes de seguir'),
   "id": zod.uuid(),
   "lengthUnit": zod.enum(['cm', 'in']),
   "locale": zod.string(),
+  "minor": zod.boolean().describe('Menor de 18 anos'),
+  "missingConsents": zod.array(zod.enum(['terms', 'privacy', 'health_data', 'photos'])).describe('Consentimentos obrigatórios ainda não aceitos na versão vigente'),
   "name": zod.string(),
-  "professional": zod.boolean().describe('Tem perfil de profissional'),
+  "role": zod.union([zod.literal('professional'),zod.literal('client'),zod.literal(null)]).nullish().describe('Papel da conta; ausente se o cadastro não escolheu'),
   "timezone": zod.string(),
   "weightUnit": zod.enum(['kg', 'lb'])
-}).describe('Conta do usuário autenticado')
+}).describe('Conta do usuário autenticado e o que falta no onboarding')
 
 export const GetMe401Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),

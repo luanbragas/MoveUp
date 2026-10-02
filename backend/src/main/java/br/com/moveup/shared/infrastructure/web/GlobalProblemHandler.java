@@ -1,5 +1,6 @@
 package br.com.moveup.shared.infrastructure.web;
 
+import br.com.moveup.shared.domain.ConflictException;
 import br.com.moveup.shared.domain.DomainException;
 import br.com.moveup.shared.domain.ResourceNotFound;
 import jakarta.servlet.http.HttpServletRequest;
@@ -56,6 +57,11 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(ResourceNotFound.class)
   ProblemDetail notFound(ResourceNotFound ex, HttpServletRequest request) {
     return problem(HttpStatus.NOT_FOUND, ex.code(), ex.getMessage(), request.getRequestURI());
+  }
+
+  @ExceptionHandler(ConflictException.class)
+  ProblemDetail conflict(ConflictException ex, HttpServletRequest request) {
+    return problem(HttpStatus.CONFLICT, ex.code(), ex.getMessage(), request.getRequestURI());
   }
 
   @ExceptionHandler(DomainException.class)

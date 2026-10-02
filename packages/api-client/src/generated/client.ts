@@ -6,10 +6,85 @@
  * OpenAPI spec version: v1
  */
 import { apiFetch } from '../runtime/fetcher';
+/**
+ * @minLength 1
+ */
+export type ConsentGrantKind = typeof ConsentGrantKind[keyof typeof ConsentGrantKind];
+
+
+export const ConsentGrantKind = {
+  terms: 'terms',
+  privacy: 'privacy',
+  health_data: 'health_data',
+  photos: 'photos',
+} as const;
+
+export interface ConsentGrant {
+  /**
+     * @minLength 0
+     * @maxLength 50
+     */
+  docVersion: string;
+  /** @minLength 1 */
+  kind: ConsentGrantKind;
+}
+
 export interface FieldProblem {
   code: string;
   field: string;
   message: string;
+}
+
+export interface GrantConsents {
+  /**
+     * @minItems 0
+     * @maxItems 4
+     */
+  grants: ConsentGrant[];
+}
+
+/**
+ * @minLength 1
+ */
+export type GuardianConsentRelationship = typeof GuardianConsentRelationship[keyof typeof GuardianConsentRelationship];
+
+
+export const GuardianConsentRelationship = {
+  mother: 'mother',
+  father: 'father',
+  legal_guardian: 'legal_guardian',
+  other: 'other',
+} as const;
+
+export interface GuardianConsent {
+  /**
+     * @minLength 0
+     * @maxLength 50
+     */
+  docVersion: string;
+  /**
+     * @minLength 0
+     * @maxLength 254
+     */
+  guardianEmail: string;
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  guardianName: string;
+  /** @minLength 1 */
+  relationship: GuardianConsentRelationship;
+}
+
+/**
+ * Versão vigente por tipo (terms, privacy, health_data, photos)
+ */
+export type LegalVersionsConsents = {[key: string]: string};
+
+export interface LegalVersions {
+  /** Versão vigente por tipo (terms, privacy, health_data, photos) */
+  consents: LegalVersionsConsents;
+  guardianConsent: string;
 }
 
 export type MeLengthUnit = typeof MeLengthUnit[keyof typeof MeLengthUnit];
@@ -18,6 +93,28 @@ export type MeLengthUnit = typeof MeLengthUnit[keyof typeof MeLengthUnit];
 export const MeLengthUnit = {
   cm: 'cm',
   in: 'in',
+} as const;
+
+export type MeMissingConsentsItem = typeof MeMissingConsentsItem[keyof typeof MeMissingConsentsItem];
+
+
+export const MeMissingConsentsItem = {
+  terms: 'terms',
+  privacy: 'privacy',
+  health_data: 'health_data',
+  photos: 'photos',
+} as const;
+
+/**
+ * Papel da conta; ausente se o cadastro não escolheu
+ * @nullable
+ */
+export type MeRole = typeof MeRole[keyof typeof MeRole] | null;
+
+
+export const MeRole = {
+  professional: 'professional',
+  client: 'client',
 } as const;
 
 export type MeWeightUnit = typeof MeWeightUnit[keyof typeof MeWeightUnit];
@@ -29,16 +126,25 @@ export const MeWeightUnit = {
 } as const;
 
 /**
- * Conta do usuário autenticado
+ * Conta do usuário autenticado e o que falta no onboarding
  */
 export interface Me {
   email: string;
+  /** Menor sem consentimento do responsável vigente: o app pede antes de seguir */
+  guardianConsentRequired: boolean;
   id: string;
   lengthUnit: MeLengthUnit;
   locale: string;
+  /** Menor de 18 anos */
+  minor: boolean;
+  /** Consentimentos obrigatórios ainda não aceitos na versão vigente */
+  missingConsents: MeMissingConsentsItem[];
   name: string;
-  /** Tem perfil de profissional */
-  professional: boolean;
+  /**
+     * Papel da conta; ausente se o cadastro não escolheu
+     * @nullable
+     */
+  role?: MeRole;
   timezone: string;
   weightUnit: MeWeightUnit;
 }
@@ -58,6 +164,308 @@ export interface Problem {
   traceId: string;
   type: string;
 }
+
+/**
+ * @minLength 1
+ * @pattern professional|client
+ */
+export type RegisterAccountRole = typeof RegisterAccountRole[keyof typeof RegisterAccountRole];
+
+
+export const RegisterAccountRole = {
+  professional: 'professional',
+  client: 'client',
+} as const;
+
+export interface RegisterAccount {
+  /** Obrigatória para aluno (decide se precisa do responsável) */
+  birthDate?: string;
+  /**
+     * Só profissional; vazio usa o nome da pessoa
+     * @minLength 0
+     * @maxLength 120
+     */
+  businessName?: string;
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  name: string;
+  /**
+     * Só profissional; CREF
+     * @minLength 0
+     * @maxLength 30
+     */
+  registryNumber?: string;
+  /**
+     * @minLength 1
+     * @pattern professional|client
+     */
+  role: RegisterAccountRole;
+}
+
+export type registerAccountResponse201 = {
+  data: Me
+  status: 201
+}
+
+export type registerAccountResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type registerAccountResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type registerAccountResponseSuccess = (registerAccountResponse201) & {
+  headers: Headers;
+};
+export type registerAccountResponseError = (registerAccountResponse409 | registerAccountResponse422) & {
+  headers: Headers;
+};
+
+export type registerAccountResponse = (registerAccountResponseSuccess | registerAccountResponseError)
+
+export const getRegisterAccountUrl = () => {
+
+
+
+
+  return `/v1/accounts`
+}
+
+/**
+ * Primeira chamada depois do login no provedor. O e-mail vem do token. Profissional ganha organização e período de teste; aluno informa a data de nascimento.
+ * @summary Cria a conta do usuário logado
+ */
+export const registerAccount = async (registerAccountBody: RegisterAccount, options?: Parameters<typeof apiFetch>[1]): Promise<registerAccountResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registerAccountResponse>(getRegisterAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(registerAccountBody)
+  }
+);}
+
+
+
+export type grantConsentsResponse204 = {
+  data: void
+  status: 204
+}
+
+export type grantConsentsResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type grantConsentsResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type grantConsentsResponseSuccess = (grantConsentsResponse204) & {
+  headers: Headers;
+};
+export type grantConsentsResponseError = (grantConsentsResponse404 | grantConsentsResponse409) & {
+  headers: Headers;
+};
+
+export type grantConsentsResponse = (grantConsentsResponseSuccess | grantConsentsResponseError)
+
+export const getGrantConsentsUrl = () => {
+
+
+
+
+  return `/v1/consents`
+}
+
+/**
+ * Cada aceite guarda a versão do texto, o IP e o app (prova do consentimento).
+ * @summary Registra aceites
+ */
+export const grantConsents = async (grantConsentsBody: GrantConsents, options?: Parameters<typeof apiFetch>[1]): Promise<grantConsentsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<grantConsentsResponse>(getGrantConsentsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(grantConsentsBody)
+  }
+);}
+
+
+
+export type revokeConsentResponse204 = {
+  data: void
+  status: 204
+}
+
+export type revokeConsentResponseSuccess = (revokeConsentResponse204) & {
+  headers: Headers;
+};
+;
+
+export type revokeConsentResponse = (revokeConsentResponseSuccess)
+
+export const getRevokeConsentUrl = (kind: string,) => {
+
+
+
+
+  return `/v1/consents/${kind}`
+}
+
+/**
+ * Direito do titular (LGPD). O histórico do aceite é mantido.
+ * @summary Revoga um aceite
+ */
+export const revokeConsent = async (kind: string, options?: Parameters<typeof apiFetch>[1]): Promise<revokeConsentResponse> => {
+
+  return apiFetch<revokeConsentResponse>(getRevokeConsentUrl(kind),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type declareGuardianConsentResponse204 = {
+  data: void
+  status: 204
+}
+
+export type declareGuardianConsentResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type declareGuardianConsentResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type declareGuardianConsentResponseSuccess = (declareGuardianConsentResponse204) & {
+  headers: Headers;
+};
+export type declareGuardianConsentResponseError = (declareGuardianConsentResponse409 | declareGuardianConsentResponse422) & {
+  headers: Headers;
+};
+
+export type declareGuardianConsentResponse = (declareGuardianConsentResponseSuccess | declareGuardianConsentResponseError)
+
+export const getDeclareGuardianConsentUrl = () => {
+
+
+
+
+  return `/v1/guardian-consent`
+}
+
+/**
+ * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). Os dados do responsável só são visíveis para o próprio aluno.
+ * @summary Consentimento do responsável pelo aluno menor
+ */
+export const declareGuardianConsent = async (guardianConsent: GuardianConsent, options?: Parameters<typeof apiFetch>[1]): Promise<declareGuardianConsentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<declareGuardianConsentResponse>(getDeclareGuardianConsentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guardianConsent)
+  }
+);}
+
+
+
+export type getLegalVersionsResponse200 = {
+  data: LegalVersions
+  status: 200
+}
+
+export type getLegalVersionsResponseSuccess = (getLegalVersionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getLegalVersionsResponse = (getLegalVersionsResponseSuccess)
+
+export const getGetLegalVersionsUrl = () => {
+
+
+
+
+  return `/v1/legal-documents`
+}
+
+/**
+ * O app mostra estes textos e manda a versão aceita em POST /v1/consents.
+ * @summary Versões vigentes dos textos legais
+ */
+export const getLegalVersions = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getLegalVersionsResponse> => {
+
+  return apiFetch<getLegalVersionsResponse>(getGetLegalVersionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
 
 export type getMeResponse200 = {
   data: Me

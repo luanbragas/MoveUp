@@ -3,10 +3,12 @@ package br.com.moveup.accounts.infrastructure.web;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 import br.com.moveup.accounts.application.port.in.MeView;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
 import java.util.UUID;
 
-@Schema(name = "Me", description = "Conta do usuário autenticado")
+@Schema(name = "Me", description = "Conta do usuário autenticado e o que falta no onboarding")
 record MeResponse(
     @Schema(requiredMode = REQUIRED) UUID id,
     @Schema(requiredMode = REQUIRED) String name,
@@ -21,8 +23,25 @@ record MeResponse(
             requiredMode = REQUIRED,
             allowableValues = {"cm", "in"})
         String lengthUnit,
-    @Schema(requiredMode = REQUIRED, description = "Tem perfil de profissional")
-        boolean professional) {
+    @Schema(
+            description = "Papel da conta; ausente se o cadastro não escolheu",
+            allowableValues = {"professional", "client"},
+            nullable = true)
+        String role,
+    @Schema(requiredMode = REQUIRED, description = "Menor de 18 anos") boolean minor,
+    @ArraySchema(
+            arraySchema =
+                @Schema(
+                    requiredMode = REQUIRED,
+                    description =
+                        "Consentimentos obrigatórios ainda não aceitos na versão vigente"),
+            schema = @Schema(allowableValues = {"terms", "privacy", "health_data", "photos"}))
+        List<String> missingConsents,
+    @Schema(
+            requiredMode = REQUIRED,
+            description =
+                "Menor sem consentimento do responsável vigente: o app pede antes de seguir")
+        boolean guardianConsentRequired) {
 
   static MeResponse from(MeView view) {
     return new MeResponse(
@@ -33,6 +52,9 @@ record MeResponse(
         view.timezone(),
         view.weightUnit(),
         view.lengthUnit(),
-        view.professional());
+        view.role(),
+        view.minor(),
+        view.missingConsents(),
+        view.guardianConsentRequired());
   }
 }

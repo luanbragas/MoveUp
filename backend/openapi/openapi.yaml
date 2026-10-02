@@ -11,7 +11,133 @@ security:
 tags:
 - description: Conta do usuário autenticado
   name: accounts
+- description: Consentimentos do usuário (LGPD)
+  name: consents
 paths:
+  /v1/accounts:
+    post:
+      description: Primeira chamada depois do login no provedor. O e-mail vem do token.
+        Profissional ganha organização e período de teste; aluno informa a data de
+        nascimento.
+      operationId: registerAccount
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterAccount"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+          description: Conta criada
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Login ou e-mail já cadastrado (`account-already-registered`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "Dado inválido: `email-required`, `name-invalid`, `role-invalid`,\
+            \ `birth-date-required`, `birth-date-invalid`, `professional-must-be-adult`,\
+            \ `business-name-invalid`, `registry-number-invalid`"
+      summary: Cria a conta do usuário logado
+      tags:
+      - accounts
+  /v1/consents:
+    post:
+      description: "Cada aceite guarda a versão do texto, o IP e o app (prova do consentimento)."
+      operationId: grantConsents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GrantConsents"
+        required: true
+      responses:
+        "204":
+          description: Aceites registrados
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Login sem cadastro (`account-not-registered`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Versão do texto desatualizada (`consent-version-outdated`)
+      summary: Registra aceites
+      tags:
+      - consents
+  /v1/consents/{kind}:
+    delete:
+      description: Direito do titular (LGPD). O histórico do aceite é mantido.
+      operationId: revokeConsent
+      parameters:
+      - in: path
+        name: kind
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Revogado (ou já não havia aceite vigente)
+      summary: Revoga um aceite
+      tags:
+      - consents
+  /v1/guardian-consent:
+    post:
+      description: "Obrigatório para menores de 18 anos antes de aceitar convite (LGPD,\
+        \ art. 14). Os dados do responsável só são visíveis para o próprio aluno."
+      operationId: declareGuardianConsent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuardianConsent"
+        required: true
+      responses:
+        "204":
+          description: Consentimento registrado
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`guardian-consent-not-required` (conta de maior), `guardian-consent-already-active`\
+            \ ou `consent-version-outdated`"
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`guardian-email-invalid`, `relationship-invalid`, `name-invalid`"
+      summary: Consentimento do responsável pelo aluno menor
+      tags:
+      - consents
+  /v1/legal-documents:
+    get:
+      description: O app mostra estes textos e manda a versão aceita em POST /v1/consents.
+      operationId: getLegalVersions
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LegalVersions"
+          description: Versões vigentes
+      summary: Versões vigentes dos textos legais
+      tags:
+      - consents
   /v1/me:
     get:
       description: "Devolve a conta ligada ao token. Login válido sem cadastro no\
@@ -41,6 +167,24 @@ paths:
       - accounts
 components:
   schemas:
+    ConsentGrant:
+      type: object
+      properties:
+        docVersion:
+          type: string
+          maxLength: 50
+          minLength: 0
+        kind:
+          type: string
+          enum:
+          - terms
+          - privacy
+          - health_data
+          - photos
+          minLength: 1
+      required:
+      - docVersion
+      - kind
     FieldProblem:
       type: object
       properties:
@@ -56,13 +200,70 @@ components:
       - code
       - field
       - message
+    GrantConsents:
+      type: object
+      properties:
+        grants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConsentGrant"
+          maxItems: 4
+          minItems: 0
+      required:
+      - grants
+    GuardianConsent:
+      type: object
+      properties:
+        docVersion:
+          type: string
+          maxLength: 50
+          minLength: 0
+        guardianEmail:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+        guardianName:
+          type: string
+          maxLength: 200
+          minLength: 0
+        relationship:
+          type: string
+          enum:
+          - mother
+          - father
+          - legal_guardian
+          - other
+          minLength: 1
+      required:
+      - docVersion
+      - guardianEmail
+      - guardianName
+      - relationship
+    LegalVersions:
+      type: object
+      properties:
+        consents:
+          type: object
+          additionalProperties:
+            type: string
+          description: "Versão vigente por tipo (terms, privacy, health_data, photos)"
+        guardianConsent:
+          type: string
+      required:
+      - consents
+      - guardianConsent
     Me:
       type: object
-      description: Conta do usuário autenticado
+      description: Conta do usuário autenticado e o que falta no onboarding
       properties:
         email:
           type: string
           format: email
+        guardianConsentRequired:
+          type: boolean
+          description: "Menor sem consentimento do responsável vigente: o app pede\
+            \ antes de seguir"
         id:
           type: string
           format: uuid
@@ -74,11 +275,29 @@ components:
         locale:
           type: string
           example: pt-BR
+        minor:
+          type: boolean
+          description: Menor de 18 anos
+        missingConsents:
+          type: array
+          description: Consentimentos obrigatórios ainda não aceitos na versão vigente
+          items:
+            type: string
+            enum:
+            - terms
+            - privacy
+            - health_data
+            - photos
         name:
           type: string
-        professional:
-          type: boolean
-          description: Tem perfil de profissional
+        role:
+          type:
+          - string
+          - "null"
+          description: Papel da conta; ausente se o cadastro não escolheu
+          enum:
+          - professional
+          - client
         timezone:
           type: string
           example: America/Sao_Paulo
@@ -89,11 +308,13 @@ components:
           - lb
       required:
       - email
+      - guardianConsentRequired
       - id
       - lengthUnit
       - locale
+      - minor
+      - missingConsents
       - name
-      - professional
       - timezone
       - weightUnit
     Problem:
@@ -135,6 +356,37 @@ components:
       - title
       - traceId
       - type
+    RegisterAccount:
+      type: object
+      properties:
+        birthDate:
+          type: string
+          format: date
+          description: Obrigatória para aluno (decide se precisa do responsável)
+        businessName:
+          type: string
+          description: Só profissional; vazio usa o nome da pessoa
+          maxLength: 120
+          minLength: 0
+        name:
+          type: string
+          maxLength: 200
+          minLength: 0
+        registryNumber:
+          type: string
+          description: Só profissional; CREF
+          maxLength: 30
+          minLength: 0
+        role:
+          type: string
+          enum:
+          - professional
+          - client
+          minLength: 1
+          pattern: professional|client
+      required:
+      - name
+      - role
   securitySchemes:
     bearerAuth:
       bearerFormat: JWT

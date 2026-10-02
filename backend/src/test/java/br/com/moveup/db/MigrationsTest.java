@@ -29,7 +29,7 @@ class MigrationsTest {
 
     // then
     assertThat(info.pending()).isEmpty();
-    assertThat(info.current().getVersion().getVersion()).isEqualTo("13");
+    assertThat(info.current().getVersion().getVersion()).isEqualTo("14");
   }
 
   @Test

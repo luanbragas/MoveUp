@@ -2,6 +2,10 @@ package br.com.moveup.accounts;
 
 import static br.com.moveup.db.DbFixtures.exec;
 import static br.com.moveup.db.DbFixtures.user;
+import static br.com.moveup.support.TestJwt.bearer;
+import static br.com.moveup.support.TestJwt.claims;
+import static br.com.moveup.support.TestJwt.signed;
+import static br.com.moveup.support.TestJwt.token;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
@@ -12,32 +16,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import br.com.moveup.db.PostgresTestDatabase;
 import br.com.moveup.shared.infrastructure.security.FirebaseJwt;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import br.com.moveup.support.TestJwt;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
-import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,31 +41,16 @@ import org.springframework.test.web.servlet.ResultActions;
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestJwt.Keys.class)
 class MeEndpointTest {
-
-  private static final String PROJECT = "moveup-test";
-  private static final RSAKey KEY = rsaKey();
-  private static final RSAKey OTHER_KEY = rsaKey();
 
   private static UUID professional;
   private static String professionalUid;
   private static String anonymizedUid;
 
-  @TestConfiguration
-  static class TestKeys {
-    @Bean
-    @Primary
-    JwtDecoder testJwtDecoder(Clock clock) throws JOSEException {
-      var decoder = NimbusJwtDecoder.withPublicKey(KEY.toRSAPublicKey()).build();
-      decoder.setJwtValidator(FirebaseJwt.validator(PROJECT, clock));
-      return decoder;
-    }
-  }
-
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
-    PostgresTestDatabase.registerSpringProperties(registry);
-    registry.add("moveup.auth.firebase.project-id", () -> PROJECT);
+    TestJwt.registerProperties(registry);
   }
 
   @BeforeAll
@@ -87,6 +63,7 @@ class MeEndpointTest {
         professionalUid,
         professional);
     exec("insert into professional_profile(user_id) values (?)", professional);
+    exec("update app_user set role = 'professional' where id = ?", professional);
 
     var anonymized = user();
     anonymizedUid = "uid-" + anonymized;
@@ -107,7 +84,9 @@ class MeEndpointTest {
         .andExpect(jsonPath("$.email").value(professional + "@example.test"))
         .andExpect(jsonPath("$.locale").value("pt-BR"))
         .andExpect(jsonPath("$.weightUnit").value("kg"))
-        .andExpect(jsonPath("$.professional").value(true));
+        .andExpect(jsonPath("$.role").value("professional"))
+        .andExpect(jsonPath("$.minor").value(false))
+        .andExpect(jsonPath("$.missingConsents.length()").value(2));
   }
 
   @Test
@@ -144,7 +123,7 @@ class MeEndpointTest {
               c ->
                   c.issueTime(Date.from(Instant.now().minusSeconds(7200)))
                       .expirationTime(Date.from(Instant.now().minusSeconds(3600)))),
-          signed(claims(professionalUid).build(), OTHER_KEY)
+          signed(claims(professionalUid).build(), TestJwt.OTHER_KEY)
         };
     for (var t : invalid) {
       expectProblem(
@@ -197,49 +176,5 @@ class MeEndpointTest {
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.code").value(code))
         .andExpect(jsonPath("$.traceId").isNotEmpty());
-  }
-
-  private static String bearer(String token) {
-    return "Bearer " + token;
-  }
-
-  private static String token(String uid) {
-    return token(uid, UnaryOperator.identity());
-  }
-
-  private static String token(String uid, UnaryOperator<JWTClaimsSet.Builder> change) {
-    return signed(change.apply(claims(uid)).build(), KEY);
-  }
-
-  /** Claims como o Firebase emite um ID token. */
-  private static JWTClaimsSet.Builder claims(String uid) {
-    var now = Instant.now();
-    return new JWTClaimsSet.Builder()
-        .issuer(FirebaseJwt.issuer(PROJECT))
-        .audience(PROJECT)
-        .subject(uid)
-        .issueTime(Date.from(now.minusSeconds(10)))
-        .expirationTime(Date.from(now.plusSeconds(3600)))
-        .claim("auth_time", now.minusSeconds(60).getEpochSecond());
-  }
-
-  private static String signed(JWTClaimsSet claims, RSAKey key) {
-    try {
-      var jwt =
-          new SignedJWT(
-              new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(), claims);
-      jwt.sign(new RSASSASigner(key));
-      return jwt.serialize();
-    } catch (JOSEException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
-  private static RSAKey rsaKey() {
-    try {
-      return new RSAKeyGenerator(2048).keyID(UUID.randomUUID().toString()).generate();
-    } catch (JOSEException e) {
-      throw new IllegalStateException(e);
-    }
   }
 }
