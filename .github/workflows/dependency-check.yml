@@ -30,7 +30,8 @@ jobs:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: >
           ./mvnw -B -DskipTests org.owasp:dependency-check-maven:13.0.0:check
-          -DnvdApiKey="$NVD_API_KEY" -DfailBuildOnCVSS=7 -Dformats=HTML,JSON
+          -DnvdApiKey="$(printf %s "$NVD_API_KEY" | tr -d "[:space:]")"
+          -DfailBuildOnCVSS=7 -Dformats=HTML,JSON
       - uses: actions/upload-artifact@v7
         if: always()
         with:
