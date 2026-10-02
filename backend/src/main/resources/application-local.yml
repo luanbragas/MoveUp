@@ -13,3 +13,10 @@ spring:
     url: jdbc:postgresql://localhost:15432/moveup
     user: moveup_owner
     password: ${DB_OWNER_PASSWORD}
+
+# Swagger UI em http://localhost:8080/swagger-ui.html (nunca em produção)
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

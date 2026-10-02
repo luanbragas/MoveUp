@@ -43,6 +43,7 @@ cd backend && ./mvnw verify                # build + todos os testes + ArchUnit 
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,api      # API
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local,worker   # worker
 ./mvnw test -Dtest=NomeDoTeste             # um teste
+./mvnw test -Dtest=OpenApiContractTest -Dopenapi.update=true   # regrava openapi.yaml (mudança de contrato intencional)
 
 # frontend (na raiz)
 pnpm install

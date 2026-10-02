@@ -24,6 +24,9 @@
     <google-java-format.version>1.28.0</google-java-format.version>
     <jacoco.version>0.8.15</jacoco.version>
     <archunit.version>1.5.1</archunit.version>
+    <springdoc.version>2.9.1</springdoc.version>
+    <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
+    <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
     <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
     <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
@@ -48,6 +51,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <!-- OpenAPI (contrato em backend/openapi/openapi.yaml) e Swagger UI só fora de produção -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
     <!-- Bean Validation nos DTOs (erro validation-failed) -->
     <dependency>
@@ -173,6 +182,7 @@
         <configuration>
           <systemPropertyVariables>
             <moveup.test.postgres-image>${postgres.image}</moveup.test.postgres-image>
+            <openapi.update>${openapi.update}</openapi.update>
           </systemPropertyVariables>
         </configuration>
       </plugin>

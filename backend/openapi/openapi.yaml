@@ -1,0 +1,143 @@
+openapi: 3.1.0
+info:
+  description: API do app MoveUp. Erros em application/problem+json (RFC 9457) com
+    `code` estável.
+  title: MoveUp API
+  version: v1
+servers:
+- url: /
+security:
+- bearerAuth: []
+tags:
+- description: Conta do usuário autenticado
+  name: accounts
+paths:
+  /v1/me:
+    get:
+      description: "Devolve a conta ligada ao token. Login válido sem cadastro no\
+        \ MoveUp responde 404 com `account-not-registered`: o app leva ao cadastro."
+      operationId: getMe
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+          description: Conta encontrada
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Sem token ou token inválido (`unauthenticated`)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Login sem cadastro (`account-not-registered`)
+      summary: Conta do usuário autenticado
+      tags:
+      - accounts
+components:
+  schemas:
+    FieldProblem:
+      type: object
+      properties:
+        code:
+          type: string
+          example: min
+        field:
+          type: string
+          example: reps.max
+        message:
+          type: string
+      required:
+      - code
+      - field
+      - message
+    Me:
+      type: object
+      description: Conta do usuário autenticado
+      properties:
+        email:
+          type: string
+          format: email
+        id:
+          type: string
+          format: uuid
+        lengthUnit:
+          type: string
+          enum:
+          - cm
+          - in
+        locale:
+          type: string
+          example: pt-BR
+        name:
+          type: string
+        professional:
+          type: boolean
+          description: Tem perfil de profissional
+        timezone:
+          type: string
+          example: America/Sao_Paulo
+        weightUnit:
+          type: string
+          enum:
+          - kg
+          - lb
+      required:
+      - email
+      - id
+      - lengthUnit
+      - locale
+      - name
+      - professional
+      - timezone
+      - weightUnit
+    Problem:
+      type: object
+      description: Erro no formato RFC 9457 (application/problem+json)
+      properties:
+        code:
+          type: string
+          description: Código estável (kebab-case) que o app usa para escolher a mensagem
+          example: resource-not-found
+        detail:
+          type: string
+          example: Recurso não encontrado.
+        errors:
+          type: array
+          description: Só em erros de validação (400)
+          items:
+            $ref: "#/components/schemas/FieldProblem"
+        instance:
+          type: string
+          example: /v1/me
+        status:
+          type: integer
+          format: int32
+          example: 404
+        title:
+          type: string
+          example: Recurso não encontrado
+        traceId:
+          type: string
+          example: 4bf92f3577b34da6a3ce929d0e0e4736
+        type:
+          type: string
+          example: https://api.moveup.com.br/problems/resource-not-found
+      required:
+      - code
+      - detail
+      - status
+      - title
+      - traceId
+      - type
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      description: ID token do Firebase Auth
+      scheme: bearer
+      type: http

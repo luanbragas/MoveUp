@@ -23,6 +23,15 @@ server:
     include-message: never
     include-binding-errors: never
 
+# OpenAPI e Swagger UI desligados por padrão (produção); o perfil local liga.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  writer-with-order-by-keys: true # saída estável: o openapi.yaml commitado não muda à toa
+  override-with-generic-response: false # erros documentados rota a rota, não todos em todas
+
 moveup:
   auth:
     firebase:

@@ -92,6 +92,19 @@ public final class PostgresTestDatabase {
     return OWNER_PASSWORD;
   }
 
+  /**
+   * Liga um {@code @SpringBootTest} a este banco, conectando como {@code app_api} (como em
+   * produção). Uso: {@code @DynamicPropertySource static void db(DynamicPropertyRegistry r) {
+   * PostgresTestDatabase.registerSpringProperties(r); }}
+   */
+  public static void registerSpringProperties(
+      org.springframework.test.context.DynamicPropertyRegistry registry) {
+    start();
+    registry.add("spring.datasource.url", PostgresTestDatabase::jdbcUrl);
+    registry.add("spring.datasource.username", PostgresTestDatabase::apiUser);
+    registry.add("spring.datasource.password", PostgresTestDatabase::apiPassword);
+  }
+
   public static String apiUser() {
     return API_USER;
   }

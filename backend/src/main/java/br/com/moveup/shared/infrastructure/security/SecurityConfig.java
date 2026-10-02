@@ -44,7 +44,15 @@ class SecurityConfig {
                     .referrerPolicy(r -> r.policy(ReferrerPolicy.NO_REFERRER)))
         .authorizeHttpRequests(
             a ->
-                a.requestMatchers("/actuator/health", "/actuator/health/**")
+                // OpenAPI/Swagger só existem quando springdoc está ligado (local); em produção, 404
+                a.requestMatchers(
+                        "/actuator/health",
+                        "/actuator/health/**",
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**")
                     .permitAll()
                     .requestMatchers("/v1/**")
                     .authenticated()

@@ -278,7 +278,7 @@ Exceções de domínio carregam só `code` e mensagem segura. Título legível v
 - **springdoc-openapi**. Toda rota com `@Operation(summary, description)`, todos os códigos de resposta com `@ApiResponse`, incluindo os de erro com schema `ProblemDetail`.
 - Exemplos (`@ExampleObject`) nas rotas principais (sync, sessão, treino).
 - Segurança declarada (`bearerAuth`) no `OpenAPIDefinition`.
-- O contrato é **artefato versionado**: `backend/openapi/openapi.yaml` é gerado no build (`springdoc-openapi-maven-plugin`) e commitado. O CI falha se o arquivo gerado divergir do commitado (mudança de contrato precisa ser intencional e revisada).
+- O contrato é **artefato versionado**: `backend/openapi/openapi.yaml` é commitado e o `OpenApiContractTest` (parte do `./mvnw verify`) gera o contrato a partir do código e **quebra o build** se o arquivo commitado divergir. A mudança de contrato precisa ser intencional e revisada: regrave com `./mvnw test -Dtest=OpenApiContractTest -Dopenapi.update=true` e rode `pnpm api:generate` no mesmo PR. Foi escolhido no lugar do `springdoc-openapi-maven-plugin` porque não precisa subir a aplicação durante o build.
 - O frontend gera o cliente e os schemas Zod a partir desse arquivo (ver FRONTEND-PATTERN.md). Mudou o contrato, regenera o cliente no mesmo PR.
 - Swagger UI habilitado em `local` e `staging`; **desabilitado em produção**.
 - Javadoc só onde o "porquê" não é óbvio. Decisões de arquitetura vão em `docs/ARQUITETURA.md`.
@@ -336,7 +336,7 @@ Exceções de domínio carregam só `code` e mensagem segura. Título legível v
 | RLS | Isolamento entre usuários | Testcontainers, conectando como `app_api` com `set_config` | Obrigatório para toda tabela com `client_id` |
 | Web | Contrato HTTP, validação, `ProblemDetail` | `@WebMvcTest` + MockMvc | Todo `code` de erro tem teste |
 | Arquitetura | Camadas e fronteiras de módulo | ArchUnit | Quebra o build |
-| Contrato | OpenAPI gerado = commitado | plugin + diff no CI | Quebra o build |
+| Contrato | OpenAPI gerado = commitado | `OpenApiContractTest` (no verify) | Quebra o build |
 | Ponta a ponta (poucos) | Fluxos críticos: convite, sessão offline, upload de foto | `@SpringBootTest` + Testcontainers | Só caminhos críticos |
 
 **Regras:**

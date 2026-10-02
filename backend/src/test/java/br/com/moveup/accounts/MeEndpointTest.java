@@ -73,10 +73,7 @@ class MeEndpointTest {
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
-    PostgresTestDatabase.start();
-    registry.add("spring.datasource.url", PostgresTestDatabase::jdbcUrl);
-    registry.add("spring.datasource.username", PostgresTestDatabase::apiUser);
-    registry.add("spring.datasource.password", PostgresTestDatabase::apiPassword);
+    PostgresTestDatabase.registerSpringProperties(registry);
     registry.add("moveup.auth.firebase.project-id", () -> PROJECT);
   }
 

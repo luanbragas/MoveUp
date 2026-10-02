@@ -11,7 +11,8 @@
     "lint": "eslint . --max-warnings 0",
     "test": "pnpm -r --if-present test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "api:generate": "pnpm --filter @moveup/api-client generate"
   },
   "prettier": "@moveup/config/prettier",
   "pnpm": {
