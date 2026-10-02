@@ -48,6 +48,7 @@ cd backend && ./mvnw verify                # build + todos os testes + ArchUnit 
 # frontend (na raiz)
 pnpm install
 pnpm api:generate                          # regenera packages/api-client a partir do openapi.yaml
+cp apps/mobile/.env.example apps/mobile/.env   # uma vez; URL da API para o app
 pnpm --filter mobile start                 # app (Expo)
 pnpm typecheck && pnpm lint && pnpm test   # o mesmo que o CI roda
 ```

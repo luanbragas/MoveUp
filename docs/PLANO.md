@@ -44,17 +44,17 @@ flowchart LR
 
 Tudo o que as outras fases assumem que já existe.
 
-- [ ] Monorepo: `backend/` (Maven, Java 21, Spring Boot 3), `apps/mobile` (Expo, app único com os dois perfis), `site/` (estático: convite, termos, privacidade), `packages/{api-client,domain,config}` (pnpm).
-- [ ] `docker compose` local: PostgreSQL 16, PgBouncer ≥ 1.21, RustFS (S3 local; substituiu o MinIO, que deixou de publicar imagens).
-- [ ] Migrations V1 a V12 no Flyway + **V13** (`V13__client_keys_tombstones.sql`): tabela `client_key` e `deleted_at` nas tabelas que o app baixa (treinos, programas, restrições).
-- [ ] Teste `scenarios.sql` portado para Testcontainers (RLS, FK composta, worker, limite do plano).
-- [ ] Geração do jOOQ a partir das migrations no build.
-- [ ] Módulos vazios com a estrutura `api/domain/application/infrastructure` e regras **ArchUnit** ligadas.
-- [ ] `shared`: `IdGenerator` (UUIDv7), `Clock`, `DomainException`, `GlobalProblemHandler` (RFC 9457), `PostgresErrorTranslator`, `RlsTransactionManager` (`set_config` por transação), logger sem PII.
-- [ ] Spring Security como resource server (JWKS do provedor) + resolução `sub` → `auth_identity` → `app_user`.
-- [ ] springdoc + `openapi.yaml` commitado + diff no CI; Orval gerando `packages/api-client`.
-- [ ] Frontend: tsconfig strict, ESLint (com boundaries) e Prettier, providers base, `shared/lib/http` com `AppError`, `env.ts` com Zod.
-- [ ] CI (GitHub Actions): build, testes, ArchUnit, Spotless, typecheck, lint, cobertura, dependency-check.
+- [x] Monorepo: `backend/` (Maven, Java 21, Spring Boot 3), `apps/mobile` (Expo, app único com os dois perfis), `site/` (estático: convite, termos, privacidade), `packages/{api-client,domain,config}` (pnpm).
+- [x] `docker compose` local: PostgreSQL 16, PgBouncer ≥ 1.21, RustFS (S3 local; substituiu o MinIO, que deixou de publicar imagens).
+- [x] Migrations V1 a V12 no Flyway + **V13** (`V13__client_keys_tombstones.sql`): tabela `client_key` e `deleted_at` nas tabelas que o app baixa (treinos, programas, restrições).
+- [x] Teste `scenarios.sql` portado para Testcontainers (RLS, FK composta, worker, limite do plano).
+- [x] Geração do jOOQ a partir das migrations no build.
+- [x] Módulos vazios com a estrutura `api/domain/application/infrastructure` e regras **ArchUnit** ligadas.
+- [x] `shared`: `IdGenerator` (UUIDv7), `Clock`, `DomainException`, `GlobalProblemHandler` (RFC 9457), `PostgresErrorTranslator`, `RlsTransactionManager` (`set_config` por transação), logger sem PII.
+- [x] Spring Security como resource server (JWKS do provedor) + resolução `sub` → `auth_identity` → `app_user`.
+- [x] springdoc + `openapi.yaml` commitado + diff no CI; Orval gerando `packages/api-client`.
+- [x] Frontend: tsconfig strict, ESLint (com boundaries) e Prettier, providers base, `shared/lib/http` com `AppError`, `env.ts` com Zod.
+- [ ] CI (GitHub Actions): build, testes, ArchUnit, Spotless, typecheck, lint, cobertura, dependency-check. *Workflows escritos (`.github/workflows/ci.yml` e `dependency-check.yml`, semanal), mas ainda não rodaram: falta o repositório no GitHub e o secret `NVD_API_KEY`. Marcar quando o primeiro run passar.*
 
 **Pronto quando:** um endpoint de exemplo autenticado responde, erro sai em `ProblemDetail`, uma tabela com RLS tem teste passando, e o cliente gerado é usado num hook de teste no app.
 
