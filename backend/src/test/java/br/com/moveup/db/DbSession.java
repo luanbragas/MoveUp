@@ -7,7 +7,8 @@ import java.util.UUID;
 /**
  * Executa um bloco numa transação como um papel da aplicação, do mesmo jeito que a infraestrutura
  * fará em produção: {@code set_config('app.user_id', ?, true)} com bind, válido só na transação.
- * Sempre termina em ROLLBACK, então um teste não contamina o outro.
+ * {@link #as} sempre termina em ROLLBACK, então um teste não contamina o outro; {@link #committed}
+ * faz COMMIT, para cenários em que o efeito precisa ser lido depois (ex.: aceite de convite).
  */
 public final class DbSession {
 
@@ -32,8 +33,19 @@ public final class DbSession {
   private DbSession() {}
 
   public static <T> T as(Role role, UUID userId, Work<T> work) throws SQLException {
+    return run(role, userId, work, false);
+  }
+
+  /** Como {@link #as}, mas faz COMMIT se o bloco terminar sem erro. */
+  public static <T> T committed(Role role, UUID userId, Work<T> work) throws SQLException {
+    return run(role, userId, work, true);
+  }
+
+  private static <T> T run(Role role, UUID userId, Work<T> work, boolean commit)
+      throws SQLException {
     try (Connection c = PostgresTestDatabase.superuser()) {
       c.setAutoCommit(false);
+      var succeeded = false;
       try {
         try (var st = c.createStatement()) {
           st.execute("set local role " + role.sqlName); // nome vem do enum, nunca de entrada
@@ -44,9 +56,15 @@ public final class DbSession {
             ps.execute();
           }
         }
-        return work.run(c);
+        var result = work.run(c);
+        succeeded = true;
+        return result;
       } finally {
-        c.rollback();
+        if (commit && succeeded) {
+          c.commit();
+        } else {
+          c.rollback();
+        }
       }
     }
   }

@@ -24,6 +24,8 @@
     <google-java-format.version>1.28.0</google-java-format.version>
     <jacoco.version>0.8.15</jacoco.version>
     <postgres.image>postgres:16-alpine</postgres.image>
+    <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
+    <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
   </properties>
 
   <dependencies>
@@ -37,10 +39,10 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
 
-    <!-- Banco: DataSource/transações (jOOQ entra no PR 4) e migrations -->
+    <!-- Banco: DataSource/transações + jOOQ (código gerado no build, ver codegen/) e migrations -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-jdbc</artifactId>
+      <artifactId>spring-boot-starter-jooq</artifactId>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>
@@ -72,6 +74,12 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- Só para o codegen/JooqCodegen.java (roda no build com o classpath de teste); não vai no jar -->
+    <dependency>
+      <groupId>org.jooq</groupId>
+      <artifactId>jooq-codegen</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -79,6 +87,56 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!--
+        jOOQ gerado do schema real (BACKEND-PATTERN, "Acesso a dados"): sobe Postgres no
+        Testcontainers, aplica o Flyway como dono das tabelas e gera o código. Precisa de Docker.
+      -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.4</version>
+        <executions>
+          <execution>
+            <id>jooq-codegen</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${java.home}/bin/java</executable>
+              <classpathScope>test</classpathScope>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath/>
+                <argument>${project.basedir}/codegen/JooqCodegen.java</argument>
+                <argument>${project.basedir}/src/main/resources/db/migration</argument>
+                <argument>${jooq.output.directory}</argument>
+                <argument>${jooq.package}</argument>
+                <argument>${postgres.image}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-jooq-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${jooq.output.directory}</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
@@ -98,6 +156,11 @@
         <version>${spotless.version}</version>
         <configuration>
           <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+              <include>codegen/**/*.java</include>
+            </includes>
             <googleJavaFormat>
               <version>${google-java-format.version}</version>
             </googleJavaFormat>
@@ -122,6 +185,8 @@
         <configuration>
           <excludes>
             <exclude>br/com/moveup/MoveUpApplication.class</exclude>
+            <!-- código gerado pelo jOOQ não entra na conta de cobertura -->
+            <exclude>br/com/moveup/shared/infrastructure/persistence/jooq/**</exclude>
           </excludes>
         </configuration>
         <executions>
