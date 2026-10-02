@@ -4,3 +4,5 @@ packages/api-client/src/generated/
 coverage/
 docs/
 *.md
+**/.expo/
+apps/mobile/expo-env.d.ts
