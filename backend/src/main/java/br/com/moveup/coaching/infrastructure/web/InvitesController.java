@@ -4,6 +4,7 @@ import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 import br.com.moveup.coaching.application.port.in.AnswerInvite;
 import br.com.moveup.coaching.application.port.in.ManageLink;
+import br.com.moveup.coaching.application.port.in.MyCoachingLinks;
 import br.com.moveup.shared.domain.ResourceNotFound;
 import br.com.moveup.shared.infrastructure.security.CurrentAppUser;
 import br.com.moveup.shared.infrastructure.web.ApiProblem;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -29,12 +31,17 @@ class InvitesController {
 
   private final AnswerInvite answerInvite;
   private final ManageLink manageLink;
+  private final MyCoachingLinks myCoachingLinks;
   private final CurrentAppUser currentAppUser;
 
   InvitesController(
-      AnswerInvite answerInvite, ManageLink manageLink, CurrentAppUser currentAppUser) {
+      AnswerInvite answerInvite,
+      ManageLink manageLink,
+      MyCoachingLinks myCoachingLinks,
+      CurrentAppUser currentAppUser) {
     this.answerInvite = answerInvite;
     this.manageLink = manageLink;
+    this.myCoachingLinks = myCoachingLinks;
     this.currentAppUser = currentAppUser;
   }
 
@@ -85,6 +92,36 @@ class InvitesController {
               schema = @Schema(implementation = ApiProblem.class)))
   AcceptedInviteResponse accept(@PathVariable String code) {
     return new AcceptedInviteResponse(answerInvite.accept(currentUser(), code));
+  }
+
+  @Schema(name = "MyCoachingLink")
+  record MyLinkResponse(
+      @Schema(requiredMode = REQUIRED) UUID linkId,
+      @Schema(
+              requiredMode = REQUIRED,
+              allowableValues = {"pending", "active", "inactive"})
+          String status,
+      @Schema(nullable = true) Instant startedAt,
+      @Schema(requiredMode = REQUIRED, example = "Ana Souza") String professionalName,
+      @Schema(requiredMode = REQUIRED, example = "Studio Fit") String organizationName) {}
+
+  @GetMapping(path = "/v1/me/coaching-links", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      operationId = "getMyCoachingLinks",
+      summary = "Vínculos do aluno",
+      description = "Não encerrados, do mais recente ao mais antigo. Vazio = aluno sem personal.")
+  @ApiResponse(responseCode = "200", description = "Vínculos do aluno")
+  List<MyLinkResponse> myLinks() {
+    return myCoachingLinks.handle(currentUser()).stream()
+        .map(
+            l ->
+                new MyLinkResponse(
+                    l.linkId(),
+                    l.status(),
+                    l.startedAt(),
+                    l.professionalName(),
+                    l.organizationName()))
+        .toList();
   }
 
   @PostMapping("/v1/me/coaching-links/{linkId}/end")

@@ -15,6 +15,11 @@ public interface AccountDirectory {
   /** Se a conta pode entrar num vínculo como aluno agora. */
   LinkReadiness linkReadiness(UUID userId);
 
+  /** Nome do profissional e do negócio, para o aluno saber com quem está. */
+  Optional<ProfessionalCard> professionalCard(UUID professionalUserId);
+
+  record ProfessionalCard(String name, String organizationName) {}
+
   enum LinkReadiness {
     /** Aluno com aceites em dia e, se menor, com autorização do responsável. */
     READY,

@@ -65,11 +65,11 @@ Tudo o que as outras fases assumem que já existe.
 - [x] Cadastro/login pelo provedor; criação de `app_user`, `organization` (automática para profissional) e `professional_profile`.
 - [x] Registro de `consent` (termos, privacidade, dados de saúde, fotos) com versão do texto.
 - [x] Pré-cadastro de aluno (`client`) e `coaching_link` pendente.
-- [ ] Convite por link/código/QR; aceite via `accept_invite` (limite do plano, reaproveitamento de cadastro).
+- [x] Convite por link/código/QR; aceite via `accept_invite` (limite do plano, reaproveitamento de cadastro).
 - [x] Plano de teste/gratuito semeado e assinatura `trialing` criada para toda organização nova.
 - [x] Inativar, reativar (com checagem de limite) e encerrar vínculo.
 - [x] Escolha de perfil no cadastro (profissional ou aluno via convite) e navegação separada por perfil no mesmo app.
-- [ ] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno).
+- [ ] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno). *Código pronto e testado com fakes (02/10/2026); marcar depois do teste no aparelho (Expo Go, iPhone e Android).*
 - [ ] Universal links / app links do convite (`site/` com `apple-app-site-association` e `assetlinks.json`).
 
 **Pronto quando:** dois profissionais e três alunos em teste E2E mostram isolamento completo (RLS + autorização no caso de uso), e o limite do plano barra o aceite excedente.

@@ -45,6 +45,12 @@ public class AccountDirectoryService implements AccountDirectory {
 
   @Override
   @Transactional(readOnly = true)
+  public Optional<ProfessionalCard> professionalCard(UUID professionalUserId) {
+    return organizations.card(professionalUserId);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public LinkReadiness linkReadiness(UUID userId) {
     var summary = accounts.find(userId);
     if (summary.isEmpty()) {

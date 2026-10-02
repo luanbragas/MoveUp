@@ -11,6 +11,7 @@ import br.com.moveup.coaching.application.port.in.InviteClient.NewClient;
 import br.com.moveup.coaching.application.port.in.ListClients.ClientItem;
 import br.com.moveup.coaching.application.port.in.ListClients.ClientPage;
 import br.com.moveup.coaching.application.port.out.CoachingLinks;
+import br.com.moveup.coaching.application.port.out.CoachingLinks.ClientLink;
 import br.com.moveup.coaching.application.port.out.Invites;
 import br.com.moveup.coaching.application.usecase.AnswerInviteUseCase;
 import br.com.moveup.coaching.application.usecase.InvitationIssuer;
@@ -95,6 +96,11 @@ class CoachingUseCasesTest {
                   .toList();
           return new ClientPage(items, null);
         }
+
+        @Override
+        public List<ClientLink> ofClientUser(UUID userId) {
+          return List.of();
+        }
       };
 
   final Invites inviteRepo =
@@ -159,6 +165,11 @@ class CoachingUseCasesTest {
         @Override
         public LinkReadiness linkReadiness(UUID user) {
           return readiness.getOrDefault(user, LinkReadiness.NOT_A_CLIENT);
+        }
+
+        @Override
+        public Optional<ProfessionalCard> professionalCard(UUID user) {
+          return Optional.of(new ProfessionalCard("Ana", "Studio"));
         }
       };
 

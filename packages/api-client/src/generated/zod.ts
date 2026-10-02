@@ -610,6 +610,20 @@ export const GetMe404Response = zod.object({
 
 
 /**
+ * Não encerrados, do mais recente ao mais antigo. Vazio = aluno sem personal.
+ * @summary Vínculos do aluno
+ */
+export const GetMyCoachingLinks200ResponseItem = zod.object({
+  "linkId": zod.uuid(),
+  "organizationName": zod.string(),
+  "professionalName": zod.string(),
+  "startedAt": zod.iso.datetime({"offset":true}).nullish(),
+  "status": zod.enum(['pending', 'active', 'inactive'])
+})
+export const GetMyCoachingLinks200Response = zod.array(GetMyCoachingLinks200ResponseItem)
+
+
+/**
  * @summary O aluno encerra o próprio vínculo
  */
 export const EndMyLinkParams = zod.object({

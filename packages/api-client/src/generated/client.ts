@@ -207,6 +207,24 @@ export interface Me {
   weightUnit: MeWeightUnit;
 }
 
+export type MyCoachingLinkStatus = typeof MyCoachingLinkStatus[keyof typeof MyCoachingLinkStatus];
+
+
+export const MyCoachingLinkStatus = {
+  pending: 'pending',
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface MyCoachingLink {
+  linkId: string;
+  organizationName: string;
+  professionalName: string;
+  /** @nullable */
+  startedAt?: string | null;
+  status: MyCoachingLinkStatus;
+}
+
 export interface NewClient {
   /**
      * @minLength 0
@@ -1032,6 +1050,43 @@ export const getGetMeUrl = () => {
 export const getMe = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getMeResponse> => {
 
   return apiFetch<getMeResponse>(getGetMeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type getMyCoachingLinksResponse200 = {
+  data: MyCoachingLink[]
+  status: 200
+}
+
+export type getMyCoachingLinksResponseSuccess = (getMyCoachingLinksResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getMyCoachingLinksResponse = (getMyCoachingLinksResponseSuccess)
+
+export const getGetMyCoachingLinksUrl = () => {
+
+
+
+
+  return `/v1/me/coaching-links`
+}
+
+/**
+ * Não encerrados, do mais recente ao mais antigo. Vazio = aluno sem personal.
+ * @summary Vínculos do aluno
+ */
+export const getMyCoachingLinks = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getMyCoachingLinksResponse> => {
+
+  return apiFetch<getMyCoachingLinksResponse>(getGetMyCoachingLinksUrl(),
   {
     ...options,
     method: 'GET'

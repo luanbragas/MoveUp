@@ -145,6 +145,22 @@ public class JooqCoachingLinks implements CoachingLinks {
     return new ClientPage(List.copyOf(items), hasMore ? items.getLast().linkId() : null);
   }
 
+  @Override
+  public List<ClientLink> ofClientUser(UUID userId) {
+    return dsl.select(
+            COACHING_LINK.ID,
+            COACHING_LINK.PROFESSIONAL_ID,
+            COACHING_LINK.STATUS,
+            COACHING_LINK.STARTED_AT)
+        .from(COACHING_LINK)
+        .join(CLIENT)
+        .on(CLIENT.ID.eq(COACHING_LINK.CLIENT_ID))
+        .where(CLIENT.USER_ID.eq(userId))
+        .and(COACHING_LINK.STATUS.ne(LinkStatus.ENDED.code()))
+        .orderBy(COACHING_LINK.ID.desc())
+        .fetch(r -> new ClientLink(r.value1(), r.value2(), r.value3(), toInstant(r.value4())));
+  }
+
   private static Instant toInstant(OffsetDateTime value) {
     return value == null ? null : value.toInstant();
   }

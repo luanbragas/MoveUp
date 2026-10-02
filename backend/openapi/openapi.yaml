@@ -430,6 +430,23 @@ paths:
       summary: Conta do usuário autenticado
       tags:
       - accounts
+  /v1/me/coaching-links:
+    get:
+      description: "Não encerrados, do mais recente ao mais antigo. Vazio = aluno\
+        \ sem personal."
+      operationId: getMyCoachingLinks
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MyCoachingLink"
+          description: Vínculos do aluno
+      summary: Vínculos do aluno
+      tags:
+      - invites
   /v1/me/coaching-links/{linkId}/end:
     post:
       operationId: endMyLink
@@ -710,6 +727,34 @@ components:
       - name
       - timezone
       - weightUnit
+    MyCoachingLink:
+      type: object
+      properties:
+        linkId:
+          type: string
+          format: uuid
+        organizationName:
+          type: string
+          example: Studio Fit
+        professionalName:
+          type: string
+          example: Ana Souza
+        startedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+        status:
+          type: string
+          enum:
+          - pending
+          - active
+          - inactive
+      required:
+      - linkId
+      - organizationName
+      - professionalName
+      - status
     NewClient:
       type: object
       properties:

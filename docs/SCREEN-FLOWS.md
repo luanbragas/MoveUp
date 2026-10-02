@@ -18,7 +18,7 @@ app/
 ├── (auth)/
 │   ├── welcome.tsx                 "Sou personal" / "Tenho um convite"
 │   ├── sign-in.tsx                 Entrar (Google, Apple, e-mail)
-│   └── invite/[code].tsx           Deep link do convite
+│   └── i/[code].tsx                Link do convite (moveup.com.br/i/CODIGO): guarda o código e segue a entrada
 ├── (client)/                       PERFIL ALUNO
 │   ├── onboarding/{consent,accept-invite,anamnesis}.tsx
 │   ├── (tabs)/{home,training,history,progress,profile}.tsx
@@ -28,6 +28,7 @@ app/
 │   ├── onboarding/{profile,plan}.tsx
 │   ├── (tabs)/{dashboard,clients,training,alerts,settings}.tsx
 │   ├── clients/new.tsx
+│   ├── invite-share.tsx            Código, QR Code, WhatsApp e compartilhar do convite
 │   ├── clients/[id]/{overview,program,sessions,assessments,anamnesis,notes}.tsx
 │   ├── training/workouts/[id]/edit.tsx
 │   ├── training/templates.tsx

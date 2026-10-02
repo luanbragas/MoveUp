@@ -7,6 +7,7 @@ import br.com.moveup.coaching.application.port.in.AnswerInvite;
 import br.com.moveup.coaching.application.port.in.InviteClient;
 import br.com.moveup.coaching.application.port.in.ListClients;
 import br.com.moveup.coaching.application.port.in.ManageLink;
+import br.com.moveup.coaching.application.port.in.MyCoachingLinks;
 import br.com.moveup.coaching.application.port.out.CoachingLinks;
 import br.com.moveup.coaching.application.port.out.Invites;
 import br.com.moveup.coaching.application.usecase.AnswerInviteUseCase;
@@ -14,6 +15,7 @@ import br.com.moveup.coaching.application.usecase.InvitationIssuer;
 import br.com.moveup.coaching.application.usecase.InviteClientUseCase;
 import br.com.moveup.coaching.application.usecase.ListClientsUseCase;
 import br.com.moveup.coaching.application.usecase.ManageLinkUseCase;
+import br.com.moveup.coaching.application.usecase.MyCoachingLinksUseCase;
 import br.com.moveup.shared.domain.IdGenerator;
 import java.time.Clock;
 import java.time.Duration;
@@ -51,6 +53,11 @@ class CoachingModuleConfig {
   @Bean
   AnswerInvite answerInvite(AccountDirectory accounts, Invites invites) {
     return new AnswerInviteUseCase(accounts, invites);
+  }
+
+  @Bean
+  MyCoachingLinks myCoachingLinks(CoachingLinks links, AccountDirectory accounts) {
+    return new MyCoachingLinksUseCase(links, accounts);
   }
 
   @Bean

@@ -3,6 +3,8 @@ package br.com.moveup.coaching.application.port.out;
 import br.com.moveup.coaching.application.port.in.ListClients.ClientPage;
 import br.com.moveup.coaching.domain.model.ClientPreRegistration;
 import br.com.moveup.coaching.domain.model.CoachingLink;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,4 +26,9 @@ public interface CoachingLinks {
   int countActive(UUID organizationId);
 
   ClientPage list(UUID professionalId, UUID cursor, int limit);
+
+  /** Vínculos não encerrados do aluno cujo usuário é este. */
+  List<ClientLink> ofClientUser(UUID userId);
+
+  record ClientLink(UUID linkId, UUID professionalId, String status, Instant startedAt) {}
 }

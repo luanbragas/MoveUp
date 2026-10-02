@@ -59,6 +59,12 @@ class CoachingEndpointTest {
     as(student, post("/v1/invites/" + code.toLowerCase() + "/accept"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.linkId").value(linkId));
+    as(student, get("/v1/me/coaching-links"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].linkId").value(linkId))
+        .andExpect(jsonPath("$[0].status").value("active"))
+        .andExpect(jsonPath("$[0].professionalName").value("Carlos Lima"))
+        .andExpect(jsonPath("$[0].organizationName").value("Studio Fit"));
 
     // o profissional vê o aluno ativo; o convite não vale mais
     as(pro, get("/v1/clients"))

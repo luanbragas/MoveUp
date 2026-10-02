@@ -13,7 +13,22 @@ import { useDeclareGuardian, useGrantConsents, useRegisterAccount } from "./use-
 function setup() {
   const session = createFakeSession();
   const fake = createFakeAccount(session);
-  const repositories: Repositories = { session, me: fake, account: fake };
+  const unused = () => Promise.reject(new Error("fora deste teste"));
+  const repositories: Repositories = {
+    session,
+    me: fake,
+    account: fake,
+    clients: {
+      list: unused,
+      invite: unused,
+      resendInvite: unused,
+      cancelInvite: unused,
+      inactivate: unused,
+      reactivate: unused,
+      end: unused,
+    },
+    invite: { preview: unused, accept: unused, myLinks: unused, endMyLink: unused },
+  };
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },
