@@ -300,6 +300,8 @@ Exceções de domínio carregam só `code` e mensagem segura. Título legível v
 **Acesso a dados (jOOQ):**
 
 - Código jOOQ **gerado a partir do schema real** (Flyway aplicado num Postgres do Testcontainers durante o build). Nunca escrever nome de tabela/coluna como string.
+  - Quem gera é `backend/codegen/JooqCodegen.java`, na fase `generate-sources`. Ele monta o banco como em produção: os papéis já existem e o Flyway roda como `moveup_owner`. O código sai em `br.com.moveup.shared.infrastructure.persistence.jooq` (fora do git e da cobertura).
+  - Todos os módulos importam dali, mas cada um só usa as **próprias tabelas** no seu `infrastructure/persistence`. O ArchUnit não consegue checar dono de tabela, então isso fica para a revisão do PR.
 - jOOQ só em `infrastructure/persistence`. Repositório mapeia registro ↔ agregado explicitamente.
 - Sem N+1: carregar agregado com o mínimo de consultas (`multiset` do jOOQ para coleções).
 - Paginação por chave (*keyset*), nunca `offset`.

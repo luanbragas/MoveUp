@@ -23,6 +23,7 @@
     <spotless.version>3.10.3</spotless.version>
     <google-java-format.version>1.28.0</google-java-format.version>
     <jacoco.version>0.8.15</jacoco.version>
+    <archunit.version>1.5.1</archunit.version>
     <postgres.image>postgres:16-alpine</postgres.image>
     <jooq.output.directory>${project.build.directory}/generated-sources/jooq</jooq.output.directory>
     <jooq.package>br.com.moveup.shared.infrastructure.persistence.jooq</jooq.package>
@@ -72,6 +73,13 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Camadas e fronteiras de módulo (BACKEND-PATTERN, seção 12) -->
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5</artifactId>
+      <version>${archunit.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- Só para o codegen/JooqCodegen.java (roda no build com o classpath de teste); não vai no jar -->
