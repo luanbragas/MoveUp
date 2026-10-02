@@ -54,7 +54,7 @@ Tudo o que as outras fases assumem que já existe.
 - [x] Spring Security como resource server (JWKS do provedor) + resolução `sub` → `auth_identity` → `app_user`.
 - [x] springdoc + `openapi.yaml` commitado + diff no CI; Orval gerando `packages/api-client`.
 - [x] Frontend: tsconfig strict, ESLint (com boundaries) e Prettier, providers base, `shared/lib/http` com `AppError`, `env.ts` com Zod.
-- [ ] CI (GitHub Actions): build, testes, ArchUnit, Spotless, typecheck, lint, cobertura, dependency-check. *Workflows escritos (`.github/workflows/ci.yml` e `dependency-check.yml`, semanal), mas ainda não rodaram: falta o repositório no GitHub e o secret `NVD_API_KEY`. Marcar quando o primeiro run passar.*
+- [ ] CI (GitHub Actions): build, testes, ArchUnit, Spotless, typecheck, lint, cobertura, dependency-check. *O `ci.yml` já passa no GitHub (02/10/2026). Falta a primeira execução do `dependency-check.yml` (secret `NVD_API_KEY`); marcar quando ela passar.*
 
 **Pronto quando:** um endpoint de exemplo autenticado responde, erro sai em `ProblemDetail`, uma tabela com RLS tem teste passando, e o cliente gerado é usado num hook de teste no app.
 
