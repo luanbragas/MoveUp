@@ -5,6 +5,10 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+  # Campo sem valor sai da resposta (não vai como null): é o que o contrato descreve como opcional
+  # e o que o app valida com Zod (campo opcional não aceita null).
+  jackson:
+    default-property-inclusion: non_null
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}

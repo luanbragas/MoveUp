@@ -3,6 +3,7 @@ package br.com.moveup.coaching;
 import static br.com.moveup.support.TestJwt.bearer;
 import static br.com.moveup.support.TestJwt.token;
 import static br.com.moveup.support.TestJwt.tokenWithEmail;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -72,6 +73,9 @@ class CoachingEndpointTest {
         .andExpect(jsonPath("$.items[0].linkId").value(linkId))
         .andExpect(jsonPath("$.items[0].status").value("active"))
         .andExpect(jsonPath("$.items[0].pendingInvite").doesNotExist());
+    // campo vazio sai da resposta: o app (Zod) não aceita null em campo opcional
+    assertThat(as(pro, get("/v1/clients")).andReturn().getResponse().getContentAsString())
+        .doesNotContain("null");
     expectProblem(as(student, get("/v1/invites/" + code)), 409, "invite-expired");
 
     // inativa, reativa e o aluno encerra o vínculo dele

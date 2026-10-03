@@ -213,5 +213,6 @@ class WorkoutsEndpointTest {
             .getResponse()
             .getContentAsString();
     assertThat(JsonPath.<Integer>read(empty, "$.revision")).isEqualTo(1);
+    assertThat(empty).doesNotContain("null"); // modelo vazio: sem goal, notes, programId…
   }
 }
