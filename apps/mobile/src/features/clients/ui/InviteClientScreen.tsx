@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { z } from "zod";
@@ -12,7 +13,9 @@ import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { TextField } from "../../../shared/ui/TextField";
 import { spacing } from "../../../shared/ui/theme";
-import { useInviteClient } from "../hooks/use-clients";
+import { isFull } from "../domain/client";
+import { useInviteClient, useSeats } from "../hooks/use-clients";
+import { PlanFullScreen } from "./PlanFullScreen";
 import { openShare } from "./share-params";
 import { strings } from "./strings";
 
@@ -38,6 +41,8 @@ type Form = z.infer<typeof FormSchema>;
 /** Pré-cadastro do aluno; ao criar, abre o compartilhamento do convite. */
 export function InviteClientScreen() {
   const invite = useInviteClient();
+  const seats = useSeats();
+  const [released, setReleased] = useState(false);
   const { control, handleSubmit, formState } = useForm<Form>({
     resolver: zodResolver(FormSchema),
     defaultValues: { name: "", email: "", phone: "", goal: "" },
@@ -56,6 +61,20 @@ export function InviteClientScreen() {
       },
     });
   });
+
+  const failure = invite.isError ? toAppError(invite.error) : null;
+  const limitHit = failure?.kind === "problem" && failure.code === "plan-limit-reached";
+  if (seats.data !== undefined && !released && (isFull(seats.data) || limitHit)) {
+    return (
+      <PlanFullScreen
+        seats={seats.data}
+        onReleased={() => {
+          invite.reset();
+          setReleased(true);
+        }}
+      />
+    );
+  }
 
   return (
     <Screen
@@ -146,7 +165,8 @@ export function InviteClientScreen() {
           </View>
         )}
       />
-      {invite.isError ? <Message text={errorMessage(toAppError(invite.error))} /> : null}
+      {released ? <Message tone="info" text={strings.full.released} /> : null}
+      {failure === null ? null : <Message text={errorMessage(failure)} />}
     </Screen>
   );
 }

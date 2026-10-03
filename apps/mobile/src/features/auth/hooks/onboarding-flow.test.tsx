@@ -26,6 +26,7 @@ function setup() {
     account: fake,
     clients: {
       list: unused,
+      seats: unused,
       invite: unused,
       resendInvite: unused,
       cancelInvite: unused,

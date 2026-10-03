@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRepositories } from "../../../providers/repositories";
 import type { LinkId, NewClientInput } from "../domain/client";
 
@@ -8,6 +8,7 @@ const CLIENTS_STALE_TIME_MS = 30 * 1000;
 export const clientsKeys = {
   all: ["clients"] as const,
   list: () => [...clientsKeys.all, "list"] as const,
+  seats: () => [...clientsKeys.all, "seats"] as const,
 };
 
 /** Alunos do profissional, paginados por cursor. */
@@ -27,7 +28,7 @@ export function useInviteClient() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: NewClientInput) => clients.invite(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: clientsKeys.list() }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: clientsKeys.all }),
   });
 }
 
@@ -56,6 +57,12 @@ export function useLinkCommand() {
           return null;
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: clientsKeys.list() }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: clientsKeys.all }),
   });
+}
+
+/** Vagas do plano ("7 de 10 vagas"); muda junto com a lista. */
+export function useSeats() {
+  const { clients } = useRepositories();
+  return useQuery({ queryKey: clientsKeys.seats(), queryFn: () => clients.seats() });
 }

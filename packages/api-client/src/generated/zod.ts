@@ -204,6 +204,31 @@ export const InviteClient422Response = zod.object({
 
 
 /**
+ * Alunos ativos e o limite do plano vivo ("7 de 10 vagas").
+ * @summary Vagas do plano
+ */
+export const GetClientSeats200Response = zod.object({
+  "active": zod.int().describe('Alunos ativos (contam no plano)'),
+  "limit": zod.int().nullish().describe('Limite do plano; ausente sem assinatura viva')
+})
+
+export const GetClientSeats403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * @summary Cancela o convite pendente
  */
 export const CancelInviteParams = zod.object({

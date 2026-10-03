@@ -1,6 +1,7 @@
 import {
   cancelInvite,
   endLink,
+  getClientSeats,
   inactivateLink,
   inviteClient,
   listClients,
@@ -56,6 +57,11 @@ export function createClientsApiRepository(): ClientsRepository {
       );
       return { items: page.items.map(toClient), nextCursor: page.nextCursor ?? null };
     },
+    async seats() {
+      const dto = await callApi(() => getClientSeats(), schemas.GetClientSeats200Response);
+      return { active: dto.active, limit: dto.limit ?? null };
+    },
+
     async invite(input) {
       const body: NewClient = { name: input.name.trim() };
       const email = optional(input.email);

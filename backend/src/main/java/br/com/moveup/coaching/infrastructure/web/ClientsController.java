@@ -149,6 +149,23 @@ class ClientsController {
         page.nextCursor());
   }
 
+  @Schema(name = "ClientSeats")
+  record SeatsResponse(
+      @Schema(requiredMode = REQUIRED, description = "Alunos ativos (contam no plano)") int active,
+      @Schema(nullable = true, description = "Limite do plano; ausente sem assinatura viva")
+          Integer limit) {}
+
+  @GetMapping(path = "/v1/clients/seats", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      operationId = "getClientSeats",
+      summary = "Vagas do plano",
+      description = "Alunos ativos e o limite do plano vivo (\"7 de 10 vagas\").")
+  @ApiResponse(responseCode = "200", description = "Vagas")
+  SeatsResponse seats() {
+    var seats = listClients.seats(currentUser());
+    return new SeatsResponse(seats.active(), seats.limit());
+  }
+
   @PostMapping(path = "/v1/clients/{linkId}/invite", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
       operationId = "resendInvite",

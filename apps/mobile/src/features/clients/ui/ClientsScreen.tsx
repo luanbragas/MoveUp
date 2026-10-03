@@ -12,7 +12,7 @@ import { Segmented } from "../../../shared/ui/Segmented";
 import { Skeleton } from "../../../shared/ui/Skeleton";
 import { palette, typography } from "../../../shared/ui/theme";
 import { inviteUrl, type ClientAction, type ClientItem } from "../domain/client";
-import { useClients, useLinkCommand, type LinkCommand } from "../hooks/use-clients";
+import { useClients, useLinkCommand, useSeats, type LinkCommand } from "../hooks/use-clients";
 import { ClientCard } from "./ClientCard";
 import { openShare } from "./share-params";
 import { strings } from "./strings";
@@ -31,6 +31,7 @@ type Filter = "all" | "active" | "invites";
 /** Lista de alunos do profissional com convite e ações por estado (SCREEN-FLOWS 2.2). */
 export function ClientsScreen() {
   const clients = useClients();
+  const seats = useSeats();
   const command = useLinkCommand();
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -94,11 +95,16 @@ export function ClientsScreen() {
         </>
       }
       title={t.title}
-      {...(clients.isSuccess ? { subtitle: t.count(items.length) } : {})}
+      {...(seats.data !== undefined && seats.data.limit !== null
+        ? { subtitle: t.seats(seats.data.active, seats.data.limit) }
+        : clients.isSuccess
+          ? { subtitle: t.count(items.length) }
+          : {})}
       refresh={{
         refreshing: clients.isRefetching,
         onRefresh: () => {
           void clients.refetch();
+          void seats.refetch();
         },
       }}
     >

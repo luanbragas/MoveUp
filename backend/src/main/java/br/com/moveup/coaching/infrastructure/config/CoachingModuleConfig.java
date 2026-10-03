@@ -46,8 +46,8 @@ class CoachingModuleConfig {
   }
 
   @Bean
-  ListClients listClients(CoachingLinks links) {
-    return new ListClientsUseCase(links);
+  ListClients listClients(CoachingLinks links, AccountDirectory accounts, PlanLimits planLimits) {
+    return new ListClientsUseCase(links, accounts, planLimits);
   }
 
   @Bean

@@ -8,6 +8,7 @@ import br.com.moveup.audit.api.AuditTrail;
 import br.com.moveup.billing.api.PlanLimits;
 import br.com.moveup.coaching.application.port.in.AnswerInvite.InvitePreview;
 import br.com.moveup.coaching.application.port.in.InviteClient.NewClient;
+import br.com.moveup.coaching.application.port.in.ListClients;
 import br.com.moveup.coaching.application.port.in.ListClients.ClientItem;
 import br.com.moveup.coaching.application.port.in.ListClients.ClientPage;
 import br.com.moveup.coaching.application.port.out.CoachingLinks;
@@ -193,7 +194,7 @@ class CoachingUseCasesTest {
   final AnswerInviteUseCase answer = new AnswerInviteUseCase(accounts, inviteRepo);
   final ManageLinkUseCase manage =
       new ManageLinkUseCase(linkRepo, inviteRepo, issuer, planLimits, audit::add, CLOCK);
-  final ListClientsUseCase list = new ListClientsUseCase(linkRepo);
+  final ListClientsUseCase list = new ListClientsUseCase(linkRepo, accounts, planLimits);
 
   static String codeOf(Throwable error) {
     return ((DomainException) error).code();
@@ -219,6 +220,7 @@ class CoachingUseCasesTest {
 
   @Test
   void planoSemVagaNaoConvida() {
+    assertThat(list.seats(PRO)).isEqualTo(new ListClients.Seats(0, 2));
     limit = 0;
 
     assertThatThrownBy(() -> inviteClient.handle(PRO, new NewClient("Bia", null, null, null)))

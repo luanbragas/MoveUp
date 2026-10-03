@@ -28,6 +28,7 @@ async function renderAs(role: "client" | "professional") {
     account: fake,
     clients: {
       list: unused,
+      seats: unused,
       invite: unused,
       resendInvite: unused,
       cancelInvite: unused,

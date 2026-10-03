@@ -27,6 +27,11 @@ function createCoachingBackend() {
 
   const clients: ClientsRepository = {
     list: () => Promise.resolve({ items: [...links.values()], nextCursor: null }),
+    seats: () =>
+      Promise.resolve({
+        active: [...links.values()].filter((link) => link.status === "active").length,
+        limit: 10,
+      }),
     invite: (input) => {
       sequence += 1;
       const linkId = `link-${String(sequence)}` as LinkId;

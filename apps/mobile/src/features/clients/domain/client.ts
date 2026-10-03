@@ -22,6 +22,17 @@ export interface ClientPage {
   readonly nextCursor: string | null;
 }
 
+/** Vagas do plano: ativos contam; limite nulo = sem assinatura viva. */
+export interface Seats {
+  readonly active: number;
+  readonly limit: number | null;
+}
+
+/** Plano sem vaga para mais um aluno ativo. */
+export function isFull(seats: Seats): boolean {
+  return seats.limit === null || seats.active >= seats.limit;
+}
+
 /** Convite pronto para compartilhar (link, código ou QR). */
 export interface Invitation {
   readonly linkId: LinkId;

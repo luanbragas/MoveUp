@@ -47,6 +47,16 @@ export interface ClientPage {
   nextCursor?: string | null;
 }
 
+export interface ClientSeats {
+  /** Alunos ativos (contam no plano) */
+  active: number;
+  /**
+     * Limite do plano; ausente sem assinatura viva
+     * @nullable
+     */
+  limit?: number | null;
+}
+
 /**
  * @minLength 1
  */
@@ -562,6 +572,50 @@ return apiFetch<inviteClientResponse>(getInviteClientUrl(),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(newClient)
+  }
+);}
+
+
+
+export type getClientSeatsResponse200 = {
+  data: ClientSeats
+  status: 200
+}
+
+export type getClientSeatsResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type getClientSeatsResponseSuccess = (getClientSeatsResponse200) & {
+  headers: Headers;
+};
+export type getClientSeatsResponseError = (getClientSeatsResponse403) & {
+  headers: Headers;
+};
+
+export type getClientSeatsResponse = (getClientSeatsResponseSuccess | getClientSeatsResponseError)
+
+export const getGetClientSeatsUrl = () => {
+
+
+
+
+  return `/v1/clients/seats`
+}
+
+/**
+ * Alunos ativos e o limite do plano vivo ("7 de 10 vagas").
+ * @summary Vagas do plano
+ */
+export const getClientSeats = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getClientSeatsResponse> => {
+
+  return apiFetch<getClientSeatsResponse>(getGetClientSeatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
   }
 );}
 

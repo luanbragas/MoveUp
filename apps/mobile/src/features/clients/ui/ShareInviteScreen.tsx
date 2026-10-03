@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Linking, Share, StyleSheet, Text, View } from "react-native";
@@ -21,6 +22,7 @@ export function ShareInviteScreen() {
   const params = parseShareParams(useLocalSearchParams());
   const professional = useProfessionalFirstName();
   const [whatsappFailed, setWhatsappFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const close = () => {
     router.dismissTo("/clients");
@@ -59,12 +61,28 @@ export function ShareInviteScreen() {
               }}
             />
           )}
-          <Button
-            label={t.shareOther}
-            variant={whatsapp === null ? "primary" : "secondary"}
-            icon="share"
-            onPress={share}
-          />
+          <View style={styles.row}>
+            <View style={styles.half}>
+              <Button
+                label={copied ? t.copied : t.copy}
+                variant="secondary"
+                icon={copied ? "check" : "copy"}
+                onPress={() => {
+                  void Clipboard.setStringAsync(params.url).then(() => {
+                    setCopied(true);
+                  });
+                }}
+              />
+            </View>
+            <View style={styles.half}>
+              <Button
+                label={t.shareOther}
+                variant={whatsapp === null ? "primary" : "secondary"}
+                icon="share"
+                onPress={share}
+              />
+            </View>
+          </View>
         </>
       }
     >
@@ -115,4 +133,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   hint: { color: palette.muted, textAlign: "center" },
+  row: { flexDirection: "row", gap: spacing.sm },
+  half: { flex: 1 },
 });

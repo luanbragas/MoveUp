@@ -129,6 +129,26 @@ paths:
       summary: Pré-cadastra um aluno e gera o convite
       tags:
       - clients
+  /v1/clients/seats:
+    get:
+      description: Alunos ativos e o limite do plano vivo ("7 de 10 vagas").
+      operationId: getClientSeats
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientSeats"
+          description: Vagas
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Vagas do plano
+      tags:
+      - clients
   /v1/clients/{linkId}/invite:
     delete:
       operationId: cancelInvite
@@ -642,6 +662,21 @@ components:
       required:
       - code
       - expiresAt
+    ClientSeats:
+      type: object
+      properties:
+        active:
+          type: integer
+          format: int32
+          description: Alunos ativos (contam no plano)
+        limit:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: Limite do plano; ausente sem assinatura viva
+      required:
+      - active
     ConsentGrant:
       type: object
       properties:

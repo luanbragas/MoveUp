@@ -1,10 +1,13 @@
 import type { ClientAction, LinkStatus } from "../domain/client";
 
+const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;
+
 // Textos da feature clients (pt-BR), num lugar só e prontos para i18n.
 export const strings = {
   list: {
     title: "Alunos",
     count: (n: number) => (n === 1 ? "1 aluno" : `${String(n)} alunos`),
+    seats: (active: number, limit: number) => `${String(active)} de ${String(limit)} vagas`,
     filter: "Filtrar alunos",
     filters: {
       all: (n: number) => `Todos ${String(n)}`,
@@ -66,6 +69,19 @@ export const strings = {
     phoneInvalid: "Confira o WhatsApp, com DDD.",
     goalTooLong: "O objetivo pode ter até 500 caracteres.",
   },
+  full: {
+    title: "Lotou.",
+    text: (limit: number | null) =>
+      limit === null
+        ? "Seu plano não tem vaga para novos alunos agora."
+        : `Suas ${String(limit)} vagas estão ocupadas. Inative um aluno que parou de treinar para abrir espaço.`,
+    pick: "Escolha quem liberar",
+    release: (name: string) => `Liberar a vaga de ${firstName(name)}`,
+    releaseHint: "Toque em um aluno acima",
+    released: "Vaga liberada. Agora dá para convidar.",
+    plans: "Planos com mais vagas chegam em breve.",
+    close: "Fechar",
+  },
   share: {
     title: "Convite\npronto",
     code: "Código do convite",
@@ -74,6 +90,8 @@ export const strings = {
     qrHint: "Na academia? O aluno aponta a câmera para o QR Code.",
     whatsapp: "Enviar no WhatsApp",
     shareOther: "Compartilhar",
+    copy: "Copiar link",
+    copied: "Link copiado",
     close: "Fechar",
     whatsappFailed: "Não foi possível abrir o WhatsApp. Use o botão Compartilhar.",
     invalid: "Convite inválido. Volte para a lista de alunos.",

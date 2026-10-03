@@ -11,6 +11,9 @@ public interface ListClients {
 
   ClientPage handle(UUID professionalId, UUID cursor, int limit);
 
+  /** Vagas do plano: alunos ativos e o limite (vazio = sem assinatura viva). */
+  Seats seats(UUID professionalId);
+
   /**
    * @param startedAt nulo enquanto pendente
    * @param pendingInvite convite válido ainda não aceito (só para pendentes); nulo se não há
@@ -29,4 +32,9 @@ public interface ListClients {
    * @param nextCursor nulo quando não há mais páginas
    */
   record ClientPage(List<ClientItem> items, UUID nextCursor) {}
+
+  /**
+   * @param limit nulo sem assinatura viva (nenhuma vaga)
+   */
+  record Seats(int active, Integer limit) {}
 }
