@@ -10,6 +10,7 @@ export default [
       "**/.expo/**",
       "backend/**",
       "packages/api-client/src/generated/**",
+      "apps/mobile/src/shared/ui/body-map/generated/**",
       "apps/mobile/expo-env.d.ts",
     ],
   },

@@ -1,0 +1,4 @@
+Desenho do corpo (frente e costas) feito pelo dono do projeto para o MoveUp.
+Cada grupo muscular está pintado com uma cor própria; scripts/build-body-map.mjs transforma as
+cores em músculos e gera src/shared/ui/body-map/generated/body-paths.ts.
+Mudou o desenho? Rode: pnpm --filter mobile body-map:generate

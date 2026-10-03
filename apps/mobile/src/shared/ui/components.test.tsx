@@ -1,5 +1,5 @@
 import { onlineManager } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import { act, fireEvent, render, screen } from "@testing-library/react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
@@ -95,8 +95,10 @@ describe("componentes base", () => {
 });
 
 describe("estados de tela", () => {
-  afterEach(() => {
-    onlineManager.setOnline(true);
+  afterEach(async () => {
+    await act(() => {
+      onlineManager.setOnline(true);
+    });
   });
 
   it("vazio mostra o que vai aparecer e o próximo passo", async () => {

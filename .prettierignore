@@ -6,3 +6,4 @@ docs/
 *.md
 **/.expo/
 apps/mobile/expo-env.d.ts
+apps/mobile/src/shared/ui/body-map/generated/
