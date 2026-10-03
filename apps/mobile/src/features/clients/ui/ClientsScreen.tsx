@@ -158,6 +158,12 @@ export function ClientsScreen() {
           client={client}
           busy={command.isPending && command.variables.linkId === client.linkId}
           onAction={onAction}
+          onOpen={(item) => {
+            router.push({
+              pathname: "/clients/[linkId]",
+              params: { linkId: item.linkId, name: item.name },
+            });
+          }}
         />
       ))}
       {clients.hasNextPage ? (

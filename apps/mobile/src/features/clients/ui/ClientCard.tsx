@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Chip } from "../../../shared/ui/Chip";
 import { fonts, palette, radius, spacing, typography } from "../../../shared/ui/theme";
 import { availableActions, type ClientAction, type ClientItem } from "../domain/client";
@@ -8,6 +8,8 @@ interface Props {
   readonly client: ClientItem;
   readonly busy: boolean;
   readonly onAction: (action: ClientAction, client: ClientItem) => void;
+  /** Abre o programa do aluno (pendente ou ativo). */
+  readonly onOpen?: (client: ClientItem) => void;
 }
 
 const formatDate = (date: Date) => date.toLocaleDateString("pt-BR");
@@ -20,7 +22,7 @@ function initials(name: string): string {
 }
 
 /** Um aluno na lista: avatar, nome, estado do vínculo e as ações que o estado permite. */
-export function ClientCard({ client, busy, onAction }: Props) {
+export function ClientCard({ client, busy, onAction, onOpen }: Props) {
   const detail =
     client.status === "pending"
       ? client.pendingInvite === null
@@ -33,7 +35,15 @@ export function ClientCard({ client, busy, onAction }: Props) {
 
   return (
     <View style={[styles.card, busy ? styles.dimmed : null]}>
-      <View style={styles.head}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={client.name}
+        disabled={onOpen === undefined || client.status === "inactive"}
+        onPress={() => {
+          onOpen?.(client);
+        }}
+        style={styles.head}
+      >
         <View style={[styles.avatar, active ? styles.avatarActive : null]}>
           <Text style={[styles.initials, { color: active ? palette.lime : palette.muted }]}>
             {initials(client.name)}
@@ -57,7 +67,7 @@ export function ClientCard({ client, busy, onAction }: Props) {
             {strings.status[client.status]}
           </Text>
         </View>
-      </View>
+      </Pressable>
       <View style={styles.actions}>
         {availableActions(client).map((action) => (
           <Chip

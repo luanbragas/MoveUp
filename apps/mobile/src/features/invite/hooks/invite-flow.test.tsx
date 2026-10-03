@@ -119,6 +119,7 @@ function setup() {
       create: () => Promise.reject(new Error("fora deste teste")),
       archive: () => Promise.reject(new Error("fora deste teste")),
     },
+    training: {} as Repositories["training"],
   };
   const queryClient = new QueryClient({
     defaultOptions: {

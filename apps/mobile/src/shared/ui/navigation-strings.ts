@@ -14,10 +14,6 @@ export const navigationStrings = {
     alerts: "Atenção",
     settings: "Ajustes",
   },
-  library: {
-    title: "Biblioteca de exercícios",
-    subtitle: "Busque, veja como fazer e cadastre os seus",
-  },
   soon: {
     clientTraining: {
       title: "Treino",
@@ -52,12 +48,6 @@ export const navigationStrings = {
       emptyTitle: "Sua carteira em um olhar",
       description:
         "Alunos ativos, adesão média e o mapa de treinos das últimas semanas aparecem aqui quando seus alunos começarem a treinar.",
-    },
-    training: {
-      title: "Treinos",
-      icon: "dumbbell",
-      emptyTitle: "Monte o primeiro treino",
-      description: "Treinos, modelos e a biblioteca de exercícios chegam aqui em breve.",
     },
     alerts: {
       title: "Atenção",

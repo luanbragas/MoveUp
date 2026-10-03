@@ -22,10 +22,12 @@ const t = strings.library;
 interface Props {
   /** Modo escolha (editor de treino): marca vários e confirma. Sem isto, só consulta. */
   readonly onPick?: (exercises: readonly Exercise[]) => void;
+  /** Fecha sem escolher (modo escolha dentro de outra tela). Padrão: voltar a rota. */
+  readonly onClose?: () => void;
 }
 
 /** Biblioteca de exercícios (design 5.7): busca sem acento, filtro por músculo e "como fazer". */
-export function ExerciseLibraryScreen({ onPick }: Props) {
+export function ExerciseLibraryScreen({ onPick, onClose }: Props) {
   const [query, setQuery] = useState("");
   const [muscle, setMuscle] = useState<MuscleCode | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -50,7 +52,11 @@ export function ExerciseLibraryScreen({ onPick }: Props) {
           icon={onPick === undefined ? "back" : "close"}
           label={t.back}
           onPress={() => {
-            router.back();
+            if (onClose === undefined) {
+              router.back();
+            } else {
+              onClose();
+            }
           }}
         />
       }

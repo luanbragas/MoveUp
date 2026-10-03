@@ -14,6 +14,7 @@ const ICONS = {
   plus: [{ d: "M12 5v14" }, { d: "M5 12h14" }],
   chevron: [{ d: "M9 6l6 6-6 6" }],
   up: [{ d: "M6 15l6-6 6 6" }],
+  down: [{ d: "M6 9l6 6 6-6" }],
   alert: [
     { d: "M12 9v4" },
     { d: "M12 17h.01" },

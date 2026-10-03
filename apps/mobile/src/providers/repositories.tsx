@@ -7,6 +7,8 @@ import { createClientsApiRepository } from "../features/clients/data/api/clients
 import type { ClientsRepository } from "../features/clients/domain/ports";
 import { createExercisesApiRepository } from "../features/exercise-library/data/api/exercises-api";
 import type { ExercisesRepository } from "../features/exercise-library/domain/ports";
+import { createTrainingApiRepository } from "../features/training/data/api/training-api";
+import type { TrainingRepository } from "../features/training/domain/ports";
 import { createInviteApiRepository } from "../features/invite/data/api/invite-api";
 import type { InviteRepository } from "../features/invite/domain/ports";
 
@@ -18,6 +20,7 @@ export interface Repositories {
   readonly clients: ClientsRepository;
   readonly invite: InviteRepository;
   readonly exercises: ExercisesRepository;
+  readonly training: TrainingRepository;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -29,6 +32,7 @@ export function createRepositories(session: AuthSession): Repositories {
     clients: createClientsApiRepository(),
     invite: createInviteApiRepository(),
     exercises: createExercisesApiRepository(),
+    training: createTrainingApiRepository(),
   };
 }
 

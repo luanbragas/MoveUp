@@ -36,6 +36,17 @@ function setup() {
     },
     invite: { preview: unused, accept: unused, myLinks: unused, endMyLink: unused },
     exercises: { search: unused, create: unused, archive: unused },
+    training: {
+      listTemplates: unused,
+      createTemplate: unused,
+      getWorkout: unused,
+      saveWorkout: unused,
+      archiveWorkout: unused,
+      activeProgram: unused,
+      createProgram: unused,
+      updateProgram: unused,
+      addProgramWorkout: unused,
+    },
   };
   const queryClient = new QueryClient({
     defaultOptions: {
