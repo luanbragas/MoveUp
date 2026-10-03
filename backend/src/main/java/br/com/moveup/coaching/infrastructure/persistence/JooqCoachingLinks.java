@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -44,6 +45,15 @@ public class JooqCoachingLinks implements CoachingLinks {
                     r.getClientId(),
                     LinkStatus.fromCode(r.getStatus()),
                     r.getEndedAt() == null ? null : r.getEndedAt().toInstant()));
+  }
+
+  @Override
+  public Optional<UUID> clientUser(UUID clientId) {
+    return dsl.select(CLIENT.USER_ID)
+        .from(CLIENT)
+        .where(CLIENT.ID.eq(clientId))
+        .fetchOptional(CLIENT.USER_ID)
+        .filter(Objects::nonNull);
   }
 
   @Override

@@ -25,4 +25,16 @@ public class LinkDirectoryService implements LinkDirectory {
                 new LinkRef(
                     link.id(), link.clientId(), link.organizationId(), link.status().code()));
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<LinkRef> ofClientUser(UUID userId, UUID linkId) {
+    return links
+        .find(linkId)
+        .filter(link -> links.clientUser(link.clientId()).filter(userId::equals).isPresent())
+        .map(
+            link ->
+                new LinkRef(
+                    link.id(), link.clientId(), link.organizationId(), link.status().code()));
+  }
 }

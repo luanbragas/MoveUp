@@ -1503,6 +1503,118 @@ export const GetSyncChanges403Response = zod.object({
 
 
 /**
+ * Idempotente: reenviar não duplica. Vence a edição mais recente no aparelho (clientUpdatedAt); a sessão vai inteira e substitui a gravada.
+ * @summary Envia treinos registrados no aparelho
+ */
+export const pushSessionsBodySessionsItemExercisesItemNotesMin = 0;
+export const pushSessionsBodySessionsItemExercisesItemNotesMax = 500;
+
+export const pushSessionsBodySessionsItemExercisesItemSetsMin = 0;
+export const pushSessionsBodySessionsItemExercisesItemSetsMax = 30;
+
+export const pushSessionsBodySessionsItemExercisesMin = 0;
+export const pushSessionsBodySessionsItemExercisesMax = 40;
+
+export const pushSessionsBodySessionsItemFeedbackCommentMin = 0;
+export const pushSessionsBodySessionsItemFeedbackCommentMax = 1000;
+
+export const pushSessionsBodySessionsItemFeedbackPainsItemDescriptionMin = 0;
+export const pushSessionsBodySessionsItemFeedbackPainsItemDescriptionMax = 500;
+
+export const pushSessionsBodySessionsItemFeedbackPainsMin = 0;
+export const pushSessionsBodySessionsItemFeedbackPainsMax = 10;
+
+export const pushSessionsBodySessionsMin = 0;
+export const pushSessionsBodySessionsMax = 50;
+
+
+
+export const PushSessionsBody = zod.object({
+  "sessions": zod.array(zod.object({
+  "clientUpdatedAt": zod.iso.datetime({"offset":true}).describe('Hora da última edição no aparelho'),
+  "completionRatio": zod.number().optional().describe('0 a 1: base da adesão'),
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "id": zod.uuid(),
+  "notes": zod.string().min(pushSessionsBodySessionsItemExercisesItemNotesMin).max(pushSessionsBodySessionsItemExercisesItemNotesMax).optional(),
+  "position": zod.int(),
+  "sets": zod.array(zod.object({
+  "completed": zod.boolean(),
+  "completedAt": zod.iso.datetime({"offset":true}).optional(),
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "id": zod.uuid().describe('Gerado no app (UUIDv7)'),
+  "loadKg": zod.number().optional(),
+  "reps": zod.int().optional(),
+  "rir": zod.int().optional(),
+  "rpe": zod.number().optional(),
+  "setNumber": zod.int(),
+  "setType": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional(),
+  "side": zod.enum(['left', 'right']).optional()
+})).min(pushSessionsBodySessionsItemExercisesItemSetsMin).max(pushSessionsBodySessionsItemExercisesItemSetsMax).optional(),
+  "status": zod.enum(['done', 'skipped', 'substituted']),
+  "substitutedFrom": zod.uuid().optional().describe('Exercício planejado que foi trocado')
+})).min(pushSessionsBodySessionsItemExercisesMin).max(pushSessionsBodySessionsItemExercisesMax).optional(),
+  "feedback": zod.object({
+  "comment": zod.string().min(pushSessionsBodySessionsItemFeedbackCommentMin).max(pushSessionsBodySessionsItemFeedbackCommentMax).optional(),
+  "effort": zod.int().describe('Esforço percebido 0–10'),
+  "pains": zod.array(zod.object({
+  "bodyRegion": zod.enum(['neck', 'shoulder_left', 'shoulder_right', 'elbow_left', 'elbow_right', 'wrist_left', 'wrist_right', 'chest', 'upper_back', 'lower_back', 'hip_left', 'hip_right', 'knee_left', 'knee_right', 'ankle_left', 'ankle_right', 'other']),
+  "description": zod.string().min(pushSessionsBodySessionsItemFeedbackPainsItemDescriptionMin).max(pushSessionsBodySessionsItemFeedbackPainsItemDescriptionMax).optional(),
+  "exerciseId": zod.uuid().optional(),
+  "id": zod.uuid(),
+  "intensity": zod.int().optional()
+})).min(pushSessionsBodySessionsItemFeedbackPainsMin).max(pushSessionsBodySessionsItemFeedbackPainsMax).optional()
+}).optional(),
+  "finishedAt": zod.iso.datetime({"offset":true}).optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "programId": zod.uuid().optional(),
+  "startedAt": zod.iso.datetime({"offset":true}),
+  "status": zod.enum(['in_progress', 'completed', 'partial', 'abandoned']),
+  "workoutId": zod.uuid().optional(),
+  "workoutVersionId": zod.uuid().optional().describe('Versão do treino daquele dia (vem no GET /v1/sync)')
+})).min(pushSessionsBodySessionsMin).max(pushSessionsBodySessionsMax).describe('performed_by sai da conta: aluno = client; personal (presencial) = professional')
+})
+
+export const PushSessions200Response = zod.object({
+  "unchanged": zod.array(zod.uuid()).describe('Já estavam iguais ou mais novas no servidor (marque como enviadas)'),
+  "written": zod.array(zod.uuid()).describe('Gravadas agora')
+})
+
+export const PushSessions404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const PushSessions422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * Do editado mais recente ao mais antigo; sem os arquivados.
  * @summary Modelos da organização
  */

@@ -66,6 +66,11 @@ class CoachingUseCasesTest {
         }
 
         @Override
+        public Optional<UUID> clientUser(UUID clientId) {
+          return Optional.empty();
+        }
+
+        @Override
         public void createPending(
             UUID clientId, UUID linkId, UUID org, UUID pro, ClientPreRegistration client) {
           links.put(linkId, new CoachingLink(linkId, org, pro, clientId, LinkStatus.PENDING, null));

@@ -14,6 +14,9 @@ public interface CoachingLinks {
   /** Só o que o RLS deixa o usuário da transação ver. */
   Optional<CoachingLink> find(UUID linkId);
 
+  /** Usuário (app_user) do aluno; vazio enquanto o pré-cadastro não foi aceito. */
+  Optional<UUID> clientUser(UUID clientId);
+
   void createPending(
       UUID clientId,
       UUID linkId,

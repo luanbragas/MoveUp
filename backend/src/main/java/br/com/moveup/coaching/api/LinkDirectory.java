@@ -9,6 +9,9 @@ public interface LinkDirectory {
   /** Vazio se o vínculo não existe ou é de outro profissional (responda 404). */
   Optional<LinkRef> ofProfessional(UUID professionalId, UUID linkId);
 
+  /** O vínculo, se o aluno dele for este usuário (o próprio aluno registrando o treino). */
+  Optional<LinkRef> ofClientUser(UUID userId, UUID linkId);
+
   /**
    * @param status {@code pending}, {@code active}, {@code inactive} ou {@code ended}
    */

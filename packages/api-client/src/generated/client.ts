@@ -465,6 +465,164 @@ export interface NewProgramWorkout {
 }
 
 /**
+ * @minLength 1
+ */
+export type PainInputBodyRegion = typeof PainInputBodyRegion[keyof typeof PainInputBodyRegion];
+
+
+export const PainInputBodyRegion = {
+  neck: 'neck',
+  shoulder_left: 'shoulder_left',
+  shoulder_right: 'shoulder_right',
+  elbow_left: 'elbow_left',
+  elbow_right: 'elbow_right',
+  wrist_left: 'wrist_left',
+  wrist_right: 'wrist_right',
+  chest: 'chest',
+  upper_back: 'upper_back',
+  lower_back: 'lower_back',
+  hip_left: 'hip_left',
+  hip_right: 'hip_right',
+  knee_left: 'knee_left',
+  knee_right: 'knee_right',
+  ankle_left: 'ankle_left',
+  ankle_right: 'ankle_right',
+  other: 'other',
+} as const;
+
+export interface PainInput {
+  /** @minLength 1 */
+  bodyRegion: PainInputBodyRegion;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  description?: string;
+  exerciseId?: string;
+  id: string;
+  intensity?: number;
+}
+
+/**
+ * @minLength 1
+ */
+export type PerformedExerciseInputStatus = typeof PerformedExerciseInputStatus[keyof typeof PerformedExerciseInputStatus];
+
+
+export const PerformedExerciseInputStatus = {
+  done: 'done',
+  skipped: 'skipped',
+  substituted: 'substituted',
+} as const;
+
+export type PerformedSetInputSetType = typeof PerformedSetInputSetType[keyof typeof PerformedSetInputSetType];
+
+
+export const PerformedSetInputSetType = {
+  warmup: 'warmup',
+  normal: 'normal',
+  drop: 'drop',
+  rest_pause: 'rest_pause',
+  failure: 'failure',
+} as const;
+
+export type PerformedSetInputSide = typeof PerformedSetInputSide[keyof typeof PerformedSetInputSide];
+
+
+export const PerformedSetInputSide = {
+  left: 'left',
+  right: 'right',
+} as const;
+
+export interface PerformedSetInput {
+  completed: boolean;
+  completedAt?: string;
+  distanceM?: number;
+  durationSeconds?: number;
+  /** Gerado no app (UUIDv7) */
+  id: string;
+  loadKg?: number;
+  reps?: number;
+  rir?: number;
+  rpe?: number;
+  setNumber: number;
+  setType?: PerformedSetInputSetType;
+  side?: PerformedSetInputSide;
+}
+
+export interface PerformedExerciseInput {
+  exerciseId: string;
+  id: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  notes?: string;
+  position: number;
+  /**
+     * @minItems 0
+     * @maxItems 30
+     */
+  sets?: PerformedSetInput[];
+  /** @minLength 1 */
+  status: PerformedExerciseInputStatus;
+  /** Exercício planejado que foi trocado */
+  substitutedFrom?: string;
+}
+
+/**
+ * @minLength 1
+ */
+export type PerformedSessionInputStatus = typeof PerformedSessionInputStatus[keyof typeof PerformedSessionInputStatus];
+
+
+export const PerformedSessionInputStatus = {
+  in_progress: 'in_progress',
+  completed: 'completed',
+  partial: 'partial',
+  abandoned: 'abandoned',
+} as const;
+
+export interface SessionFeedbackInput {
+  /**
+     * @minLength 0
+     * @maxLength 1000
+     */
+  comment?: string;
+  /** Esforço percebido 0–10 */
+  effort: number;
+  /**
+     * @minItems 0
+     * @maxItems 10
+     */
+  pains?: PainInput[];
+}
+
+export interface PerformedSessionInput {
+  /** Hora da última edição no aparelho */
+  clientUpdatedAt: string;
+  /** 0 a 1: base da adesão */
+  completionRatio?: number;
+  durationSeconds?: number;
+  /**
+     * @minItems 0
+     * @maxItems 40
+     */
+  exercises?: PerformedExerciseInput[];
+  feedback?: SessionFeedbackInput;
+  finishedAt?: string;
+  id: string;
+  linkId: string;
+  programId?: string;
+  startedAt: string;
+  /** @minLength 1 */
+  status: PerformedSessionInputStatus;
+  workoutId?: string;
+  /** Versão do treino daquele dia (vem no GET /v1/sync) */
+  workoutVersionId?: string;
+}
+
+/**
  * @nullable
  */
 export type PrescribedExerciseTrackingType = typeof PrescribedExerciseTrackingType[keyof typeof PrescribedExerciseTrackingType] | null;
@@ -696,6 +854,22 @@ export interface RegisterAccount {
      * @pattern professional|client
      */
   role: RegisterAccountRole;
+}
+
+export interface SessionSync {
+  /**
+     * performed_by sai da conta: aluno = client; personal (presencial) = professional
+     * @minItems 0
+     * @maxItems 50
+     */
+  sessions: PerformedSessionInput[];
+}
+
+export interface SessionSyncResult {
+  /** Já estavam iguais ou mais novas no servidor (marque como enviadas) */
+  unchanged: string[];
+  /** Gravadas agora */
+  written: string[];
 }
 
 export type SyncProgramScheduleMode = typeof SyncProgramScheduleMode[keyof typeof SyncProgramScheduleMode];
@@ -2532,6 +2706,69 @@ export const getSyncChanges = async (params?: GetSyncChangesParams, options?: Pa
     method: 'GET'
 
 
+  }
+);}
+
+
+
+export type pushSessionsResponse200 = {
+  data: SessionSyncResult
+  status: 200
+}
+
+export type pushSessionsResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type pushSessionsResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type pushSessionsResponseSuccess = (pushSessionsResponse200) & {
+  headers: Headers;
+};
+export type pushSessionsResponseError = (pushSessionsResponse404 | pushSessionsResponse422) & {
+  headers: Headers;
+};
+
+export type pushSessionsResponse = (pushSessionsResponseSuccess | pushSessionsResponseError)
+
+export const getPushSessionsUrl = () => {
+
+
+
+
+  return `/v1/sync`
+}
+
+/**
+ * Idempotente: reenviar não duplica. Vence a edição mais recente no aparelho (clientUpdatedAt); a sessão vai inteira e substitui a gravada.
+ * @summary Envia treinos registrados no aparelho
+ */
+export const pushSessions = async (sessionSync: SessionSync, options?: Parameters<typeof apiFetch>[1]): Promise<pushSessionsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<pushSessionsResponse>(getPushSessionsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sessionSync)
   }
 );}
 

@@ -96,6 +96,13 @@ public final class Titles {
           Map.entry("program-name-invalid", "Nome do programa inválido"),
           Map.entry("period-invalid", "Período inválido"),
           Map.entry("weekly-target-invalid", "Meta semanal inválida"),
+          Map.entry("session-status-invalid", "Status da sessão inválido"),
+          Map.entry("session-invalid", "Sessão inválida"),
+          Map.entry("set-invalid", "Série inválida"),
+          Map.entry("exercise-invalid", "Exercício da sessão inválido"),
+          Map.entry("pain-invalid", "Relato de dor inválido"),
+          Map.entry("comment-invalid", "Comentário inválido"),
+          Map.entry("sync-too-big", "Lote de sincronização grande demais"),
           Map.entry("internal-error", "Erro inesperado"));
 
   private Titles() {}
