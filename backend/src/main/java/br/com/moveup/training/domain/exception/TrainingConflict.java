@@ -7,6 +7,7 @@ public final class TrainingConflict extends ConflictException {
 
   public static final String EXERCISE_NAME_TAKEN = "exercise-name-taken";
   public static final String BASE_EXERCISE_READ_ONLY = "base-exercise-read-only";
+  public static final String LINK_NOT_TRAINABLE = "link-not-trainable";
 
   private TrainingConflict(String code, String safeMessage) {
     super(code, safeMessage);
@@ -15,6 +16,11 @@ public final class TrainingConflict extends ConflictException {
   public static TrainingConflict exerciseNameTaken() {
     return new TrainingConflict(
         EXERCISE_NAME_TAKEN, "Já existe um exercício com esse nome na sua biblioteca.");
+  }
+
+  public static TrainingConflict linkNotTrainable() {
+    return new TrainingConflict(
+        LINK_NOT_TRAINABLE, "O aluno está inativo ou encerrado. Reative para mexer no treino.");
   }
 
   public static TrainingConflict baseExerciseReadOnly() {

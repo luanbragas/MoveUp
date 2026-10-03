@@ -3,6 +3,7 @@ package br.com.moveup.coaching.infrastructure.config;
 import br.com.moveup.accounts.api.AccountDirectory;
 import br.com.moveup.audit.api.AuditTrail;
 import br.com.moveup.billing.api.PlanLimits;
+import br.com.moveup.coaching.api.LinkDirectory;
 import br.com.moveup.coaching.application.port.in.AnswerInvite;
 import br.com.moveup.coaching.application.port.in.InviteClient;
 import br.com.moveup.coaching.application.port.in.ListClients;
@@ -13,6 +14,7 @@ import br.com.moveup.coaching.application.port.out.Invites;
 import br.com.moveup.coaching.application.usecase.AnswerInviteUseCase;
 import br.com.moveup.coaching.application.usecase.InvitationIssuer;
 import br.com.moveup.coaching.application.usecase.InviteClientUseCase;
+import br.com.moveup.coaching.application.usecase.LinkDirectoryService;
 import br.com.moveup.coaching.application.usecase.ListClientsUseCase;
 import br.com.moveup.coaching.application.usecase.ManageLinkUseCase;
 import br.com.moveup.coaching.application.usecase.MyCoachingLinksUseCase;
@@ -43,6 +45,11 @@ class CoachingModuleConfig {
       InvitationIssuer issuer,
       IdGenerator ids) {
     return new InviteClientUseCase(accounts, planLimits, links, issuer, ids);
+  }
+
+  @Bean
+  LinkDirectory linkDirectory(CoachingLinks links) {
+    return new LinkDirectoryService(links);
   }
 
   @Bean

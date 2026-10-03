@@ -3,7 +3,6 @@ package br.com.moveup.training.infrastructure.web;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 import br.com.moveup.shared.domain.Forbidden;
-import br.com.moveup.shared.domain.VersionMismatch;
 import br.com.moveup.shared.infrastructure.security.CurrentAppUser;
 import br.com.moveup.shared.infrastructure.web.ApiProblem;
 import br.com.moveup.training.application.port.in.ManageWorkouts;
@@ -30,7 +29,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -59,8 +57,6 @@ import org.springframework.web.bind.annotation.RestController;
             mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
             schema = @Schema(implementation = ApiProblem.class)))
 class WorkoutsController {
-
-  private static final Pattern ETAG = Pattern.compile("^(?:W/)?\"r(\\d{1,9})\"$");
 
   private final ManageWorkouts workouts;
   private final CurrentAppUser currentAppUser;
@@ -388,7 +384,7 @@ class WorkoutsController {
         workouts.save(
             currentUser(),
             workoutId,
-            revisionOf(ifMatch),
+            Revisions.fromIfMatch(ifMatch),
             request.name(),
             request.content().toInput());
     return withEtag(ResponseEntity.ok(), view);
@@ -413,25 +409,14 @@ class WorkoutsController {
       @Parameter(description = "\"r<revision>\" da última leitura", required = true)
           @RequestHeader(name = HttpHeaders.IF_MATCH, required = false)
           String ifMatch) {
-    workouts.archive(currentUser(), workoutId, revisionOf(ifMatch));
+    workouts.archive(currentUser(), workoutId, Revisions.fromIfMatch(ifMatch));
   }
 
   // ---------------------------------------------------------------- apoio
 
   private static ResponseEntity<WorkoutResponse> withEtag(
       ResponseEntity.BodyBuilder builder, WorkoutView view) {
-    return builder.eTag("\"r" + view.revision() + "\"").body(WorkoutResponse.from(view));
-  }
-
-  private static int revisionOf(String ifMatch) {
-    if (ifMatch == null || ifMatch.isBlank()) {
-      throw VersionMismatch.required();
-    }
-    var matcher = ETAG.matcher(ifMatch.strip());
-    if (!matcher.matches()) {
-      throw VersionMismatch.stale();
-    }
-    return Integer.parseInt(matcher.group(1));
+    return builder.eTag(Revisions.etag(view.revision())).body(WorkoutResponse.from(view));
   }
 
   private UUID currentUser() {

@@ -89,6 +89,13 @@ public final class Titles {
           Map.entry("workout-name-invalid", "Nome do treino inválido"),
           Map.entry("not-a-template", "Não é um modelo"),
           Map.entry("exercise-unknown", "Exercício desconhecido"),
+          Map.entry("link-not-trainable", "Aluno inativo ou encerrado"),
+          Map.entry("schedule-mode-invalid", "Tipo de agenda inválido"),
+          Map.entry("weekday-invalid", "Dia da semana inválido"),
+          Map.entry("schedule-workouts-invalid", "Agenda não confere com os treinos"),
+          Map.entry("program-name-invalid", "Nome do programa inválido"),
+          Map.entry("period-invalid", "Período inválido"),
+          Map.entry("weekly-target-invalid", "Meta semanal inválida"),
           Map.entry("internal-error", "Erro inesperado"));
 
   private Titles() {}

@@ -367,6 +367,160 @@ export const InactivateLink403Response = zod.object({
 
 
 /**
+ * Vira o programa ativo; o anterior do vínculo é arquivado.
+ * @summary Cria o programa do aluno
+ */
+export const CreateProgramParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const createProgramBodyGoalMin = 0;
+export const createProgramBodyGoalMax = 200;
+
+export const createProgramBodyNameMin = 0;
+export const createProgramBodyNameMax = 80;
+
+
+
+export const CreateProgramBody = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().min(createProgramBodyGoalMin).max(createProgramBodyGoalMax).optional(),
+  "name": zod.string().min(createProgramBodyNameMin).max(createProgramBodyNameMax),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional().describe('Treinos por semana (obrigatório na sequência, 1 a 14)')
+})
+
+export const CreateProgram201Response = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "weekdays": zod.array(zod.int())
+}))
+})
+
+export const CreateProgram404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateProgram409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateProgram422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Programa ativo do aluno
+ */
+export const GetActiveProgramParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const GetActiveProgram200Response = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "weekdays": zod.array(zod.int())
+}))
+})
+
+export const GetActiveProgram204Response = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "weekdays": zod.array(zod.int())
+}))
+})
+
+export const GetActiveProgram404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * @summary Reativa o aluno (exige vaga no plano)
  */
 export const ReactivateLinkParams = zod.object({
@@ -982,6 +1136,262 @@ export const EndMyLinkParams = zod.object({
 export const EndMyLink204Response = zod.void()
 
 export const EndMyLink404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Arquiva o programa
+ */
+export const ArchiveProgramParams = zod.object({
+  "programId": zod.uuid()
+})
+
+export const ArchiveProgramHeader = zod.object({
+  "If-Match": zod.string().describe('"r<revision>" da última leitura')
+})
+
+export const ArchiveProgram204Response = zod.void()
+
+export const ArchiveProgram404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Programa com os treinos e a agenda
+ */
+export const GetProgramParams = zod.object({
+  "programId": zod.uuid()
+})
+
+export const GetProgram200Response = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "weekdays": zod.array(zod.int())
+}))
+})
+
+export const GetProgram404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * A agenda lista todos os treinos do programa, na ordem desejada.
+ * @summary Salva nome, período e agenda
+ */
+export const UpdateProgramParams = zod.object({
+  "programId": zod.uuid()
+})
+
+export const UpdateProgramHeader = zod.object({
+  "If-Match": zod.string().describe('"r<revision>" da última leitura')
+})
+
+export const updateProgramBodyGoalMin = 0;
+export const updateProgramBodyGoalMax = 200;
+
+export const updateProgramBodyNameMin = 0;
+export const updateProgramBodyNameMax = 80;
+
+export const updateProgramBodyScheduleItemWeekdaysItemMin = 0;
+export const updateProgramBodyScheduleItemWeekdaysItemMax = 6;
+
+export const updateProgramBodyScheduleMin = 0;
+export const updateProgramBodyScheduleMax = 14;
+
+
+
+export const UpdateProgramBody = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().min(updateProgramBodyGoalMin).max(updateProgramBodyGoalMax).optional(),
+  "name": zod.string().min(updateProgramBodyNameMin).max(updateProgramBodyNameMax),
+  "schedule": zod.array(zod.object({
+  "weekdays": zod.array(zod.int().min(updateProgramBodyScheduleItemWeekdaysItemMin).max(updateProgramBodyScheduleItemWeekdaysItemMax)).optional().describe('0 = domingo; só no modo dias fixos'),
+  "workoutId": zod.uuid()
+})).min(updateProgramBodyScheduleMin).max(updateProgramBodyScheduleMax).describe('Todos os treinos do programa, na ordem (A, B, C…)'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional()
+})
+
+export const UpdateProgram200Response = zod.object({
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "weekdays": zod.array(zod.int())
+}))
+})
+
+export const UpdateProgram404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const UpdateProgram412Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const UpdateProgram422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Cópia de um modelo (guarda a origem) ou treino vazio para abrir no editor.
+ * @summary Adiciona um treino ao programa
+ */
+export const AddProgramWorkoutParams = zod.object({
+  "programId": zod.uuid()
+})
+
+export const addProgramWorkoutBodyNameMin = 0;
+export const addProgramWorkoutBodyNameMax = 60;
+
+
+
+export const AddProgramWorkoutBody = zod.object({
+  "name": zod.string().min(addProgramWorkoutBodyNameMin).max(addProgramWorkoutBodyNameMax).nullish().describe('Padrão: o nome do modelo'),
+  "templateId": zod.uuid().nullish().describe('Modelo a copiar; ausente = treino vazio')
+})
+
+export const AddProgramWorkout201Response = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "exerciseName": zod.string().nullish(),
+  "notes": zod.string().optional(),
+  "primaryMuscle": zod.string().nullish(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})),
+  "trackingType": zod.union([zod.literal('reps_load'),zod.literal('reps_only'),zod.literal('time'),zod.literal('distance_time'),zod.literal(null)]).nullish()
+})),
+  "method": zod.string(),
+  "name": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "preset": zod.string().optional(),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().optional(),
+  "notes": zod.string().optional()
+}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "programId": zod.uuid().nullish(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
+  "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
+})
+
+export const AddProgramWorkout404Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({

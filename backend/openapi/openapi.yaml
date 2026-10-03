@@ -13,6 +13,8 @@ tags:
   name: accounts
 - description: Consentimentos do usuário (LGPD)
   name: consents
+- description: Programas e agenda
+  name: programs
 - description: Treinos e modelos
   name: workouts
 - description: Convite do ponto de vista do aluno
@@ -259,6 +261,83 @@ paths:
       summary: Inativa o aluno
       tags:
       - clients
+  /v1/coaching-links/{linkId}/programs:
+    post:
+      description: Vira o programa ativo; o anterior do vínculo é arquivado.
+      operationId: createProgram
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramInput"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+          description: Programa criado (cabeçalho ETag)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`link-not-trainable` (aluno inativo ou encerrado)'
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`program-name-invalid`, `period-invalid`, `weekly-target-invalid`…"
+      summary: Cria o programa do aluno
+      tags:
+      - programs
+  /v1/coaching-links/{linkId}/programs/active:
+    get:
+      operationId: getActiveProgram
+      parameters:
+      - in: path
+        name: linkId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+          description: Programa ativo (cabeçalho ETag)
+        "204":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+          description: Aluno sem programa ativo
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+      summary: Programa ativo do aluno
+      tags:
+      - programs
   /v1/coaching-links/{linkId}/reactivate:
     post:
       operationId: reactivateLink
@@ -723,6 +802,143 @@ paths:
       summary: O aluno encerra o próprio vínculo
       tags:
       - invites
+  /v1/programs/{programId}:
+    delete:
+      operationId: archiveProgram
+      parameters:
+      - in: path
+        name: programId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: '"r<revision>" da última leitura'
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Arquivado
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+      summary: Arquiva o programa
+      tags:
+      - programs
+    get:
+      operationId: getProgram
+      parameters:
+      - in: path
+        name: programId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+          description: Programa (cabeçalho ETag)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+      summary: Programa com os treinos e a agenda
+      tags:
+      - programs
+    put:
+      description: "A agenda lista todos os treinos do programa, na ordem desejada."
+      operationId: updateProgram
+      parameters:
+      - in: path
+        name: programId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: '"r<revision>" da última leitura'
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramUpdate"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+          description: Programa salvo (cabeçalho ETag)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+        "412":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`version-mismatch`'
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`schedule-workouts-invalid`, `weekday-invalid`…"
+      summary: "Salva nome, período e agenda"
+      tags:
+      - programs
+  /v1/programs/{programId}/workouts:
+    post:
+      description: Cópia de um modelo (guarda a origem) ou treino vazio para abrir
+        no editor.
+      operationId: addProgramWorkout
+      parameters:
+      - in: path
+        name: programId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewProgramWorkout"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+          description: "Treino criado (edite com PUT /v1/workouts/{id})"
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found` (vínculo ou programa de outro profissional)'
+      summary: Adiciona um treino ao programa
+      tags:
+      - programs
   /v1/workout-templates:
     get:
       description: Do editado mais recente ao mais antigo; sem os arquivados.
@@ -1432,6 +1648,22 @@ components:
       - modality
       - name
       - trackingType
+    NewProgramWorkout:
+      type: object
+      properties:
+        name:
+          type:
+          - string
+          - "null"
+          description: "Padrão: o nome do modelo"
+          maxLength: 60
+          minLength: 0
+        templateId:
+          type:
+          - string
+          - "null"
+          format: uuid
+          description: Modelo a copiar; ausente = treino vazio
     PrescribedExercise:
       type: object
       properties:
@@ -1565,6 +1797,162 @@ components:
       - title
       - traceId
       - type
+    Program:
+      type: object
+      properties:
+        endsOn:
+          type: string
+          format: date
+        goal:
+          type: string
+        id:
+          type: string
+          format: uuid
+        linkId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        revision:
+          type: integer
+          format: int32
+          description: Mande em If-Match como "r<revision>"
+        scheduleMode:
+          type: string
+          enum:
+          - fixed_days
+          - sequence
+        startsOn:
+          type: string
+          format: date
+        weeklyTarget:
+          type: integer
+          format: int32
+        workouts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgramWorkout"
+      required:
+      - id
+      - linkId
+      - name
+      - revision
+      - scheduleMode
+      - workouts
+    ProgramInput:
+      type: object
+      properties:
+        endsOn:
+          type: string
+          format: date
+        goal:
+          type: string
+          maxLength: 200
+          minLength: 0
+        name:
+          type: string
+          maxLength: 80
+          minLength: 0
+        scheduleMode:
+          type: string
+          enum:
+          - fixed_days
+          - sequence
+          minLength: 1
+        startsOn:
+          type: string
+          format: date
+        weeklyTarget:
+          type: integer
+          format: int32
+          description: "Treinos por semana (obrigatório na sequência, 1 a 14)"
+      required:
+      - name
+      - scheduleMode
+    ProgramSlot:
+      type: object
+      properties:
+        weekdays:
+          type: array
+          description: 0 = domingo; só no modo dias fixos
+          items:
+            type: integer
+            format: int32
+            maximum: 6
+            minimum: 0
+          uniqueItems: true
+        workoutId:
+          type: string
+          format: uuid
+      required:
+      - workoutId
+    ProgramUpdate:
+      type: object
+      properties:
+        endsOn:
+          type: string
+          format: date
+        goal:
+          type: string
+          maxLength: 200
+          minLength: 0
+        name:
+          type: string
+          maxLength: 80
+          minLength: 0
+        schedule:
+          type: array
+          description: "Todos os treinos do programa, na ordem (A, B, C…)"
+          items:
+            $ref: "#/components/schemas/ProgramSlot"
+          maxItems: 14
+          minItems: 0
+        scheduleMode:
+          type: string
+          enum:
+          - fixed_days
+          - sequence
+          minLength: 1
+        startsOn:
+          type: string
+          format: date
+        weeklyTarget:
+          type: integer
+          format: int32
+      required:
+      - name
+      - schedule
+      - scheduleMode
+    ProgramWorkout:
+      type: object
+      properties:
+        estimatedMinutes:
+          type: integer
+          format: int32
+        exercises:
+          type: integer
+          format: int32
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: integer
+          format: int32
+          description: Ordem na agenda (A = 1)
+        weekdays:
+          type: array
+          items:
+            type: integer
+            format: int32
+          uniqueItems: true
+      required:
+      - exercises
+      - id
+      - name
+      - position
+      - weekdays
     RegisterAccount:
       type: object
       properties:

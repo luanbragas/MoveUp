@@ -449,6 +449,21 @@ export interface NewExercise {
   unilateral?: boolean;
 }
 
+export interface NewProgramWorkout {
+  /**
+     * Padrão: o nome do modelo
+     * @minLength 0
+     * @maxLength 60
+     * @nullable
+     */
+  name?: string | null;
+  /**
+     * Modelo a copiar; ausente = treino vazio
+     * @nullable
+     */
+  templateId?: string | null;
+}
+
 /**
  * @nullable
  */
@@ -535,6 +550,113 @@ export interface Problem {
   title: string;
   traceId: string;
   type: string;
+}
+
+export type ProgramScheduleMode = typeof ProgramScheduleMode[keyof typeof ProgramScheduleMode];
+
+
+export const ProgramScheduleMode = {
+  fixed_days: 'fixed_days',
+  sequence: 'sequence',
+} as const;
+
+export interface ProgramWorkout {
+  estimatedMinutes?: number;
+  exercises: number;
+  id: string;
+  name: string;
+  /** Ordem na agenda (A = 1) */
+  position: number;
+  weekdays: number[];
+}
+
+export interface Program {
+  endsOn?: string;
+  goal?: string;
+  id: string;
+  linkId: string;
+  name: string;
+  /** Mande em If-Match como "r<revision>" */
+  revision: number;
+  scheduleMode: ProgramScheduleMode;
+  startsOn?: string;
+  weeklyTarget?: number;
+  workouts: ProgramWorkout[];
+}
+
+/**
+ * @minLength 1
+ */
+export type ProgramInputScheduleMode = typeof ProgramInputScheduleMode[keyof typeof ProgramInputScheduleMode];
+
+
+export const ProgramInputScheduleMode = {
+  fixed_days: 'fixed_days',
+  sequence: 'sequence',
+} as const;
+
+export interface ProgramInput {
+  endsOn?: string;
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  goal?: string;
+  /**
+     * @minLength 0
+     * @maxLength 80
+     */
+  name: string;
+  /** @minLength 1 */
+  scheduleMode: ProgramInputScheduleMode;
+  startsOn?: string;
+  /** Treinos por semana (obrigatório na sequência, 1 a 14) */
+  weeklyTarget?: number;
+}
+
+export interface ProgramSlot {
+  /**
+     * 0 = domingo; só no modo dias fixos
+     * @items.minimum 0
+     * @items.maximum 6
+     */
+  weekdays?: number[];
+  workoutId: string;
+}
+
+/**
+ * @minLength 1
+ */
+export type ProgramUpdateScheduleMode = typeof ProgramUpdateScheduleMode[keyof typeof ProgramUpdateScheduleMode];
+
+
+export const ProgramUpdateScheduleMode = {
+  fixed_days: 'fixed_days',
+  sequence: 'sequence',
+} as const;
+
+export interface ProgramUpdate {
+  endsOn?: string;
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  goal?: string;
+  /**
+     * @minLength 0
+     * @maxLength 80
+     */
+  name: string;
+  /**
+     * Todos os treinos do programa, na ordem (A, B, C…)
+     * @minItems 0
+     * @maxItems 14
+     */
+  schedule: ProgramSlot[];
+  /** @minLength 1 */
+  scheduleMode: ProgramUpdateScheduleMode;
+  startsOn?: string;
+  weeklyTarget?: number;
 }
 
 /**
@@ -1134,6 +1256,123 @@ export const inactivateLink = async (linkId: string, options?: Parameters<typeof
   {
     ...options,
     method: 'POST'
+
+
+  }
+);}
+
+
+
+export type createProgramResponse201 = {
+  data: Program
+  status: 201
+}
+
+export type createProgramResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type createProgramResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type createProgramResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type createProgramResponseSuccess = (createProgramResponse201) & {
+  headers: Headers;
+};
+export type createProgramResponseError = (createProgramResponse404 | createProgramResponse409 | createProgramResponse422) & {
+  headers: Headers;
+};
+
+export type createProgramResponse = (createProgramResponseSuccess | createProgramResponseError)
+
+export const getCreateProgramUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/coaching-links/${linkId}/programs`
+}
+
+/**
+ * Vira o programa ativo; o anterior do vínculo é arquivado.
+ * @summary Cria o programa do aluno
+ */
+export const createProgram = async (linkId: string,
+    programInput: ProgramInput, options?: Parameters<typeof apiFetch>[1]): Promise<createProgramResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createProgramResponse>(getCreateProgramUrl(linkId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(programInput)
+  }
+);}
+
+
+
+export type getActiveProgramResponse200 = {
+  data: Program
+  status: 200
+}
+
+export type getActiveProgramResponse204 = {
+  data: Program
+  status: 204
+}
+
+export type getActiveProgramResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getActiveProgramResponseSuccess = (getActiveProgramResponse200 | getActiveProgramResponse204) & {
+  headers: Headers;
+};
+export type getActiveProgramResponseError = (getActiveProgramResponse404) & {
+  headers: Headers;
+};
+
+export type getActiveProgramResponse = (getActiveProgramResponseSuccess | getActiveProgramResponseError)
+
+export const getGetActiveProgramUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/coaching-links/${linkId}/programs/active`
+}
+
+/**
+ * @summary Programa ativo do aluno
+ */
+export const getActiveProgram = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getActiveProgramResponse> => {
+
+  return apiFetch<getActiveProgramResponse>(getGetActiveProgramUrl(linkId),
+  {
+    ...options,
+    method: 'GET'
 
 
   }
@@ -1977,6 +2216,220 @@ export const endMyLink = async (linkId: string, options?: Parameters<typeof apiF
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type archiveProgramResponse204 = {
+  data: void
+  status: 204
+}
+
+export type archiveProgramResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type archiveProgramResponseSuccess = (archiveProgramResponse204) & {
+  headers: Headers;
+};
+export type archiveProgramResponseError = (archiveProgramResponse404) & {
+  headers: Headers;
+};
+
+export type archiveProgramResponse = (archiveProgramResponseSuccess | archiveProgramResponseError)
+
+export const getArchiveProgramUrl = (programId: string,) => {
+
+
+
+
+  return `/v1/programs/${programId}`
+}
+
+/**
+ * @summary Arquiva o programa
+ */
+export const archiveProgram = async (programId: string, options?: Parameters<typeof apiFetch>[1]): Promise<archiveProgramResponse> => {
+
+  return apiFetch<archiveProgramResponse>(getArchiveProgramUrl(programId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type getProgramResponse200 = {
+  data: Program
+  status: 200
+}
+
+export type getProgramResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getProgramResponseSuccess = (getProgramResponse200) & {
+  headers: Headers;
+};
+export type getProgramResponseError = (getProgramResponse404) & {
+  headers: Headers;
+};
+
+export type getProgramResponse = (getProgramResponseSuccess | getProgramResponseError)
+
+export const getGetProgramUrl = (programId: string,) => {
+
+
+
+
+  return `/v1/programs/${programId}`
+}
+
+/**
+ * @summary Programa com os treinos e a agenda
+ */
+export const getProgram = async (programId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getProgramResponse> => {
+
+  return apiFetch<getProgramResponse>(getGetProgramUrl(programId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateProgramResponse200 = {
+  data: Program
+  status: 200
+}
+
+export type updateProgramResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type updateProgramResponse412 = {
+  data: Problem
+  status: 412
+}
+
+export type updateProgramResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type updateProgramResponseSuccess = (updateProgramResponse200) & {
+  headers: Headers;
+};
+export type updateProgramResponseError = (updateProgramResponse404 | updateProgramResponse412 | updateProgramResponse422) & {
+  headers: Headers;
+};
+
+export type updateProgramResponse = (updateProgramResponseSuccess | updateProgramResponseError)
+
+export const getUpdateProgramUrl = (programId: string,) => {
+
+
+
+
+  return `/v1/programs/${programId}`
+}
+
+/**
+ * A agenda lista todos os treinos do programa, na ordem desejada.
+ * @summary Salva nome, período e agenda
+ */
+export const updateProgram = async (programId: string,
+    programUpdate: ProgramUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<updateProgramResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<updateProgramResponse>(getUpdateProgramUrl(programId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(programUpdate)
+  }
+);}
+
+
+
+export type addProgramWorkoutResponse201 = {
+  data: Workout
+  status: 201
+}
+
+export type addProgramWorkoutResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type addProgramWorkoutResponseSuccess = (addProgramWorkoutResponse201) & {
+  headers: Headers;
+};
+export type addProgramWorkoutResponseError = (addProgramWorkoutResponse404) & {
+  headers: Headers;
+};
+
+export type addProgramWorkoutResponse = (addProgramWorkoutResponseSuccess | addProgramWorkoutResponseError)
+
+export const getAddProgramWorkoutUrl = (programId: string,) => {
+
+
+
+
+  return `/v1/programs/${programId}/workouts`
+}
+
+/**
+ * Cópia de um modelo (guarda a origem) ou treino vazio para abrir no editor.
+ * @summary Adiciona um treino ao programa
+ */
+export const addProgramWorkout = async (programId: string,
+    newProgramWorkout: NewProgramWorkout, options?: Parameters<typeof apiFetch>[1]): Promise<addProgramWorkoutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<addProgramWorkoutResponse>(getAddProgramWorkoutUrl(programId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(newProgramWorkout)
   }
 );}
 
