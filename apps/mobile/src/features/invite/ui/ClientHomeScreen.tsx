@@ -1,98 +1,133 @@
-import type { ReactNode } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { toAppError } from "../../../shared/lib/http";
 import { Button } from "../../../shared/ui/Button";
+import { Chevrons } from "../../../shared/ui/Chevrons";
 import { errorMessage } from "../../../shared/ui/error-messages";
+import { Icon } from "../../../shared/ui/Icon";
 import { Message } from "../../../shared/ui/Message";
 import { Screen } from "../../../shared/ui/Screen";
-import { spacing, typography, useColors } from "../../../shared/ui/theme";
+import { Skeleton } from "../../../shared/ui/Skeleton";
+import { TextLink } from "../../../shared/ui/TextLink";
+import { Title } from "../../../shared/ui/Title";
+import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
+import { useAuthState, useMe } from "../../auth";
 import { currentLink, type MyLink } from "../domain/invite";
 import { useEndMyLink, useMyLinks } from "../hooks/use-invite";
-import { InviteCodeForm } from "./InviteCodeForm";
+import { InviteFlow } from "./InviteFlow";
 import { strings } from "./strings";
 
-interface Props {
-  /** Rodapé da tela (ex.: sair), até existir a aba de perfil. */
-  readonly footer?: ReactNode;
+function firstName(name: string | undefined): string {
+  return name?.trim().split(/\s+/)[0] ?? "";
 }
 
 /**
- * Casa do aluno nesta fase: o personal atual ou, sem vínculo ativo, o código do convite
- * (SCREEN-FLOWS 1.2: no MVP o aluno não usa o app sem vínculo).
+ * Aba Hoje do aluno nesta fase: sem vínculo ativo, o convite (SCREEN-FLOWS 1.2: no MVP o aluno não
+ * usa o app sem personal); com vínculo, a espera pelo primeiro treino e o card do personal.
  */
-export function ClientHomeScreen({ footer }: Props) {
-  const colors = useColors();
+export function ClientHomeScreen() {
+  const auth = useAuthState();
+  const me = useMe(auth.status === "signed-in" ? auth.user.uid : null);
   const links = useMyLinks();
+  const [welcomed, setWelcomed] = useState<string | null>(null);
   const link = links.data === undefined ? null : currentLink(links.data);
+  const name = firstName(me.data?.name);
+
+  if (welcomed !== null) {
+    const t = strings.accepted;
+    return (
+      <Screen
+        footer={
+          <Button
+            label={t.go}
+            onPress={() => {
+              setWelcomed(null);
+            }}
+          />
+        }
+      >
+        <View style={styles.hero}>
+          <Chevrons size={96} count={3} />
+          <Title size={44}>{t.title(name)}</Title>
+          <Text style={[typography.body, { color: palette.textSoft }]}>{t.text(welcomed)}</Text>
+        </View>
+      </Screen>
+    );
+  }
 
   if (links.isPending) {
     return (
-      <Screen title={strings.home.title}>
-        <ActivityIndicator accessibilityLabel="Carregando" color={colors.primary} />
+      <Screen>
+        <Skeleton width="60%" height={80} />
+        <Skeleton width="100%" height={140} rounded={24} />
+        <Skeleton width="100%" height={88} rounded={24} />
       </Screen>
     );
   }
   if (links.isError) {
     return (
-      <Screen title={strings.home.title}>
-        <Message text={strings.home.error} />
-        <Button
-          label={strings.home.retry}
-          onPress={() => {
-            void links.refetch();
-          }}
-        />
-        {footer}
-      </Screen>
-    );
-  }
-  if (link?.status === "active") {
-    return (
       <Screen
-        title={strings.home.title}
-        refresh={{
-          refreshing: links.isRefetching,
-          onRefresh: () => {
-            void links.refetch();
-          },
-        }}
+        title={strings.home.greeting(name)}
+        footer={
+          <Button
+            label={strings.home.retry}
+            variant="secondary"
+            icon="refresh"
+            onPress={() => {
+              void links.refetch();
+            }}
+          />
+        }
       >
-        <LinkCard link={link} />
-        <Message tone="info" text={strings.home.trainingSoon} />
-        {footer}
+        <Message text={strings.home.error} />
       </Screen>
     );
   }
+  // pausado pelo personal continua sendo o personal dele: mostra a casa com o aviso no card
+  if (link === null || link.status === "pending") {
+    return <InviteFlow onAccepted={setWelcomed} />;
+  }
+
   return (
-    <Screen title={strings.code.title} subtitle={strings.code.subtitle}>
-      {link === null ? null : <LinkCard link={link} />}
-      <InviteCodeForm />
-      {footer}
+    <Screen
+      title={strings.home.greeting(name)}
+      refresh={{
+        refreshing: links.isRefetching,
+        onRefresh: () => {
+          void links.refetch();
+        },
+      }}
+    >
+      <View style={styles.empty}>
+        <Icon name="dumbbell" size={28} color={palette.lime} />
+        <Title size={28}>{strings.home.emptyTitle}</Title>
+        <Text style={[typography.body, { color: palette.textSoft }]}>
+          {strings.home.emptyText(link.professionalName)}
+        </Text>
+      </View>
+      <LinkCard link={link} />
     </Screen>
   );
 }
 
 function LinkCard({ link }: { readonly link: MyLink }) {
-  const colors = useColors();
   const end = useEndMyLink();
   const t = strings.link;
 
   return (
-    <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-      <Text style={[typography.small, { color: colors.textMuted }]}>{t.yourProfessional}</Text>
-      <Text style={[typography.label, { color: colors.text }]}>{link.professionalName}</Text>
-      <Text style={[typography.body, { color: colors.textMuted }]}>{link.organizationName}</Text>
+    <View style={styles.card}>
+      <Text style={[typography.small, { color: palette.muted }]}>{t.yourProfessional}</Text>
+      <Text style={[typography.headline, { color: palette.text }]}>{link.professionalName}</Text>
+      <Text style={[typography.body, { color: palette.muted }]}>{link.organizationName}</Text>
       {link.startedAt === null ? null : (
-        <Text style={[typography.small, { color: colors.textMuted }]}>
+        <Text style={[typography.small, { color: palette.muted }]}>
           {t.since(link.startedAt.toLocaleDateString("pt-BR"))}
         </Text>
       )}
       {link.status === "inactive" ? <Message tone="info" text={t.paused} /> : null}
       {end.isError ? <Message text={errorMessage(toAppError(end.error))} /> : null}
-      <Button
+      <TextLink
         label={t.end}
-        variant="secondary"
-        loading={end.isPending}
         onPress={() => {
           Alert.alert(t.confirmTitle, t.confirmMessage(link.professionalName), [
             { text: t.confirmBack, style: "cancel" },
@@ -111,5 +146,20 @@ function LinkCard({ link }: { readonly link: MyLink }) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 12, padding: spacing.md, gap: spacing.sm },
+  hero: { gap: spacing.lg, marginTop: spacing.xl },
+  empty: {
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.sm + 4,
+    borderWidth: 1,
+    borderColor: palette.line,
+    borderStyle: "dashed",
+  },
+  card: {
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
 });

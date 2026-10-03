@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MIN_TOUCH, spacing, typography, useColors } from "../../../shared/ui/theme";
+import { StyleSheet, Text, View } from "react-native";
+import { Chip } from "../../../shared/ui/Chip";
+import { fonts, palette, radius, spacing, typography } from "../../../shared/ui/theme";
 import { availableActions, type ClientAction, type ClientItem } from "../domain/client";
 import { strings } from "./strings";
 
@@ -11,9 +12,15 @@ interface Props {
 
 const formatDate = (date: Date) => date.toLocaleDateString("pt-BR");
 
-/** Um aluno na lista: nome, estado do vínculo e as ações que o estado permite. */
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return (
+    (parts[0]?.[0] ?? "") + (parts.length > 1 ? (parts.at(-1)?.[0] ?? "") : "")
+  ).toUpperCase();
+}
+
+/** Um aluno na lista: avatar, nome, estado do vínculo e as ações que o estado permite. */
 export function ClientCard({ client, busy, onAction }: Props) {
-  const colors = useColors();
   const detail =
     client.status === "pending"
       ? client.pendingInvite === null
@@ -22,41 +29,46 @@ export function ClientCard({ client, busy, onAction }: Props) {
       : client.startedAt === null
         ? null
         : strings.list.since(formatDate(client.startedAt));
+  const active = client.status === "active";
 
   return (
-    <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-      <View style={styles.header}>
-        <Text style={[typography.label, styles.name, { color: colors.text }]}>{client.name}</Text>
-        <Text style={[typography.small, { color: colors.textMuted }]}>
-          {strings.status[client.status]}
-        </Text>
-      </View>
-      {detail === null ? null : (
-        <Text style={[typography.small, { color: colors.textMuted }]}>{detail}</Text>
-      )}
-      <View style={styles.actions}>
-        {availableActions(client).map((action) => (
-          <Pressable
-            key={action}
-            accessibilityRole="button"
-            accessibilityLabel={`${strings.actions[action]}: ${client.name}`}
-            accessibilityState={{ disabled: busy }}
-            disabled={busy}
-            onPress={() => {
-              onAction(action, client);
-            }}
-            style={({ pressed }) => [
-              styles.action,
-              { borderColor: action === "end" ? colors.danger : colors.border },
-              (pressed || busy) && styles.dimmed,
+    <View style={[styles.card, busy ? styles.dimmed : null]}>
+      <View style={styles.head}>
+        <View style={[styles.avatar, active ? styles.avatarActive : null]}>
+          <Text style={[styles.initials, { color: active ? palette.lime : palette.muted }]}>
+            {initials(client.name)}
+          </Text>
+        </View>
+        <View style={styles.texts}>
+          <Text style={[typography.label, { color: palette.text, fontSize: 16 }]} numberOfLines={1}>
+            {client.name}
+          </Text>
+          {detail === null ? null : (
+            <Text style={[typography.small, { color: palette.muted }]}>{detail}</Text>
+          )}
+        </View>
+        <View style={[styles.status, client.status === "pending" ? styles.statusPending : null]}>
+          <Text
+            style={[
+              typography.small,
+              { color: client.status === "pending" ? palette.onLime : palette.textSoft },
             ]}
           >
-            <Text
-              style={[typography.small, { color: action === "end" ? colors.danger : colors.text }]}
-            >
-              {strings.actions[action]}
-            </Text>
-          </Pressable>
+            {strings.status[client.status]}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.actions}>
+        {availableActions(client).map((action) => (
+          <Chip
+            key={action}
+            label={strings.actions[action]}
+            onPress={() => {
+              if (!busy) {
+                onAction(action, client);
+              }
+            }}
+          />
         ))}
       </View>
     </View>
@@ -64,16 +76,31 @@ export function ClientCard({ client, busy, onAction }: Props) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 12, padding: spacing.md, gap: spacing.sm },
-  header: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  name: { flex: 1 },
-  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  action: {
-    minHeight: MIN_TOUCH,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: spacing.md,
-    justifyContent: "center",
+  card: {
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.sm + 4,
   },
   dimmed: { opacity: 0.6 },
+  head: { flexDirection: "row", alignItems: "center", gap: spacing.sm + 4 },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: palette.surface2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarActive: { backgroundColor: palette.limeDark },
+  initials: { fontFamily: fonts.number, fontSize: 16 },
+  texts: { flex: 1, gap: 2 },
+  status: {
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: palette.surface2,
+  },
+  statusPending: { backgroundColor: palette.lime },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
 });

@@ -1,13 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
+import { StyleSheet, View } from "react-native";
 import { z } from "zod";
 import { toAppError } from "../../../shared/lib/http";
 import { Button } from "../../../shared/ui/Button";
+import { Chip } from "../../../shared/ui/Chip";
 import { errorMessage } from "../../../shared/ui/error-messages";
 import { Message } from "../../../shared/ui/Message";
+import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { TextField } from "../../../shared/ui/TextField";
+import { spacing } from "../../../shared/ui/theme";
 import { useInviteClient } from "../hooks/use-clients";
 import { openShare } from "./share-params";
 import { strings } from "./strings";
@@ -54,7 +58,28 @@ export function InviteClientScreen() {
   });
 
   return (
-    <Screen title={t.title} subtitle={t.subtitle}>
+    <Screen
+      header={
+        <RoundButton
+          icon="close"
+          label={t.close}
+          onPress={() => {
+            router.back();
+          }}
+        />
+      }
+      title={t.title}
+      subtitle={t.subtitle}
+      footer={
+        <Button
+          label={t.submit}
+          loading={invite.isPending}
+          onPress={() => {
+            void submit();
+          }}
+        />
+      }
+    >
       <Controller
         control={control}
         name="name"
@@ -67,22 +92,6 @@ export function InviteClientScreen() {
             autoCapitalize="words"
             autoComplete="off"
             error={formState.errors.name?.message}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="email"
-        render={({ field }) => (
-          <TextField
-            label={t.email}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="off"
-            error={formState.errors.email?.message}
           />
         )}
       />
@@ -104,32 +113,44 @@ export function InviteClientScreen() {
       />
       <Controller
         control={control}
-        name="goal"
+        name="email"
         render={({ field }) => (
           <TextField
-            label={t.goal}
+            label={t.email}
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            error={formState.errors.goal?.message}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="off"
+            error={formState.errors.email?.message}
           />
         )}
       />
+      <Controller
+        control={control}
+        name="goal"
+        render={({ field }) => (
+          <View accessibilityRole="radiogroup" accessibilityLabel={t.goal} style={styles.goals}>
+            {t.goals.map((goal) => (
+              <Chip
+                key={goal}
+                label={goal}
+                role="radio"
+                selected={field.value === goal}
+                onPress={() => {
+                  field.onChange(field.value === goal ? "" : goal);
+                }}
+              />
+            ))}
+          </View>
+        )}
+      />
       {invite.isError ? <Message text={errorMessage(toAppError(invite.error))} /> : null}
-      <Button
-        label={t.submit}
-        loading={invite.isPending}
-        onPress={() => {
-          void submit();
-        }}
-      />
-      <Button
-        label={t.cancel}
-        variant="secondary"
-        onPress={() => {
-          router.back();
-        }}
-      />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  goals: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+});
