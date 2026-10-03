@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTabBarInset } from "./PillTabBar";
 import { palette, spacing, typography } from "./theme";
 import { Title } from "./Title";
 
@@ -29,14 +30,22 @@ interface Props {
 
 /** Tela base: área segura, rolagem, teclado sem cobrir os campos e rodapé fixo opcional. */
 export function Screen({ title, titleAccent, subtitle, children, refresh, header, footer }: Props) {
+  // Dentro das abas, a barra flutua por cima: o fim da rolagem (ou o rodapé) fica livre dela.
+  const tabBarInset = useTabBarInset();
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}>
+    <SafeAreaView
+      edges={tabBarInset > 0 ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+      style={[styles.safe, { backgroundColor: palette.background }]}
+    >
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            footer === undefined && tabBarInset > 0 ? { paddingBottom: tabBarInset } : null,
+          ]}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             refresh === undefined ? undefined : (
@@ -61,7 +70,11 @@ export function Screen({ title, titleAccent, subtitle, children, refresh, header
             {children}
           </View>
         </ScrollView>
-        {footer === undefined ? null : <View style={styles.footer}>{footer}</View>}
+        {footer === undefined ? null : (
+          <View style={[styles.footer, tabBarInset > 0 ? { paddingBottom: tabBarInset } : null]}>
+            {footer}
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
