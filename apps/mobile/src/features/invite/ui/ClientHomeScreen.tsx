@@ -12,7 +12,7 @@ import { TextLink } from "../../../shared/ui/TextLink";
 import { Title } from "../../../shared/ui/Title";
 import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
 import { useAuthState, useMe } from "../../auth";
-import { TodayCard, usePlannedSnapshot, useSyncPlanned } from "../../sync";
+import { ProgramWorkouts, TodayCard, usePlannedSnapshot, useSyncPlanned } from "../../sync";
 import { currentLink, type MyLink } from "../domain/invite";
 import { useEndMyLink, useMyLinks } from "../hooks/use-invite";
 import { InviteFlow } from "./InviteFlow";
@@ -104,7 +104,10 @@ export function ClientHomeScreen() {
       }}
     >
       {planned.data?.program != null && planned.data.workouts.length > 0 ? (
-        <TodayCard snapshot={planned.data} date={today} />
+        <>
+          <TodayCard snapshot={planned.data} date={today} />
+          <ProgramWorkouts snapshot={planned.data} />
+        </>
       ) : (
         <EmptyState
           icon="dumbbell"
