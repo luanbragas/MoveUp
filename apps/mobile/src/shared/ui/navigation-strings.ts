@@ -16,37 +16,57 @@ export const navigationStrings = {
   },
   soon: {
     clientTraining: {
-      title: "Seu\ntreino",
+      title: "Treino",
+      icon: "dumbbell",
+      emptyTitle: "Seu treino vem aqui",
       description: "Quando seu personal montar o treino, ele aparece aqui, pronto para começar.",
     },
     clientHistory: {
       title: "Histórico",
-      description: "Cada treino que você terminar fica guardado aqui, com cargas e repetições.",
+      icon: "clock",
+      emptyTitle: "Seu primeiro treino aparece aqui",
+      description:
+        "Cada treino terminado fica salvo com carga e esforço, para você comparar com a vez anterior.",
     },
     clientProgress: {
       title: "Evolução",
-      description: "Peso, medidas, recordes e fotos de evolução aparecem aqui em breve.",
+      icon: "trend",
+      emptyTitle: "Comece pela primeira avaliação",
+      description:
+        "Medidas, peso e % de gordura de hoje viram o ponto de partida. Daqui a algumas semanas, sua evolução aparece aqui.",
     },
     clientProfile: {
       title: "Perfil",
-      description: "Seus dados, unidades e privacidade chegam aqui em breve.",
+      icon: "user",
+      emptyTitle: "Seus dados e privacidade",
+      description:
+        "Unidades, notificações e o que você compartilha com o personal chegam aqui em breve.",
     },
     dashboard: {
       title: "Painel",
+      icon: "chart",
+      emptyTitle: "Sua carteira em um olhar",
       description:
-        "Alunos ativos, adesão da carteira e o mapa de treinos da semana aparecem aqui quando seus alunos começarem a treinar.",
+        "Alunos ativos, adesão média e o mapa de treinos das últimas semanas aparecem aqui quando seus alunos começarem a treinar.",
     },
     training: {
       title: "Treinos",
-      description: "Monte treinos, modelos e a biblioteca de exercícios por aqui em breve.",
+      icon: "dumbbell",
+      emptyTitle: "Monte o primeiro treino",
+      description: "Treinos, modelos e a biblioteca de exercícios chegam aqui em breve.",
     },
     alerts: {
       title: "Atenção",
-      description: "Dores relatadas, alunos parados e avaliações atrasadas aparecem aqui.",
+      icon: "bell",
+      emptyTitle: "Tudo em dia por aqui",
+      description:
+        "Quando um aluno relatar dor, sumir ou mandar recado, aparece aqui primeiro, do mais urgente para o menos.",
     },
     settings: {
       title: "Ajustes",
-      description: "Seu perfil, plano e privacidade chegam aqui em breve.",
+      icon: "sliders",
+      emptyTitle: "Perfil, plano e privacidade",
+      description: "Seus dados, o plano e as preferências do app chegam aqui em breve.",
     },
   },
 } as const;

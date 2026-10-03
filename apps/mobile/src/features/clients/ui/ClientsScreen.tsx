@@ -4,13 +4,13 @@ import { Alert, StyleSheet, Text, View } from "react-native";
 import { toAppError } from "../../../shared/lib/http";
 import { Button } from "../../../shared/ui/Button";
 import { errorMessage } from "../../../shared/ui/error-messages";
-import { Icon } from "../../../shared/ui/Icon";
+import { EmptyState } from "../../../shared/ui/EmptyState";
 import { Message } from "../../../shared/ui/Message";
 import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { Segmented } from "../../../shared/ui/Segmented";
 import { Skeleton } from "../../../shared/ui/Skeleton";
-import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
+import { palette, typography } from "../../../shared/ui/theme";
 import { inviteUrl, type ClientAction, type ClientItem } from "../domain/client";
 import { useClients, useLinkCommand, type LinkCommand } from "../hooks/use-clients";
 import { ClientCard } from "./ClientCard";
@@ -124,12 +124,12 @@ export function ClientsScreen() {
         </>
       ) : null}
       {clients.isSuccess && items.length === 0 ? (
-        <View style={styles.empty}>
-          <Icon name="users" size={30} color={palette.lime} />
-          <Text style={[typography.headline, { color: palette.text }]}>{t.emptyTitle}</Text>
-          <Text style={[typography.body, { color: palette.textSoft }]}>{t.emptyText}</Text>
-          <Button label={t.invite} icon="plus" onPress={invite} />
-        </View>
+        <EmptyState
+          icon="users"
+          title={t.emptyTitle}
+          text={t.emptyText}
+          action={<Button label={t.invite} icon="plus" onPress={invite} />}
+        />
       ) : null}
       {items.length > 0 ? (
         <Segmented
@@ -171,13 +171,4 @@ export function ClientsScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  empty: {
-    backgroundColor: palette.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: spacing.sm + 4,
-    borderWidth: 1,
-    borderColor: palette.line,
-    borderStyle: "dashed",
-  },
 });

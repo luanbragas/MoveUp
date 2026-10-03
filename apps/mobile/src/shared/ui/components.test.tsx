@@ -1,10 +1,20 @@
+import { onlineManager } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Button } from "./Button";
 import { Checkbox } from "./Checkbox";
+import { EmptyState } from "./EmptyState";
+import { ErrorScreen } from "./ErrorScreen";
+import { Screen } from "./Screen";
 import { ChoiceGroup } from "./ChoiceGroup";
 import { Segmented } from "./Segmented";
 import { TextField } from "./TextField";
 import { Toggle } from "./Toggle";
+
+const METRICS = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 0, left: 0, right: 0, bottom: 0 },
+};
 
 // Componentes base do visual "Impacto": o que importa é o comportamento e o que o leitor de tela recebe.
 
@@ -81,5 +91,48 @@ describe("componentes base", () => {
     );
     expect(screen.getByText("Confira o e-mail.")).toBeOnTheScreen();
     expect(screen.getByLabelText("E-mail")).toHaveProp("accessibilityHint", "Confira o e-mail.");
+  });
+});
+
+describe("estados de tela", () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+  });
+
+  it("vazio mostra o que vai aparecer e o próximo passo", async () => {
+    const onPress = jest.fn();
+    await render(
+      <EmptyState
+        icon="users"
+        title="Convide seu primeiro aluno"
+        text="Pelo WhatsApp ou QR Code."
+        action={<Button label="Convidar aluno" onPress={onPress} />}
+      />,
+    );
+    expect(screen.getByRole("header", { name: "Convide seu primeiro aluno" })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Convidar aluno" }));
+    expect(onPress).toHaveBeenCalled();
+  });
+
+  it("erro inesperado tenta de novo e mostra o código só quando existe", async () => {
+    const onRetry = jest.fn();
+    await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <ErrorScreen onRetry={onRetry} code="trace-123" />
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByText(/trace-123/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(onRetry).toHaveBeenCalled();
+  });
+
+  it("sem internet, toda tela avisa no topo", async () => {
+    onlineManager.setOnline(false);
+    await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <Screen title="Alunos" />
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByText(/Sem internet/)).toBeOnTheScreen();
   });
 });

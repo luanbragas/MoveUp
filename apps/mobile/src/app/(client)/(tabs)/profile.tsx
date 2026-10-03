@@ -6,7 +6,12 @@ const t = navigationStrings.soon.clientProfile;
 
 export default function Soon() {
   return (
-    <PlaceholderScreen title={t.title} description={t.description}>
+    <PlaceholderScreen
+      title={t.title}
+      emptyTitle={t.emptyTitle}
+      description={t.description}
+      icon={t.icon}
+    >
       <SignOutButton />
     </PlaceholderScreen>
   );

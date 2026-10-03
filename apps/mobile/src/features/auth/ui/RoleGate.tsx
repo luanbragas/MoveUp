@@ -1,7 +1,8 @@
 import { Redirect } from "expo-router";
 import type { ReactNode } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useColors } from "../../../shared/ui/theme";
+import { StyleSheet, View } from "react-native";
+import { Chevrons } from "../../../shared/ui/Chevrons";
+import { palette } from "../../../shared/ui/theme";
 import { useEntry } from "../hooks/use-entry";
 
 interface Props {
@@ -16,12 +17,14 @@ interface Props {
  */
 export function RoleGate({ home, children }: Props) {
   const { destination } = useEntry();
-  const colors = useColors();
 
   if (destination === "loading") {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator accessibilityLabel="Carregando" color={colors.primary} />
+      <View
+        accessibilityLabel="Carregando"
+        style={[styles.center, { backgroundColor: palette.background }]}
+      >
+        <Chevrons size={72} count={3} />
       </View>
     );
   }

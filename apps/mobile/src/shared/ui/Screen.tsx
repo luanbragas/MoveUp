@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOnline } from "../lib/use-online";
+import { Banner } from "./Banner";
 import { useTabBarInset } from "./PillTabBar";
 import { palette, spacing, typography } from "./theme";
 import { Title } from "./Title";
@@ -28,10 +30,13 @@ interface Props {
   readonly footer?: ReactNode;
 }
 
+const OFFLINE = "Sem internet. Mostrando os últimos dados salvos.";
+
 /** Tela base: área segura, rolagem, teclado sem cobrir os campos e rodapé fixo opcional. */
 export function Screen({ title, titleAccent, subtitle, children, refresh, header, footer }: Props) {
   // Dentro das abas, a barra flutua por cima: o fim da rolagem (ou o rodapé) fica livre dela.
   const tabBarInset = useTabBarInset();
+  const online = useOnline();
   return (
     <SafeAreaView
       edges={tabBarInset > 0 ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
@@ -58,6 +63,7 @@ export function Screen({ title, titleAccent, subtitle, children, refresh, header
           }
         >
           {header === undefined ? null : <View style={styles.header}>{header}</View>}
+          {online ? null : <Banner text={OFFLINE} />}
           {title === undefined ? null : (
             <Title size={40} {...(titleAccent === undefined ? {} : { accent: titleAccent })}>
               {title}

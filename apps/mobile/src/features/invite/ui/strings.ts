@@ -5,7 +5,7 @@ export const strings = {
       firstName.length > 0 && firstName.length <= 9 ? `Bora,\n${firstName}.` : "Bora\ntreinar.",
     error: "Não conseguimos carregar seu personal.",
     retry: "Tentar de novo",
-    emptyTitle: "Seu treino\nvem aqui",
+    emptyTitle: "Seu treino vem aqui",
     emptyText: (professional: string) =>
       `${professional} está montando seu primeiro treino. Você recebe um aviso assim que ele chegar.`,
   },

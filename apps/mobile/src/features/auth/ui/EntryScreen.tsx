@@ -1,9 +1,10 @@
 import { Redirect, type Href } from "expo-router";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button } from "../../../shared/ui/Button";
-import { Message } from "../../../shared/ui/Message";
+import { Chevrons } from "../../../shared/ui/Chevrons";
 import { Screen } from "../../../shared/ui/Screen";
-import { useColors } from "../../../shared/ui/theme";
+import { TextLink } from "../../../shared/ui/TextLink";
+import { palette } from "../../../shared/ui/theme";
 import type { Destination } from "../domain/entry";
 import { useSignOut } from "../hooks/use-auth-actions";
 import { useEntry } from "../hooks/use-entry";
@@ -22,28 +23,34 @@ const ROUTES: Readonly<Record<Exclude<Destination, "loading" | "error">, Href>> 
 export function EntryScreen() {
   const { destination, retry } = useEntry();
   const signOut = useSignOut();
-  const colors = useColors();
 
   if (destination === "loading") {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator accessibilityLabel="Carregando" color={colors.primary} />
+      <View
+        accessibilityLabel={strings.entry.loading}
+        style={[styles.center, { backgroundColor: palette.background }]}
+      >
+        <Chevrons size={72} count={3} />
       </View>
     );
   }
   if (destination === "error") {
     return (
-      <Screen title="MoveUp">
-        <Message text={strings.entry.error} />
-        <Button label={strings.entry.retry} onPress={retry} />
-        <Button
-          label={strings.entry.signOut}
-          variant="secondary"
-          onPress={() => {
-            signOut.mutate();
-          }}
-        />
-      </Screen>
+      <Screen
+        title={strings.entry.errorTitle}
+        subtitle={strings.entry.error}
+        footer={
+          <>
+            <Button label={strings.entry.retry} icon="refresh" onPress={retry} />
+            <TextLink
+              label={strings.entry.signOut}
+              onPress={() => {
+                signOut.mutate();
+              }}
+            />
+          </>
+        }
+      />
     );
   }
   return <Redirect href={ROUTES[destination]} />;

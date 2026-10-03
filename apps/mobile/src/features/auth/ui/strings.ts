@@ -5,7 +5,9 @@ import type { AuthErrorCode } from "../domain/session";
 // Textos da feature auth (pt-BR), num lugar só e prontos para i18n.
 export const strings = {
   entry: {
-    error: "Não conseguimos carregar sua conta.",
+    loading: "Carregando",
+    errorTitle: "Não deu\npara abrir.",
+    error: "Não conseguimos carregar sua conta. Confira a internet e tente de novo.",
     retry: "Tentar de novo",
     signOut: "Sair",
   },

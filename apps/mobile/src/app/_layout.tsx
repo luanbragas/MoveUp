@@ -1,9 +1,11 @@
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { AppProviders } from "../providers/AppProviders";
+import { toAppError } from "../shared/lib/http";
+import { ErrorScreen } from "../shared/ui/ErrorScreen";
 import { fontAssets } from "../shared/ui/font-assets";
 import { palette } from "../shared/ui/theme";
 
@@ -33,5 +35,21 @@ export default function RootLayout() {
         }}
       />
     </AppProviders>
+  );
+}
+
+/** Erro inesperado em qualquer rota: tela de erro do sistema visual, sem detalhe técnico. */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const failure = toAppError(error);
+  return (
+    <ErrorScreen
+      code={failure.kind === "problem" ? failure.traceId : null}
+      onRetry={() => {
+        void retry();
+      }}
+      onHome={() => {
+        router.replace("/");
+      }}
+    />
   );
 }

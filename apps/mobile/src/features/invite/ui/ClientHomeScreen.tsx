@@ -4,7 +4,7 @@ import { toAppError } from "../../../shared/lib/http";
 import { Button } from "../../../shared/ui/Button";
 import { Chevrons } from "../../../shared/ui/Chevrons";
 import { errorMessage } from "../../../shared/ui/error-messages";
-import { Icon } from "../../../shared/ui/Icon";
+import { EmptyState } from "../../../shared/ui/EmptyState";
 import { Message } from "../../../shared/ui/Message";
 import { Screen } from "../../../shared/ui/Screen";
 import { Skeleton } from "../../../shared/ui/Skeleton";
@@ -98,13 +98,11 @@ export function ClientHomeScreen() {
         },
       }}
     >
-      <View style={styles.empty}>
-        <Icon name="dumbbell" size={28} color={palette.lime} />
-        <Title size={28}>{strings.home.emptyTitle}</Title>
-        <Text style={[typography.body, { color: palette.textSoft }]}>
-          {strings.home.emptyText(link.professionalName)}
-        </Text>
-      </View>
+      <EmptyState
+        icon="dumbbell"
+        title={strings.home.emptyTitle}
+        text={strings.home.emptyText(link.professionalName)}
+      />
       <LinkCard link={link} />
     </Screen>
   );
@@ -147,15 +145,7 @@ function LinkCard({ link }: { readonly link: MyLink }) {
 
 const styles = StyleSheet.create({
   hero: { gap: spacing.lg, marginTop: spacing.xl },
-  empty: {
-    backgroundColor: palette.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: spacing.sm + 4,
-    borderWidth: 1,
-    borderColor: palette.line,
-    borderStyle: "dashed",
-  },
+
   card: {
     backgroundColor: palette.surface,
     borderRadius: radius.lg,
