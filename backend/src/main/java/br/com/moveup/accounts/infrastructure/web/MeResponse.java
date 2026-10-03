@@ -3,8 +3,10 @@ package br.com.moveup.accounts.infrastructure.web;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 import br.com.moveup.accounts.application.port.in.MeView;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,9 +41,40 @@ record MeResponse(
         List<String> missingConsents,
     @Schema(
             requiredMode = REQUIRED,
+            description = "Menor sem autorização do responsável: o app pede antes de seguir")
+        boolean guardianConsentRequired,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(
             description =
-                "Menor sem consentimento do responsável vigente: o app pede antes de seguir")
-        boolean guardianConsentRequired) {
+                "Pedido ao responsável aguardando ou recusado; ausente se não há (ou já autorizou)")
+        GuardianRequestResponse guardianRequest) {
+
+  @Schema(name = "GuardianRequestStatus")
+  record GuardianRequestResponse(
+      @Schema(
+              requiredMode = REQUIRED,
+              allowableValues = {"pending", "declined"})
+          String status,
+      @Schema(requiredMode = REQUIRED) String guardianName,
+      @Schema(
+              requiredMode = REQUIRED,
+              allowableValues = {"mother", "father", "legal_guardian", "other"})
+          String relationship,
+      @Schema(requiredMode = REQUIRED) Instant requestedAt,
+      @Schema(description = "Validade do último link; ausente se recusado", nullable = true)
+          Instant linkExpiresAt) {
+
+    static GuardianRequestResponse from(MeView.GuardianRequestView view) {
+      return view == null
+          ? null
+          : new GuardianRequestResponse(
+              view.status(),
+              view.guardianName(),
+              view.relationship(),
+              view.requestedAt(),
+              view.linkExpiresAt());
+    }
+  }
 
   static MeResponse from(MeView view) {
     return new MeResponse(
@@ -55,6 +88,7 @@ record MeResponse(
         view.role(),
         view.minor(),
         view.missingConsents(),
-        view.guardianConsentRequired());
+        view.guardianConsentRequired(),
+        GuardianRequestResponse.from(view.guardianRequest()));
   }
 }

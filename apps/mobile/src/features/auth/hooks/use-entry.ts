@@ -1,10 +1,15 @@
 import { toAppError } from "../../../shared/lib/http";
 import { entryDestination, type AccountLookup, type Destination } from "../domain/entry";
+import type { Me } from "../domain/me";
 import { useAuthState } from "./use-auth-state";
 import { useMe } from "./use-me";
 
-/** Destino ao abrir o app, mais a ação de tentar de novo quando a busca da conta falha. */
-export function useEntry(): { readonly destination: Destination; readonly retry: () => void } {
+/** Destino ao abrir o app, a conta (se já carregou) e a ação de buscar de novo. */
+export function useEntry(): {
+  readonly destination: Destination;
+  readonly me: Me | null;
+  readonly retry: () => void;
+} {
   const auth = useAuthState();
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
   const me = useMe(uid);
@@ -25,6 +30,7 @@ export function useEntry(): { readonly destination: Destination; readonly retry:
   const signedIn = auth.status === "loading" ? null : auth.status === "signed-in";
   return {
     destination: entryDestination(signedIn, account),
+    me: me.data ?? null,
     retry: () => {
       void me.refetch();
     },

@@ -43,7 +43,7 @@ public final class AccountProfile {
 
   /**
    * @param accepted versão aceita (e não revogada) de cada consentimento
-   * @param guardianConsentActive há consentimento do responsável vigente
+   * @param guardianConsentActive há consentimento autorizado pelo responsável e não revogado
    */
   public Onboarding onboardingOn(
       LocalDate today,

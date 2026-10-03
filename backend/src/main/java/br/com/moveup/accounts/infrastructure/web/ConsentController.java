@@ -1,7 +1,7 @@
 package br.com.moveup.accounts.infrastructure.web;
 
-import br.com.moveup.accounts.application.port.in.DeclareGuardianConsent;
 import br.com.moveup.accounts.application.port.in.ManageConsents;
+import br.com.moveup.accounts.application.port.in.ManageGuardianRequest;
 import br.com.moveup.accounts.domain.exception.AccountNotRegistered;
 import br.com.moveup.shared.infrastructure.security.CurrentAppUser;
 import br.com.moveup.shared.infrastructure.web.ApiProblem;
@@ -12,10 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,15 +35,15 @@ import org.springframework.web.bind.annotation.RestController;
 class ConsentController {
 
   private final ManageConsents manageConsents;
-  private final DeclareGuardianConsent declareGuardianConsent;
+  private final ManageGuardianRequest guardianRequest;
   private final CurrentAppUser currentAppUser;
 
   ConsentController(
       ManageConsents manageConsents,
-      DeclareGuardianConsent declareGuardianConsent,
+      ManageGuardianRequest guardianRequest,
       CurrentAppUser currentAppUser) {
     this.manageConsents = manageConsents;
-    this.declareGuardianConsent = declareGuardianConsent;
+    this.guardianRequest = guardianRequest;
     this.currentAppUser = currentAppUser;
   }
 
@@ -70,15 +70,10 @@ class ConsentController {
       @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotEmpty @Size(max = 4)
           List<@Valid GrantItem> grants) {}
 
-  @Schema(name = "GuardianConsent")
-  record GuardianConsentRequest(
+  @Schema(name = "GuardianRequest")
+  record GuardianRequestBody(
       @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Size(max = 200)
           String guardianName,
-      @Schema(requiredMode = Schema.RequiredMode.REQUIRED, format = "email")
-          @NotBlank
-          @Email
-          @Size(max = 254)
-          String guardianEmail,
       @Schema(
               requiredMode = Schema.RequiredMode.REQUIRED,
               allowableValues = {"mother", "father", "legal_guardian", "other"})
@@ -86,6 +81,21 @@ class ConsentController {
           String relationship,
       @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Size(max = 50)
           String docVersion) {}
+
+  @Schema(name = "GuardianLink")
+  record GuardianLinkResponse(
+      @Schema(
+              requiredMode = Schema.RequiredMode.REQUIRED,
+              description =
+                  "Link para o responsável abrir no celular dele. Só aparece nesta resposta: o"
+                      + " app compartilha na hora")
+          String url,
+      @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant expiresAt) {
+
+    static GuardianLinkResponse from(ManageGuardianRequest.GuardianLink link) {
+      return new GuardianLinkResponse(link.url(), link.expiresAt());
+    }
+  }
 
   @GetMapping(path = "/v1/legal-documents", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(
@@ -139,41 +149,81 @@ class ConsentController {
     manageConsents.revoke(currentUser(), kind, RequestOrigins.of(http));
   }
 
-  @PostMapping(path = "/v1/guardian-consent", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PostMapping(
+      path = "/v1/guardian-consent",
+      consumes = MediaType.APPLICATION_JSON_VALUE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseStatus(HttpStatus.CREATED)
   @Operation(
-      operationId = "declareGuardianConsent",
-      summary = "Consentimento do responsável pelo aluno menor",
+      operationId = "requestGuardianConsent",
+      summary = "Menor pede a autorização do responsável",
       description =
-          "Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). Os dados"
-              + " do responsável só são visíveis para o próprio aluno.")
-  @ApiResponse(responseCode = "204", description = "Consentimento registrado")
+          "Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). O menor"
+              + " indica quem é o responsável e recebe o link para mandar a essa pessoa; só vale"
+              + " quando o responsável autoriza pelo link. Os dados do responsável só são visíveis"
+              + " para o próprio aluno.")
+  @ApiResponse(responseCode = "201", description = "Pedido criado; link para o responsável")
   @ApiResponse(
       responseCode = "409",
       description =
-          "`guardian-consent-not-required` (conta de maior), `guardian-consent-already-active` ou"
-              + " `consent-version-outdated`",
+          "`guardian-consent-not-required` (conta de maior), `guardian-consent-already-active`"
+              + " (já há pedido aberto ou autorização) ou `consent-version-outdated`",
       content =
           @Content(
               mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
               schema = @Schema(implementation = ApiProblem.class)))
   @ApiResponse(
       responseCode = "422",
-      description = "`guardian-email-invalid`, `relationship-invalid`, `name-invalid`",
+      description = "`relationship-invalid`, `name-invalid`",
       content =
           @Content(
               mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
               schema = @Schema(implementation = ApiProblem.class)))
-  void declareGuardian(
-      @Valid @RequestBody GuardianConsentRequest request, HttpServletRequest http) {
-    declareGuardianConsent.handle(
-        new DeclareGuardianConsent.Command(
-            currentUser(),
-            request.guardianName(),
-            request.guardianEmail(),
-            request.relationship(),
-            request.docVersion(),
-            RequestOrigins.of(http)));
+  GuardianLinkResponse requestGuardian(
+      @Valid @RequestBody GuardianRequestBody request, HttpServletRequest http) {
+    return GuardianLinkResponse.from(
+        guardianRequest.request(
+            new ManageGuardianRequest.RequestCommand(
+                currentUser(),
+                request.guardianName(),
+                request.relationship(),
+                request.docVersion(),
+                RequestOrigins.of(http))));
+  }
+
+  @PostMapping(path = "/v1/guardian-consent/link", produces = MediaType.APPLICATION_JSON_VALUE)
+  @Operation(
+      operationId = "resendGuardianLink",
+      summary = "Novo link para o responsável",
+      description = "Para reenviar o pedido. O link anterior deixa de valer.")
+  @ApiResponse(responseCode = "200", description = "Link novo")
+  @ApiResponse(
+      responseCode = "409",
+      description = "`guardian-request-not-pending` (nenhum pedido aguardando o responsável)",
+      content =
+          @Content(
+              mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+              schema = @Schema(implementation = ApiProblem.class)))
+  GuardianLinkResponse resendGuardianLink() {
+    return GuardianLinkResponse.from(guardianRequest.resendLink(currentUser()));
+  }
+
+  @DeleteMapping("/v1/guardian-consent")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(
+      operationId = "cancelGuardianRequest",
+      summary = "Cancela o pedido ao responsável",
+      description = "Para indicar outra pessoa. O link enviado deixa de valer.")
+  @ApiResponse(responseCode = "204", description = "Pedido cancelado")
+  @ApiResponse(
+      responseCode = "409",
+      description = "`guardian-request-not-pending` (nenhum pedido aguardando o responsável)",
+      content =
+          @Content(
+              mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+              schema = @Schema(implementation = ApiProblem.class)))
+  void cancelGuardianRequest() {
+    guardianRequest.cancel(currentUser());
   }
 
   private UUID currentUser() {

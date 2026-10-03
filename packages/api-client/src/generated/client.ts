@@ -84,20 +84,9 @@ export interface GrantConsents {
   grants: ConsentGrant[];
 }
 
-/**
- * @minLength 1
- */
-export type GuardianConsentRelationship = typeof GuardianConsentRelationship[keyof typeof GuardianConsentRelationship];
-
-
-export const GuardianConsentRelationship = {
-  mother: 'mother',
-  father: 'father',
-  legal_guardian: 'legal_guardian',
-  other: 'other',
-} as const;
-
-export interface GuardianConsent {
+export interface GuardianAuthorizationDecision {
+  /** true = autoriza; false = não autoriza */
+  approve: boolean;
   /**
      * @minLength 0
      * @maxLength 50
@@ -105,16 +94,101 @@ export interface GuardianConsent {
   docVersion: string;
   /**
      * @minLength 0
-     * @maxLength 254
+     * @maxLength 64
      */
-  guardianEmail: string;
+  token: string;
+}
+
+export interface GuardianAuthorizationLookup {
+  /**
+     * Segredo do link
+     * @minLength 0
+     * @maxLength 64
+     */
+  token: string;
+}
+
+export type GuardianAuthorizationPreviewRelationship = typeof GuardianAuthorizationPreviewRelationship[keyof typeof GuardianAuthorizationPreviewRelationship];
+
+
+export const GuardianAuthorizationPreviewRelationship = {
+  mother: 'mother',
+  father: 'father',
+  legal_guardian: 'legal_guardian',
+  other: 'other',
+} as const;
+
+export interface GuardianAuthorizationPreview {
+  /** Versão do termo que a página mostra; volta na decisão */
+  docVersion: string;
+  expiresAt: string;
+  guardianName: string;
+  minorFirstName: string;
+  relationship: GuardianAuthorizationPreviewRelationship;
+}
+
+export interface GuardianLink {
+  expiresAt: string;
+  /** Link para o responsável abrir no celular dele. Só aparece nesta resposta: o app compartilha na hora */
+  url: string;
+}
+
+/**
+ * @minLength 1
+ */
+export type GuardianRequestRelationship = typeof GuardianRequestRelationship[keyof typeof GuardianRequestRelationship];
+
+
+export const GuardianRequestRelationship = {
+  mother: 'mother',
+  father: 'father',
+  legal_guardian: 'legal_guardian',
+  other: 'other',
+} as const;
+
+export interface GuardianRequest {
+  /**
+     * @minLength 0
+     * @maxLength 50
+     */
+  docVersion: string;
   /**
      * @minLength 0
      * @maxLength 200
      */
   guardianName: string;
   /** @minLength 1 */
-  relationship: GuardianConsentRelationship;
+  relationship: GuardianRequestRelationship;
+}
+
+export type GuardianRequestStatusRelationship = typeof GuardianRequestStatusRelationship[keyof typeof GuardianRequestStatusRelationship];
+
+
+export const GuardianRequestStatusRelationship = {
+  mother: 'mother',
+  father: 'father',
+  legal_guardian: 'legal_guardian',
+  other: 'other',
+} as const;
+
+export type GuardianRequestStatusStatus = typeof GuardianRequestStatusStatus[keyof typeof GuardianRequestStatusStatus];
+
+
+export const GuardianRequestStatusStatus = {
+  pending: 'pending',
+  declined: 'declined',
+} as const;
+
+export interface GuardianRequestStatus {
+  guardianName: string;
+  /**
+     * Validade do último link; ausente se recusado
+     * @nullable
+     */
+  linkExpiresAt?: string | null;
+  relationship: GuardianRequestStatusRelationship;
+  requestedAt: string;
+  status: GuardianRequestStatusStatus;
 }
 
 /**
@@ -188,8 +262,10 @@ export const MeWeightUnit = {
  */
 export interface Me {
   email: string;
-  /** Menor sem consentimento do responsável vigente: o app pede antes de seguir */
+  /** Menor sem autorização do responsável: o app pede antes de seguir */
   guardianConsentRequired: boolean;
+  /** Pedido ao responsável aguardando ou recusado; ausente se não há (ou já autorizou) */
+  guardianRequest?: GuardianRequestStatus;
   id: string;
   lengthUnit: MeLengthUnit;
   locale: string;
@@ -823,43 +899,43 @@ export const revokeConsent = async (kind: string, options?: Parameters<typeof ap
 
 
 
-export type declareGuardianConsentResponse204 = {
+export type decideGuardianAuthorizationResponse204 = {
   data: void
   status: 204
 }
 
-export type declareGuardianConsentResponse409 = {
+export type decideGuardianAuthorizationResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type decideGuardianAuthorizationResponse409 = {
   data: Problem
   status: 409
 }
 
-export type declareGuardianConsentResponse422 = {
-  data: Problem
-  status: 422
-}
-
-export type declareGuardianConsentResponseSuccess = (declareGuardianConsentResponse204) & {
+export type decideGuardianAuthorizationResponseSuccess = (decideGuardianAuthorizationResponse204) & {
   headers: Headers;
 };
-export type declareGuardianConsentResponseError = (declareGuardianConsentResponse409 | declareGuardianConsentResponse422) & {
+export type decideGuardianAuthorizationResponseError = (decideGuardianAuthorizationResponse404 | decideGuardianAuthorizationResponse409) & {
   headers: Headers;
 };
 
-export type declareGuardianConsentResponse = (declareGuardianConsentResponseSuccess | declareGuardianConsentResponseError)
+export type decideGuardianAuthorizationResponse = (decideGuardianAuthorizationResponseSuccess | decideGuardianAuthorizationResponseError)
 
-export const getDeclareGuardianConsentUrl = () => {
-
-
+export const getDecideGuardianAuthorizationUrl = () => {
 
 
-  return `/v1/guardian-consent`
+
+
+  return `/v1/guardian-authorizations/decision`
 }
 
 /**
- * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). Os dados do responsável só são visíveis para o próprio aluno.
- * @summary Consentimento do responsável pelo aluno menor
+ * Guarda quando, o IP e o navegador como prova (LGPD). O link vale uma vez: depois da decisão responde 404.
+ * @summary Responsável autoriza ou recusa
  */
-export const declareGuardianConsent = async (guardianConsent: GuardianConsent, options?: Parameters<typeof apiFetch>[1]): Promise<declareGuardianConsentResponse> => {
+export const decideGuardianAuthorization = async (guardianAuthorizationDecision: GuardianAuthorizationDecision, options?: Parameters<typeof apiFetch>[1]): Promise<decideGuardianAuthorizationResponse> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -875,12 +951,221 @@ export const declareGuardianConsent = async (guardianConsent: GuardianConsent, o
     }
     return headers;
   };
-return apiFetch<declareGuardianConsentResponse>(getDeclareGuardianConsentUrl(),
+return apiFetch<decideGuardianAuthorizationResponse>(getDecideGuardianAuthorizationUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(guardianConsent)
+    body: JSON.stringify(guardianAuthorizationDecision)
+  }
+);}
+
+
+
+export type previewGuardianAuthorizationResponse200 = {
+  data: GuardianAuthorizationPreview
+  status: 200
+}
+
+export type previewGuardianAuthorizationResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type previewGuardianAuthorizationResponseSuccess = (previewGuardianAuthorizationResponse200) & {
+  headers: Headers;
+};
+export type previewGuardianAuthorizationResponseError = (previewGuardianAuthorizationResponse404) & {
+  headers: Headers;
+};
+
+export type previewGuardianAuthorizationResponse = (previewGuardianAuthorizationResponseSuccess | previewGuardianAuthorizationResponseError)
+
+export const getPreviewGuardianAuthorizationUrl = () => {
+
+
+
+
+  return `/v1/guardian-authorizations/preview`
+}
+
+/**
+ * Só o primeiro nome do menor e quem ele indicou; nenhum dado de saúde.
+ * @summary Pedido de autorização, pelo link
+ */
+export const previewGuardianAuthorization = async (guardianAuthorizationLookup: GuardianAuthorizationLookup, options?: Parameters<typeof apiFetch>[1]): Promise<previewGuardianAuthorizationResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<previewGuardianAuthorizationResponse>(getPreviewGuardianAuthorizationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guardianAuthorizationLookup)
+  }
+);}
+
+
+
+export type cancelGuardianRequestResponse204 = {
+  data: void
+  status: 204
+}
+
+export type cancelGuardianRequestResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type cancelGuardianRequestResponseSuccess = (cancelGuardianRequestResponse204) & {
+  headers: Headers;
+};
+export type cancelGuardianRequestResponseError = (cancelGuardianRequestResponse409) & {
+  headers: Headers;
+};
+
+export type cancelGuardianRequestResponse = (cancelGuardianRequestResponseSuccess | cancelGuardianRequestResponseError)
+
+export const getCancelGuardianRequestUrl = () => {
+
+
+
+
+  return `/v1/guardian-consent`
+}
+
+/**
+ * Para indicar outra pessoa. O link enviado deixa de valer.
+ * @summary Cancela o pedido ao responsável
+ */
+export const cancelGuardianRequest = async ( options?: Parameters<typeof apiFetch>[1]): Promise<cancelGuardianRequestResponse> => {
+
+  return apiFetch<cancelGuardianRequestResponse>(getCancelGuardianRequestUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type requestGuardianConsentResponse201 = {
+  data: GuardianLink
+  status: 201
+}
+
+export type requestGuardianConsentResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type requestGuardianConsentResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type requestGuardianConsentResponseSuccess = (requestGuardianConsentResponse201) & {
+  headers: Headers;
+};
+export type requestGuardianConsentResponseError = (requestGuardianConsentResponse409 | requestGuardianConsentResponse422) & {
+  headers: Headers;
+};
+
+export type requestGuardianConsentResponse = (requestGuardianConsentResponseSuccess | requestGuardianConsentResponseError)
+
+export const getRequestGuardianConsentUrl = () => {
+
+
+
+
+  return `/v1/guardian-consent`
+}
+
+/**
+ * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). O menor indica quem é o responsável e recebe o link para mandar a essa pessoa; só vale quando o responsável autoriza pelo link. Os dados do responsável só são visíveis para o próprio aluno.
+ * @summary Menor pede a autorização do responsável
+ */
+export const requestGuardianConsent = async (guardianRequest: GuardianRequest, options?: Parameters<typeof apiFetch>[1]): Promise<requestGuardianConsentResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<requestGuardianConsentResponse>(getRequestGuardianConsentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guardianRequest)
+  }
+);}
+
+
+
+export type resendGuardianLinkResponse200 = {
+  data: GuardianLink
+  status: 200
+}
+
+export type resendGuardianLinkResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type resendGuardianLinkResponseSuccess = (resendGuardianLinkResponse200) & {
+  headers: Headers;
+};
+export type resendGuardianLinkResponseError = (resendGuardianLinkResponse409) & {
+  headers: Headers;
+};
+
+export type resendGuardianLinkResponse = (resendGuardianLinkResponseSuccess | resendGuardianLinkResponseError)
+
+export const getResendGuardianLinkUrl = () => {
+
+
+
+
+  return `/v1/guardian-consent/link`
+}
+
+/**
+ * Para reenviar o pedido. O link anterior deixa de valer.
+ * @summary Novo link para o responsável
+ */
+export const resendGuardianLink = async ( options?: Parameters<typeof apiFetch>[1]): Promise<resendGuardianLinkResponse> => {
+
+  return apiFetch<resendGuardianLinkResponse>(getResendGuardianLinkUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
   }
 );}
 

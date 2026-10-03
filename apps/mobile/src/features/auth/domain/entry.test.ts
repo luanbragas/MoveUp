@@ -11,7 +11,7 @@ function me(overrides: Partial<Me> = {}): Me {
     units: { weight: "kg", length: "cm" },
     role: "client",
     isMinor: false,
-    onboarding: { missingConsents: [], guardianConsentRequired: false },
+    onboarding: { missingConsents: [], guardianConsentRequired: false, guardianRequest: null },
     ...overrides,
   };
 }
@@ -35,11 +35,15 @@ describe("entryDestination", () => {
   it("consentimentos pendentes vêm antes do responsável", () => {
     const pending = me({
       isMinor: true,
-      onboarding: { missingConsents: ["terms"], guardianConsentRequired: true },
+      onboarding: {
+        missingConsents: ["terms"],
+        guardianConsentRequired: true,
+        guardianRequest: null,
+      },
     });
     const guardianOnly = me({
       isMinor: true,
-      onboarding: { missingConsents: [], guardianConsentRequired: true },
+      onboarding: { missingConsents: [], guardianConsentRequired: true, guardianRequest: null },
     });
 
     expect(entryDestination(true, { kind: "found", me: pending })).toBe("consents");

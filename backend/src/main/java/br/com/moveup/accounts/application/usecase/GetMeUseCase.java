@@ -8,7 +8,9 @@ import br.com.moveup.accounts.application.port.out.GuardianConsentRepository;
 import br.com.moveup.accounts.application.port.out.LegalDocuments;
 import br.com.moveup.accounts.domain.exception.AccountNotRegistered;
 import br.com.moveup.accounts.domain.model.ConsentKind;
+import br.com.moveup.accounts.domain.model.GuardianConsent.Status;
 import java.time.Clock;
+import java.util.Locale;
 import java.util.UUID;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +44,7 @@ public class GetMeUseCase implements GetMe {
             .onboardingOn(
                 Profiles.today(clock),
                 consents.acceptedVersions(userId),
-                guardianConsents.hasActive(userId),
+                guardianConsents.hasVerified(userId),
                 legalDocuments.current());
     return new MeView(
         summary.id(),
@@ -55,6 +57,22 @@ public class GetMeUseCase implements GetMe {
         summary.role(),
         onboarding.minor(),
         onboarding.missingConsents().stream().map(ConsentKind::code).sorted().toList(),
-        onboarding.guardianConsentRequired());
+        onboarding.guardianConsentRequired(),
+        onboarding.guardianConsentRequired() ? guardianRequest(userId) : null);
+  }
+
+  private MeView.GuardianRequestView guardianRequest(UUID userId) {
+    return guardianConsents
+        .latest(userId)
+        .filter(c -> c.status() == Status.PENDING || c.status() == Status.DECLINED)
+        .map(
+            c ->
+                new MeView.GuardianRequestView(
+                    c.status().name().toLowerCase(Locale.ROOT),
+                    c.guardianName().value(),
+                    c.relationship().code(),
+                    c.requestedAt(),
+                    c.linkExpiresAt()))
+        .orElse(null);
   }
 }

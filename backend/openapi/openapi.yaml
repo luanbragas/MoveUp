@@ -15,6 +15,8 @@ tags:
   name: consents
 - description: Convite do ponto de vista do aluno
   name: invites
+- description: Autorização do responsável pelo menor
+  name: guardian-authorizations
 - description: Alunos e vínculos do profissional
   name: clients
 paths:
@@ -305,34 +307,138 @@ paths:
       summary: Revoga um aceite
       tags:
       - consents
-  /v1/guardian-consent:
+  /v1/guardian-authorizations/decision:
     post:
-      description: "Obrigatório para menores de 18 anos antes de aceitar convite (LGPD,\
-        \ art. 14). Os dados do responsável só são visíveis para o próprio aluno."
-      operationId: declareGuardianConsent
+      description: "Guarda quando, o IP e o navegador como prova (LGPD). O link vale\
+        \ uma vez: depois da decisão responde 404."
+      operationId: decideGuardianAuthorization
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GuardianConsent"
+              $ref: "#/components/schemas/GuardianAuthorizationDecision"
         required: true
       responses:
         "204":
-          description: Consentimento registrado
+          description: Decisão registrada
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`guardian-authorization-not-found` (link inválido, vencido\
+            \ ou já usado)"
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`consent-version-outdated` (o termo mudou: recarregar a pá\
+            gina)"
+      security: []
+      summary: Responsável autoriza ou recusa
+      tags:
+      - guardian-authorizations
+  /v1/guardian-authorizations/preview:
+    post:
+      description: Só o primeiro nome do menor e quem ele indicou; nenhum dado de
+        saúde.
+      operationId: previewGuardianAuthorization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuardianAuthorizationLookup"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuardianAuthorizationPreview"
+          description: Pedido aguardando a decisão
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`guardian-authorization-not-found` (link inválido, vencido\
+            \ ou já usado)"
+      security: []
+      summary: "Pedido de autorização, pelo link"
+      tags:
+      - guardian-authorizations
+  /v1/guardian-consent:
+    delete:
+      description: Para indicar outra pessoa. O link enviado deixa de valer.
+      operationId: cancelGuardianRequest
+      responses:
+        "204":
+          description: Pedido cancelado
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`guardian-request-not-pending` (nenhum pedido aguardando o
+            responsável)'
+      summary: Cancela o pedido ao responsável
+      tags:
+      - consents
+    post:
+      description: "Obrigatório para menores de 18 anos antes de aceitar convite (LGPD,\
+        \ art. 14). O menor indica quem é o responsável e recebe o link para mandar\
+        \ a essa pessoa; só vale quando o responsável autoriza pelo link. Os dados\
+        \ do responsável só são visíveis para o próprio aluno."
+      operationId: requestGuardianConsent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuardianRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuardianLink"
+          description: Pedido criado; link para o responsável
         "409":
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
           description: "`guardian-consent-not-required` (conta de maior), `guardian-consent-already-active`\
-            \ ou `consent-version-outdated`"
+            \ (já há pedido aberto ou autorização) ou `consent-version-outdated`"
         "422":
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-          description: "`guardian-email-invalid`, `relationship-invalid`, `name-invalid`"
-      summary: Consentimento do responsável pelo aluno menor
+          description: "`relationship-invalid`, `name-invalid`"
+      summary: Menor pede a autorização do responsável
+      tags:
+      - consents
+  /v1/guardian-consent/link:
+    post:
+      description: Para reenviar o pedido. O link anterior deixa de valer.
+      operationId: resendGuardianLink
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuardianLink"
+          description: Link novo
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`guardian-request-not-pending` (nenhum pedido aguardando o
+            responsável)'
+      summary: Novo link para o responsável
       tags:
       - consents
   /v1/invites/{code}:
@@ -580,17 +686,79 @@ components:
           minItems: 0
       required:
       - grants
-    GuardianConsent:
+    GuardianAuthorizationDecision:
+      type: object
+      properties:
+        approve:
+          type: boolean
+          description: true = autoriza; false = não autoriza
+        docVersion:
+          type: string
+          maxLength: 50
+          minLength: 0
+        token:
+          type: string
+          maxLength: 64
+          minLength: 0
+      required:
+      - approve
+      - docVersion
+      - token
+    GuardianAuthorizationLookup:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Segredo do link
+          maxLength: 64
+          minLength: 0
+      required:
+      - token
+    GuardianAuthorizationPreview:
+      type: object
+      properties:
+        docVersion:
+          type: string
+          description: Versão do termo que a página mostra; volta na decisão
+        expiresAt:
+          type: string
+          format: date-time
+        guardianName:
+          type: string
+        minorFirstName:
+          type: string
+        relationship:
+          type: string
+          enum:
+          - mother
+          - father
+          - legal_guardian
+          - other
+      required:
+      - docVersion
+      - expiresAt
+      - guardianName
+      - minorFirstName
+      - relationship
+    GuardianLink:
+      type: object
+      properties:
+        expiresAt:
+          type: string
+          format: date-time
+        url:
+          type: string
+          description: "Link para o responsável abrir no celular dele. Só aparece\
+            \ nesta resposta: o app compartilha na hora"
+      required:
+      - expiresAt
+      - url
+    GuardianRequest:
       type: object
       properties:
         docVersion:
           type: string
           maxLength: 50
-          minLength: 0
-        guardianEmail:
-          type: string
-          format: email
-          maxLength: 254
           minLength: 0
         guardianName:
           type: string
@@ -606,9 +774,39 @@ components:
           minLength: 1
       required:
       - docVersion
-      - guardianEmail
       - guardianName
       - relationship
+    GuardianRequestStatus:
+      type: object
+      properties:
+        guardianName:
+          type: string
+        linkExpiresAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: Validade do último link; ausente se recusado
+        relationship:
+          type: string
+          enum:
+          - mother
+          - father
+          - legal_guardian
+          - other
+        requestedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - pending
+          - declined
+      required:
+      - guardianName
+      - relationship
+      - requestedAt
+      - status
     Invitation:
       type: object
       description: "Convite para compartilhar (link, código ou QR)"
@@ -672,8 +870,12 @@ components:
           format: email
         guardianConsentRequired:
           type: boolean
-          description: "Menor sem consentimento do responsável vigente: o app pede\
-            \ antes de seguir"
+          description: "Menor sem autorização do responsável: o app pede antes de\
+            \ seguir"
+        guardianRequest:
+          $ref: "#/components/schemas/GuardianRequestStatus"
+          description: Pedido ao responsável aguardando ou recusado; ausente se não
+            há (ou já autorizou)
         id:
           type: string
           format: uuid

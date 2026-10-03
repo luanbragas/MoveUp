@@ -1,17 +1,23 @@
 import {
-  declareGuardianConsent,
+  cancelGuardianRequest,
   getLegalVersions,
   grantConsents,
   registerAccount,
+  requestGuardianConsent,
+  resendGuardianLink,
   type RegisterAccount,
   schemas,
 } from "@moveup/api-client";
 import { z } from "zod";
 import { callApi } from "../../../../shared/lib/http";
-import type { AccountRepository, LegalVersions } from "../../domain/ports";
+import type { AccountRepository, GuardianLink, LegalVersions } from "../../domain/ports";
 import { toMe } from "./me-api";
 
 const NoContent = z.undefined();
+
+function toLink(dto: { readonly url: string; readonly expiresAt: string }): GuardianLink {
+  return { url: dto.url, expiresAt: new Date(dto.expiresAt) };
+}
 
 /** Texto vazio vira ausência. */
 function optional(value: string | null): string | undefined {
@@ -68,17 +74,27 @@ export function createAccountApiRepository(): AccountRepository {
       );
     },
 
-    async declareGuardian(input, versions) {
-      await callApi(
+    async requestGuardian(input, versions) {
+      const dto = await callApi(
         () =>
-          declareGuardianConsent({
+          requestGuardianConsent({
             guardianName: input.guardianName.trim(),
-            guardianEmail: input.guardianEmail.trim(),
             relationship: input.relationship,
             docVersion: versions.guardianConsent,
           }),
-        NoContent,
+        schemas.RequestGuardianConsent201Response,
       );
+      return toLink(dto);
+    },
+
+    async resendGuardianLink() {
+      return toLink(
+        await callApi(() => resendGuardianLink(), schemas.ResendGuardianLink200Response),
+      );
+    },
+
+    async cancelGuardianRequest() {
+      await callApi(() => cancelGuardianRequest(), NoContent);
     },
   };
 }

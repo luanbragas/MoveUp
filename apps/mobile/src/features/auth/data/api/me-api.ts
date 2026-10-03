@@ -21,6 +21,19 @@ export function toMe(dto: MeDto): Me {
     onboarding: {
       missingConsents: dto.missingConsents,
       guardianConsentRequired: dto.guardianConsentRequired,
+      guardianRequest:
+        dto.guardianRequest == null
+          ? null
+          : {
+              status: dto.guardianRequest.status,
+              guardianName: dto.guardianRequest.guardianName,
+              relationship: dto.guardianRequest.relationship,
+              requestedAt: new Date(dto.guardianRequest.requestedAt),
+              linkExpiresAt:
+                dto.guardianRequest.linkExpiresAt == null
+                  ? null
+                  : new Date(dto.guardianRequest.linkExpiresAt),
+            },
     },
   };
 }

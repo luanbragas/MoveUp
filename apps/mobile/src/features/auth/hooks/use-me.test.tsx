@@ -81,7 +81,11 @@ describe("useMe", () => {
       units: { weight: "kg", length: "cm" },
       role: "professional",
       isMinor: false,
-      onboarding: { missingConsents: ["terms"], guardianConsentRequired: false },
+      onboarding: {
+        missingConsents: ["terms"],
+        guardianConsentRequired: false,
+        guardianRequest: null,
+      },
     });
   });
 

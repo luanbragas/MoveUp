@@ -3,18 +3,15 @@ package br.com.moveup.accounts.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.moveup.accounts.application.port.in.DeclareGuardianConsent;
 import br.com.moveup.accounts.application.port.in.ManageConsents;
 import br.com.moveup.accounts.application.port.in.RegisterAccount;
 import br.com.moveup.accounts.application.port.in.RequestOrigin;
-import br.com.moveup.accounts.application.usecase.DeclareGuardianConsentUseCase;
 import br.com.moveup.accounts.application.usecase.GetMeUseCase;
 import br.com.moveup.accounts.application.usecase.ManageConsentsUseCase;
 import br.com.moveup.accounts.application.usecase.RegisterAccountUseCase;
 import br.com.moveup.accounts.domain.exception.AccountAlreadyRegistered;
 import br.com.moveup.accounts.domain.exception.AccountNotRegistered;
 import br.com.moveup.accounts.domain.exception.ConsentVersionOutdated;
-import br.com.moveup.accounts.domain.exception.GuardianConsentNotAllowed;
 import br.com.moveup.accounts.domain.model.ConsentKind;
 import br.com.moveup.accounts.domain.model.LegalVersions;
 import br.com.moveup.accounts.domain.model.LoginIdentity;
@@ -59,8 +56,6 @@ class AccountUseCasesTest {
       new RegisterAccountUseCase(accounts, startTrial, ids, CLOCK);
   final GetMeUseCase getMe = new GetMeUseCase(accounts, consents, consents, () -> VERSIONS, CLOCK);
   final ManageConsentsUseCase manageConsents = new ManageConsentsUseCase(consents, () -> VERSIONS);
-  final DeclareGuardianConsentUseCase declareGuardian =
-      new DeclareGuardianConsentUseCase(accounts, consents, () -> VERSIONS, ids, CLOCK);
 
   @Test
   void profissionalGanhaOrganizacaoEPeriodoDeTeste() {
@@ -154,28 +149,8 @@ class AccountUseCasesTest {
   }
 
   @Test
-  void menorPrecisaDoResponsavelUmaVezSo() {
-    var id = register.handle(client("uid-teen", "teen@x.test", TODAY.minusYears(15)));
-    assertThat(getMe.handle(id).guardianConsentRequired()).isTrue();
-    assertThat(getMe.handle(id).minor()).isTrue();
-
-    declareGuardian.handle(guardian(id));
-
-    assertThat(getMe.handle(id).guardianConsentRequired()).isFalse();
-    assertThat(consents.guardianConsents).hasSize(1);
-    assertThatThrownBy(() -> declareGuardian.handle(guardian(id)))
-        .satisfies(
-            e ->
-                assertThat(((DomainException) e).code())
-                    .isEqualTo(GuardianConsentNotAllowed.ALREADY_ACTIVE));
-  }
-
-  @Test
-  void contaInexistenteNaoTemMeNemResponsavel() {
-    var stranger = UUID.randomUUID();
-
-    assertThatThrownBy(() -> getMe.handle(stranger)).isInstanceOf(AccountNotRegistered.class);
-    assertThatThrownBy(() -> declareGuardian.handle(guardian(stranger)))
+  void contaInexistenteNaoTemMe() {
+    assertThatThrownBy(() -> getMe.handle(UUID.randomUUID()))
         .isInstanceOf(AccountNotRegistered.class);
   }
 
@@ -197,10 +172,5 @@ class AccountUseCasesTest {
   static RegisterAccount.Command client(String uid, String email, LocalDate birthDate) {
     return new RegisterAccount.Command(
         new LoginIdentity("firebase", uid), email, "Bia Souza", "client", birthDate, null, null);
-  }
-
-  static DeclareGuardianConsent.Command guardian(UUID userId) {
-    return new DeclareGuardianConsent.Command(
-        userId, "Maria Souza", "maria@x.test", "mother", "g-1", ORIGIN);
   }
 }

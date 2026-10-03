@@ -49,6 +49,13 @@ moveup:
     # Link compartilhado pelo profissional; o site estático abre o app (universal links, F1-6).
     # Provisório até o domínio definitivo do site.
     link-base-url: https://moveup-site.pages.dev/i/
+  guardian:
+    link-ttl: P7D
+    # Página do site onde o responsável autoriza o menor (o segredo vai depois do #).
+    # Provisório até o domínio definitivo do site.
+    link-base-url: https://moveup-site.pages.dev/autorizar/
+    # Origens que podem chamar /v1/guardian-authorizations do navegador (CORS).
+    allowed-origins: https://moveup-site.pages.dev
   auth:
     firebase:
       # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>

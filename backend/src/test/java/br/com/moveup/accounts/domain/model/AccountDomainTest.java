@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import br.com.moveup.accounts.domain.exception.ConsentVersionOutdated;
+import br.com.moveup.accounts.domain.exception.GuardianAuthorizationNotFound;
 import br.com.moveup.accounts.domain.exception.GuardianConsentNotAllowed;
 import br.com.moveup.accounts.domain.exception.InvalidAccountData;
 import br.com.moveup.shared.domain.DomainException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumMap;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 class AccountDomainTest {
 
   static final LocalDate TODAY = LocalDate.of(2026, 10, 2);
+  static final Instant NOW = Instant.parse("2026-10-02T12:00:00Z");
   static final LoginIdentity IDENTITY = new LoginIdentity("firebase", "uid-1");
   static final LegalVersions VERSIONS =
       new LegalVersions(
@@ -203,23 +206,67 @@ class AccountDomainTest {
     }
 
     @Test
-    void responsavelConsentePeloMenorComVersaoVigente() {
+    void menorPedeEOPedidoSoValeComOResponsavel() {
       var minor = client(TODAY.minusYears(16));
 
-      var consent = declare(minor, "mae@x.test", "g-1");
+      var requested = request(minor, "g-1");
 
-      assertThat(consent.userId()).isEqualTo(minor.userId());
-      assertThat(consent.relationship()).isEqualTo(GuardianRelationship.MOTHER);
+      assertThat(requested.userId()).isEqualTo(minor.userId());
+      assertThat(requested.status()).isEqualTo(GuardianConsent.Status.PENDING);
+      assertThat(requested.linkOpenAt(NOW)).isFalse(); // sem link ainda
+      var linked = requested.withLink(NOW.plus(Duration.ofDays(7)));
+      assertThat(linked.linkOpenAt(NOW)).isTrue();
+      var approved = linked.approve("g-1", VERSIONS, NOW.plusSeconds(60));
+      assertThat(approved.status()).isEqualTo(GuardianConsent.Status.VERIFIED);
+      assertThat(approved.isOpen()).isTrue();
+      assertThat(approved.linkExpiresAt()).isNull();
     }
 
     @Test
-    void responsavelSoParaMenorComTextoVigenteEEmailDiferente() {
-      assertThatThrownBy(() -> declare(client(TODAY.minusYears(20)), "mae@x.test", "g-1"))
+    void pedidoSoParaMenorComTextoVigente() {
+      assertThatThrownBy(() -> request(client(TODAY.minusYears(20)), "g-1"))
           .satisfies(e -> assertThat(codeOf(e)).isEqualTo(GuardianConsentNotAllowed.NOT_REQUIRED));
-      assertThatThrownBy(() -> declare(client(TODAY.minusYears(16)), "mae@x.test", "g-0"))
+      assertThatThrownBy(() -> request(client(TODAY.minusYears(16)), "g-0"))
           .isInstanceOf(ConsentVersionOutdated.class);
-      assertThatThrownBy(() -> declare(client(TODAY.minusYears(16)), "aluno@x.test", "g-1"))
-          .satisfies(e -> assertThat(codeOf(e)).isEqualTo("guardian-email-invalid"));
+    }
+
+    @Test
+    void recusaEncerraOPedidoECancelarSoComPedidoAberto() {
+      var linked = request(client(TODAY.minusYears(16)), "g-1").withLink(NOW.plusSeconds(600));
+
+      var declined = linked.decline(NOW);
+
+      assertThat(declined.status()).isEqualTo(GuardianConsent.Status.DECLINED);
+      assertThat(declined.isOpen()).isFalse();
+      assertThatThrownBy(() -> declined.cancel(NOW))
+          .satisfies(e -> assertThat(codeOf(e)).isEqualTo(GuardianConsentNotAllowed.NOT_PENDING));
+      assertThatThrownBy(() -> declined.approve("g-1", VERSIONS, NOW))
+          .isInstanceOf(GuardianAuthorizationNotFound.class);
+      var cancelled = linked.cancel(NOW);
+      assertThat(cancelled.status()).isEqualTo(GuardianConsent.Status.CANCELLED);
+      assertThat(cancelled.isOpen()).isFalse();
+    }
+
+    @Test
+    void linkVencidoNaoDecide() {
+      var linked = request(client(TODAY.minusYears(16)), "g-1").withLink(NOW.plusSeconds(60));
+
+      assertThatThrownBy(() -> linked.approve("g-1", VERSIONS, NOW.plusSeconds(60)))
+          .isInstanceOf(GuardianAuthorizationNotFound.class);
+      assertThatThrownBy(() -> linked.decline(NOW.plusSeconds(61)))
+          .isInstanceOf(GuardianAuthorizationNotFound.class);
+    }
+
+    @Test
+    void segredoDoLinkTemFormatoFixoENaoApareceEmLog() {
+      var token = GuardianLinkToken.generate(bytes -> java.util.Arrays.fill(bytes, (byte) 7));
+
+      assertThat(token.value()).hasSize(43);
+      assertThat(token.hash()).hasSize(32);
+      assertThat(token.toString()).doesNotContain(token.value());
+      assertThat(GuardianLinkToken.parse(token.value())).contains(token);
+      assertThat(GuardianLinkToken.parse("curto")).isEmpty();
+      assertThat(GuardianLinkToken.parse(null)).isEmpty();
     }
 
     @Test
@@ -237,16 +284,15 @@ class AccountDomainTest {
           .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private GuardianConsent declare(AccountProfile minor, String guardianEmail, String version) {
-      return GuardianConsent.declare(
+    private GuardianConsent request(AccountProfile minor, String version) {
+      return GuardianConsent.request(
           UUID.randomUUID(),
           minor,
           PersonName.of("Maria"),
-          Email.of(guardianEmail),
           GuardianRelationship.MOTHER,
           version,
           VERSIONS,
-          Instant.parse("2026-10-02T12:00:00Z"),
+          NOW,
           TODAY);
     }
   }

@@ -5,12 +5,25 @@ export type WeightUnit = "kg" | "lb";
 export type LengthUnit = "cm" | "in";
 export type AccountRole = "professional" | "client";
 export type ConsentKind = "terms" | "privacy" | "health_data" | "photos";
+export type GuardianRelationship = "mother" | "father" | "legal_guardian" | "other";
+
+/** Pedido do menor ao responsável, que autoriza pelo link no celular dele. */
+export interface GuardianRequest {
+  readonly status: "pending" | "declined";
+  readonly guardianName: string;
+  readonly relationship: GuardianRelationship;
+  readonly requestedAt: Date;
+  /** Validade do último link; null se recusado. */
+  readonly linkExpiresAt: Date | null;
+}
 
 /** O que falta para liberar o app (SCREEN-FLOWS 0.2 e 1.2). */
 export interface Onboarding {
   readonly missingConsents: readonly ConsentKind[];
-  /** Menor de 18 sem consentimento do responsável (LGPD, art. 14). */
+  /** Menor de 18 sem autorização do responsável (LGPD, art. 14). */
   readonly guardianConsentRequired: boolean;
+  /** Pedido aguardando ou recusado; null se ainda não pediu (ou já autorizou). */
+  readonly guardianRequest: GuardianRequest | null;
 }
 
 export interface Me {
@@ -26,7 +39,7 @@ export interface Me {
   readonly onboarding: Onboarding;
 }
 
-/** Onboarding fechado: aceites em dia e, se menor, responsável registrado. */
+/** Onboarding fechado: aceites em dia e, se menor, autorização do responsável. */
 export function isOnboardingComplete(me: Me): boolean {
   return me.onboarding.missingConsents.length === 0 && !me.onboarding.guardianConsentRequired;
 }

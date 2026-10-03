@@ -1,4 +1,6 @@
-import type { AccountRole, ConsentKind, Me } from "./me";
+import type { AccountRole, ConsentKind, GuardianRelationship, Me } from "./me";
+
+export type { GuardianRelationship } from "./me";
 
 /** Porta da conta do usuário: o hook não sabe se vem da API ou de um fake. */
 export interface MeRepository {
@@ -19,12 +21,15 @@ export interface LegalVersions {
   readonly guardianConsent: string;
 }
 
-export type GuardianRelationship = "mother" | "father" | "legal_guardian" | "other";
-
 export interface GuardianInput {
   readonly guardianName: string;
-  readonly guardianEmail: string;
   readonly relationship: GuardianRelationship;
+}
+
+/** Link para o responsável. Só existe na resposta: o app compartilha na hora. */
+export interface GuardianLink {
+  readonly url: string;
+  readonly expiresAt: Date;
 }
 
 /** Cadastro e consentimentos (backend: módulo accounts). */
@@ -33,5 +38,10 @@ export interface AccountRepository {
   legalVersions(): Promise<LegalVersions>;
   /** Aceita os tipos informados na versão vigente. */
   grantConsents(kinds: readonly ConsentKind[], versions: LegalVersions): Promise<void>;
-  declareGuardian(input: GuardianInput, versions: LegalVersions): Promise<void>;
+  /** Menor indica o responsável e recebe o link para mandar a essa pessoa. */
+  requestGuardian(input: GuardianInput, versions: LegalVersions): Promise<GuardianLink>;
+  /** Link novo para o mesmo pedido; o anterior deixa de valer. */
+  resendGuardianLink(): Promise<GuardianLink>;
+  /** Desiste do pedido para indicar outra pessoa. */
+  cancelGuardianRequest(): Promise<void>;
 }

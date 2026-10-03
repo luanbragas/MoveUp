@@ -30,9 +30,9 @@ public final class Titles {
           Map.entry("consent-kind-invalid", "Tipo de consentimento inválido"),
           Map.entry("consents-empty", "Nenhum consentimento informado"),
           Map.entry("guardian-consent-not-required", "Consentimento do responsável não se aplica"),
-          Map.entry(
-              "guardian-consent-already-active", "Consentimento do responsável já registrado"),
-          Map.entry("guardian-email-invalid", "E-mail do responsável inválido"),
+          Map.entry("guardian-consent-already-active", "Pedido ao responsável já registrado"),
+          Map.entry("guardian-request-not-pending", "Nenhum pedido aguardando o responsável"),
+          Map.entry("guardian-authorization-not-found", "Link de autorização inválido ou vencido"),
           Map.entry("relationship-invalid", "Parentesco inválido"),
           Map.entry("link-state-invalid", "O vínculo não permite essa ação agora"),
           Map.entry("onboarding-incomplete", "Cadastro incompleto"),

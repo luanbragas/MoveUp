@@ -64,7 +64,7 @@ public class AccountDirectoryService implements AccountDirectory {
         profile.onboardingOn(
             Profiles.today(clock),
             consents.acceptedVersions(userId),
-            guardianConsents.hasActive(userId),
+            guardianConsents.hasVerified(userId),
             legalDocuments.current());
     return onboarding.complete() ? LinkReadiness.READY : LinkReadiness.ONBOARDING_INCOMPLETE;
   }

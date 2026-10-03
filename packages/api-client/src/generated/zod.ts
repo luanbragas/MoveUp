@@ -32,7 +32,14 @@ export const RegisterAccountBody = zod.object({
 
 export const RegisterAccount201Response = zod.object({
   "email": zod.email(),
-  "guardianConsentRequired": zod.boolean().describe('Menor sem consentimento do responsável vigente: o app pede antes de seguir'),
+  "guardianConsentRequired": zod.boolean().describe('Menor sem autorização do responsável: o app pede antes de seguir'),
+  "guardianRequest": zod.object({
+  "guardianName": zod.string(),
+  "linkExpiresAt": zod.iso.datetime({"offset":true}).nullish().describe('Validade do último link; ausente se recusado'),
+  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other']),
+  "requestedAt": zod.iso.datetime({"offset":true}),
+  "status": zod.enum(['pending', 'declined'])
+}).optional().describe('Pedido ao responsável aguardando ou recusado; ausente se não há (ou já autorizou)'),
   "id": zod.uuid(),
   "lengthUnit": zod.enum(['cm', 'in']),
   "locale": zod.string(),
@@ -438,30 +445,26 @@ export const RevokeConsent204Response = zod.void()
 
 
 /**
- * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). Os dados do responsável só são visíveis para o próprio aluno.
- * @summary Consentimento do responsável pelo aluno menor
+ * Guarda quando, o IP e o navegador como prova (LGPD). O link vale uma vez: depois da decisão responde 404.
+ * @summary Responsável autoriza ou recusa
  */
-export const declareGuardianConsentBodyDocVersionMin = 0;
-export const declareGuardianConsentBodyDocVersionMax = 50;
+export const decideGuardianAuthorizationBodyDocVersionMin = 0;
+export const decideGuardianAuthorizationBodyDocVersionMax = 50;
 
-export const declareGuardianConsentBodyGuardianEmailMin = 0;
-export const declareGuardianConsentBodyGuardianEmailMax = 254;
-
-export const declareGuardianConsentBodyGuardianNameMin = 0;
-export const declareGuardianConsentBodyGuardianNameMax = 200;
+export const decideGuardianAuthorizationBodyTokenMin = 0;
+export const decideGuardianAuthorizationBodyTokenMax = 64;
 
 
 
-export const DeclareGuardianConsentBody = zod.object({
-  "docVersion": zod.string().min(declareGuardianConsentBodyDocVersionMin).max(declareGuardianConsentBodyDocVersionMax),
-  "guardianEmail": zod.email().min(declareGuardianConsentBodyGuardianEmailMin).max(declareGuardianConsentBodyGuardianEmailMax),
-  "guardianName": zod.string().min(declareGuardianConsentBodyGuardianNameMin).max(declareGuardianConsentBodyGuardianNameMax),
-  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other'])
+export const DecideGuardianAuthorizationBody = zod.object({
+  "approve": zod.boolean().describe('true = autoriza; false = não autoriza'),
+  "docVersion": zod.string().min(decideGuardianAuthorizationBodyDocVersionMin).max(decideGuardianAuthorizationBodyDocVersionMax),
+  "token": zod.string().min(decideGuardianAuthorizationBodyTokenMin).max(decideGuardianAuthorizationBodyTokenMax)
 })
 
-export const DeclareGuardianConsent204Response = zod.void()
+export const DecideGuardianAuthorization204Response = zod.void()
 
-export const DeclareGuardianConsent409Response = zod.object({
+export const DecideGuardianAuthorization404Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({
@@ -476,7 +479,145 @@ export const DeclareGuardianConsent409Response = zod.object({
   "type": zod.string()
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
 
-export const DeclareGuardianConsent422Response = zod.object({
+export const DecideGuardianAuthorization409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Só o primeiro nome do menor e quem ele indicou; nenhum dado de saúde.
+ * @summary Pedido de autorização, pelo link
+ */
+export const previewGuardianAuthorizationBodyTokenMin = 0;
+export const previewGuardianAuthorizationBodyTokenMax = 64;
+
+
+
+export const PreviewGuardianAuthorizationBody = zod.object({
+  "token": zod.string().min(previewGuardianAuthorizationBodyTokenMin).max(previewGuardianAuthorizationBodyTokenMax).describe('Segredo do link')
+})
+
+export const PreviewGuardianAuthorization200Response = zod.object({
+  "docVersion": zod.string().describe('Versão do termo que a página mostra; volta na decisão'),
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "guardianName": zod.string(),
+  "minorFirstName": zod.string(),
+  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other'])
+})
+
+export const PreviewGuardianAuthorization404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Para indicar outra pessoa. O link enviado deixa de valer.
+ * @summary Cancela o pedido ao responsável
+ */
+export const CancelGuardianRequest204Response = zod.void()
+
+export const CancelGuardianRequest409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Obrigatório para menores de 18 anos antes de aceitar convite (LGPD, art. 14). O menor indica quem é o responsável e recebe o link para mandar a essa pessoa; só vale quando o responsável autoriza pelo link. Os dados do responsável só são visíveis para o próprio aluno.
+ * @summary Menor pede a autorização do responsável
+ */
+export const requestGuardianConsentBodyDocVersionMin = 0;
+export const requestGuardianConsentBodyDocVersionMax = 50;
+
+export const requestGuardianConsentBodyGuardianNameMin = 0;
+export const requestGuardianConsentBodyGuardianNameMax = 200;
+
+
+
+export const RequestGuardianConsentBody = zod.object({
+  "docVersion": zod.string().min(requestGuardianConsentBodyDocVersionMin).max(requestGuardianConsentBodyDocVersionMax),
+  "guardianName": zod.string().min(requestGuardianConsentBodyGuardianNameMin).max(requestGuardianConsentBodyGuardianNameMax),
+  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other'])
+})
+
+export const RequestGuardianConsent201Response = zod.object({
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "url": zod.string().describe('Link para o responsável abrir no celular dele. Só aparece nesta resposta: o app compartilha na hora')
+})
+
+export const RequestGuardianConsent409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const RequestGuardianConsent422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Para reenviar o pedido. O link anterior deixa de valer.
+ * @summary Novo link para o responsável
+ */
+export const ResendGuardianLink200Response = zod.object({
+  "expiresAt": zod.iso.datetime({"offset":true}),
+  "url": zod.string().describe('Link para o responsável abrir no celular dele. Só aparece nesta resposta: o app compartilha na hora')
+})
+
+export const ResendGuardianLink409Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({
@@ -566,7 +707,14 @@ export const GetLegalVersions200Response = zod.object({
  */
 export const GetMe200Response = zod.object({
   "email": zod.email(),
-  "guardianConsentRequired": zod.boolean().describe('Menor sem consentimento do responsável vigente: o app pede antes de seguir'),
+  "guardianConsentRequired": zod.boolean().describe('Menor sem autorização do responsável: o app pede antes de seguir'),
+  "guardianRequest": zod.object({
+  "guardianName": zod.string(),
+  "linkExpiresAt": zod.iso.datetime({"offset":true}).nullish().describe('Validade do último link; ausente se recusado'),
+  "relationship": zod.enum(['mother', 'father', 'legal_guardian', 'other']),
+  "requestedAt": zod.iso.datetime({"offset":true}),
+  "status": zod.enum(['pending', 'declined'])
+}).optional().describe('Pedido ao responsável aguardando ou recusado; ausente se não há (ou já autorizou)'),
   "id": zod.uuid(),
   "lengthUnit": zod.enum(['cm', 'in']),
   "locale": zod.string(),

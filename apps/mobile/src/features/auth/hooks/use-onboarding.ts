@@ -38,12 +38,33 @@ export function useGrantConsents(uid: string) {
   });
 }
 
-export function useDeclareGuardian(uid: string) {
+/** Menor indica o responsável; a resposta traz o link para compartilhar com ele. */
+export function useRequestGuardian(uid: string) {
   const { account } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ input, versions }: { input: GuardianInput; versions: LegalVersions }) =>
-      account.declareGuardian(input, versions),
+      account.requestGuardian(input, versions),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me(uid) }),
+  });
+}
+
+/** Link novo para o mesmo pedido (o anterior deixa de valer). */
+export function useResendGuardianLink(uid: string) {
+  const { account } = useRepositories();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => account.resendGuardianLink(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me(uid) }),
+  });
+}
+
+/** Desiste do pedido para indicar outra pessoa. */
+export function useCancelGuardianRequest(uid: string) {
+  const { account } = useRepositories();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => account.cancelGuardianRequest(),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: authKeys.me(uid) }),
   });
 }

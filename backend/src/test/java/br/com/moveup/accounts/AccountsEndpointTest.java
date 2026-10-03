@@ -9,11 +9,14 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import br.com.moveup.support.TestJwt;
+import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.UUID;
@@ -123,7 +126,7 @@ class AccountsEndpointTest {
   }
 
   @Test
-  void alunoMenorSoCompletaComOResponsavel() throws Exception {
+  void alunoMenorSoCompletaQuandoOResponsavelAutorizaPeloLink() throws Exception {
     var uid = registerClient(TODAY.minusYears(15));
     me(uid)
         .andExpect(jsonPath("$.role").value("client"))
@@ -131,10 +134,98 @@ class AccountsEndpointTest {
         .andExpect(jsonPath("$.guardianConsentRequired").value(true))
         .andExpect(jsonPath("$.missingConsents", contains("health_data", "privacy", "terms")));
 
-    guardian(uid).andExpect(status().isNoContent());
-
-    me(uid).andExpect(jsonPath("$.guardianConsentRequired").value(false));
+    var url =
+        JsonPath.<String>read(
+            guardian(uid)
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(),
+            "$.url");
+    assertThat(url).startsWith("https://moveup-site.pages.dev/autorizar/#");
+    var token = url.substring(url.indexOf('#') + 1);
+    me(uid)
+        .andExpect(jsonPath("$.guardianConsentRequired").value(true))
+        .andExpect(jsonPath("$.guardianRequest.status").value("pending"))
+        .andExpect(jsonPath("$.guardianRequest.guardianName").value("Maria Souza"));
     expectProblem(guardian(uid), 409, "guardian-consent-already-active");
+
+    // a página do responsável não tem login
+    mvc.perform(
+            post("/v1/guardian-authorizations/preview")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\": \"" + token + "\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.minorFirstName").value("Bia"))
+        .andExpect(jsonPath("$.relationship").value("mother"))
+        .andExpect(jsonPath("$.docVersion").value(VERSION));
+    decide(token, true).andExpect(status().isNoContent());
+
+    me(uid)
+        .andExpect(jsonPath("$.guardianConsentRequired").value(false))
+        .andExpect(jsonPath("$.guardianRequest").doesNotExist());
+    assertThat(
+            single(
+                "select host(decided_ip) || ' ' || decided_user_agent from guardian_consent g"
+                    + " join app_user u on u.id = g.user_id where u.email = ?",
+                uid + "@example.test"))
+        .isEqualTo("127.0.0.1 Navegador (teste)");
+    expectProblem(decide(token, true), 404, "guardian-authorization-not-found");
+  }
+
+  @Test
+  void responsavelRecusaEMenorReenviaOuCancela() throws Exception {
+    var uid = registerClient(TODAY.minusYears(16));
+    var first = tokenOf(guardian(uid).andExpect(status().isCreated()));
+
+    var second =
+        tokenOf(
+            mvc.perform(
+                    post("/v1/guardian-consent/link")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token(uid))))
+                .andExpect(status().isOk()));
+
+    expectProblem(decide(first, true), 404, "guardian-authorization-not-found");
+    decide(second, false).andExpect(status().isNoContent());
+    me(uid)
+        .andExpect(jsonPath("$.guardianConsentRequired").value(true))
+        .andExpect(jsonPath("$.guardianRequest.status").value("declined"));
+
+    var third = tokenOf(guardian(uid).andExpect(status().isCreated()));
+    mvc.perform(
+            delete("/v1/guardian-consent").header(HttpHeaders.AUTHORIZATION, bearer(token(uid))))
+        .andExpect(status().isNoContent());
+    expectProblem(decide(third, true), 404, "guardian-authorization-not-found");
+    me(uid).andExpect(jsonPath("$.guardianRequest").doesNotExist());
+  }
+
+  @Test
+  void paginaDoResponsavelSoPeloSiteESemTocarNoRestoDaApi() throws Exception {
+    mvc.perform(
+            options("/v1/guardian-authorizations/decision")
+                .header(HttpHeaders.ORIGIN, "https://moveup-site.pages.dev")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type"))
+        .andExpect(status().isOk())
+        .andExpect(
+            header()
+                .string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://moveup-site.pages.dev"));
+    mvc.perform(
+            options("/v1/guardian-authorizations/decision")
+                .header(HttpHeaders.ORIGIN, "https://evil.example")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST"))
+        .andExpect(status().isForbidden());
+    // o resto da API continua exigindo login e sem CORS
+    mvc.perform(get("/v1/me").header(HttpHeaders.ORIGIN, "https://moveup-site.pages.dev"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+    expectProblem(
+        mvc.perform(
+            post("/v1/guardian-authorizations/preview")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"token\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}")),
+        404,
+        "guardian-authorization-not-found");
   }
 
   @Test
@@ -217,10 +308,27 @@ class AccountsEndpointTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                {"guardianName": "Maria Souza", "guardianEmail": "maria.souza@example.test",
-                 "relationship": "mother", "docVersion": "%s"}
+                {"guardianName": "Maria Souza", "relationship": "mother", "docVersion": "%s"}
                 """
                     .formatted(VERSION)));
+  }
+
+  private ResultActions decide(String token, boolean approve) throws Exception {
+    return mvc.perform(
+        post("/v1/guardian-authorizations/decision")
+            .header(HttpHeaders.USER_AGENT, "Navegador (teste)")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(
+                """
+                {"token": "%s", "approve": %s, "docVersion": "%s"}
+                """
+                    .formatted(token, approve, VERSION)));
+  }
+
+  private static String tokenOf(ResultActions created) throws Exception {
+    var url =
+        JsonPath.<String>read(created.andReturn().getResponse().getContentAsString(), "$.url");
+    return url.substring(url.indexOf('#') + 1);
   }
 
   private ResultActions me(String uid) throws Exception {

@@ -73,24 +73,33 @@ export const strings = {
     mustAcceptAll: "Marque todos os itens para continuar.",
   },
   guardian: {
-    title: "Autorização do responsável",
-    subtitle:
-      "Como você tem menos de 18 anos, um dos seus pais ou responsável legal precisa autorizar o uso dos seus dados no MoveUp.",
+    title: "Quem\nautoriza?",
+    subtitle: "Menores de 18 anos precisam da autorização de mãe, pai ou responsável.",
     name: "Nome do responsável",
-    email: "E-mail do responsável",
     relationshipLabel: "Parentesco",
     relationshipRequired: "Escolha o parentesco.",
     relationships: {
       mother: "Mãe",
       father: "Pai",
-      legal_guardian: "Responsável legal",
+      legal_guardian: "Responsável",
       other: "Outro",
     } satisfies Record<GuardianRelationship, string>,
-    declaration:
-      "Declaro que sou o responsável e autorizo o uso dos dados de saúde e de treino deste aluno no MoveUp.",
-    submit: "Enviar autorização",
+    howItWorks: "Você manda um link pelo WhatsApp e a pessoa autoriza pelo celular dela.",
+    submit: "Enviar pedido",
     nameRequired: "Informe o nome do responsável.",
-    emailInvalid: "Confira o e-mail do responsável.",
-    mustDeclare: "O responsável precisa confirmar a autorização.",
+    declinedBanner: (name: string) =>
+      `${name} não autorizou. Converse com essa pessoa e peça de novo, ou indique outra.`,
+    waitingTitle: (firstName: string) =>
+      firstName.length <= 9 ? `Falta\n${firstName}.` : "Quase\nlá.",
+    waitingLead: (name: string) =>
+      `Mande o link para ${name}. Assim que a autorização chegar, seu app libera sozinho.`,
+    waitingSince: (time: string, until: string) => `Pedido às ${time} · o link vale até ${until}.`,
+    expired: "O link venceu. Mande um novo.",
+    resend: "Mandar o link de novo",
+    wrongPerson: "Pessoa errada?",
+    changeGuardian: "Trocar responsável",
+    back: "Voltar",
+    shareMessage: (name: string, url: string) =>
+      `Oi, ${name}! Preciso da sua autorização para usar o MoveUp, o app dos meus treinos. É rapidinho: ${url}`,
   },
 } as const;

@@ -19,8 +19,8 @@ const BY_CODE: Readonly<Record<string, string>> = {
   "registry-number-invalid": "Confira o número do CREF.",
   "consent-version-outdated": "O texto foi atualizado. Leia a versão nova para continuar.",
   "guardian-consent-not-required": "O consentimento do responsável é só para menores de 18 anos.",
-  "guardian-consent-already-active": "O consentimento do seu responsável já está registrado.",
-  "guardian-email-invalid": "Informe o e-mail do seu responsável, não o seu.",
+  "guardian-consent-already-active": "Você já tem um pedido aberto para o seu responsável.",
+  "guardian-request-not-pending": "Esse pedido não está mais aguardando. Atualize a tela.",
   "relationship-invalid": "Escolha o parentesco do responsável.",
   "link-state-invalid": "Esse aluno não está numa situação que permita isso agora.",
   "onboarding-incomplete":
