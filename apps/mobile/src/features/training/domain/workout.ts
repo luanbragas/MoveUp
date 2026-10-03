@@ -56,6 +56,8 @@ export interface Workout {
   readonly programId: string | null;
   /** Vai no If-Match ao salvar. */
   readonly revision: number;
+  /** Versão atual do conteúdo: vai na sessão do treino presencial. */
+  readonly versionId: string;
   readonly versionNumber: number;
   readonly draft: WorkoutDraft;
 }

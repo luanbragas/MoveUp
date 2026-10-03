@@ -2407,6 +2407,10 @@ components:
         template:
           type: boolean
           description: Modelo (sem programa)
+        versionId:
+          type: string
+          format: uuid
+          description: "Versão atual: vai na sessão (presencial)"
         versionNumber:
           type: integer
           format: int32
@@ -2417,6 +2421,7 @@ components:
       - name
       - revision
       - template
+      - versionId
       - versionNumber
     WorkoutBlock:
       type: object

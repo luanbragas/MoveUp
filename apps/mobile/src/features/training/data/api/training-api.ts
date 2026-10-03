@@ -37,6 +37,7 @@ function toWorkout(dto: WorkoutDto): Workout {
     template: dto.template,
     programId: dto.programId ?? null,
     revision: dto.revision,
+    versionId: dto.versionId,
     versionNumber: dto.versionNumber,
     draft: {
       name: dto.name,

@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router/js-tabs";
+import { AutoPush } from "../../../features/execution";
 import { AutoSync } from "../../../features/sync";
 import { PillTabBar, TabBarInsetProvider } from "../../../shared/ui/PillTabBar";
 import { navigationStrings } from "../../../shared/ui/navigation-strings";
@@ -17,6 +18,7 @@ const ICONS = {
 export default function TabsLayout() {
   return (
     <TabBarInsetProvider>
+      <AutoPush />
       <AutoSync />
       <Tabs
         screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: palette.background } }}

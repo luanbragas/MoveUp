@@ -18,6 +18,7 @@ const WORKOUT: Workout = {
   template: true,
   programId: null,
   revision: 3,
+  versionId: "v1",
   versionNumber: 1,
   draft: {
     name: "Treino A",

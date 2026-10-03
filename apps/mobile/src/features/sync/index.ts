@@ -5,3 +5,4 @@ export { AutoSync } from "./ui/AutoSync";
 export { ProgramWorkouts } from "./ui/ProgramWorkouts";
 export { TodayCard } from "./ui/TodayCard";
 export { WorkoutPreviewScreen } from "./ui/WorkoutPreviewScreen";
+export { ClientSessionScreen } from "./ui/ClientSessionScreen";

@@ -951,6 +951,8 @@ export interface Workout {
   sourceTemplateId?: string | null;
   /** Modelo (sem programa) */
   template: boolean;
+  /** Versão atual: vai na sessão (presencial) */
+  versionId: string;
   /** Sobe quando o treino já tinha sessão */
   versionNumber: number;
 }

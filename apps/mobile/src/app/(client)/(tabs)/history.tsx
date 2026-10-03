@@ -1,15 +1,3 @@
-import { PlaceholderScreen } from "../../../shared/ui/PlaceholderScreen";
-import { navigationStrings } from "../../../shared/ui/navigation-strings";
+import { HistoryScreen } from "../../../features/execution";
 
-const t = navigationStrings.soon.clientHistory;
-
-export default function Soon() {
-  return (
-    <PlaceholderScreen
-      title={t.title}
-      emptyTitle={t.emptyTitle}
-      description={t.description}
-      icon={t.icon}
-    ></PlaceholderScreen>
-  );
-}
+export default HistoryScreen;

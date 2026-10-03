@@ -1388,6 +1388,7 @@ export const AddProgramWorkout201Response = zod.object({
   "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
   "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
   "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionId": zod.uuid().describe('Versão atual: vai na sessão (presencial)'),
   "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
 })
 
@@ -1754,6 +1755,7 @@ export const CreateWorkoutTemplate201Response = zod.object({
   "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
   "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
   "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionId": zod.uuid().describe('Versão atual: vai na sessão (presencial)'),
   "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
 })
 
@@ -1882,6 +1884,7 @@ export const GetWorkout200Response = zod.object({
   "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
   "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
   "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionId": zod.uuid().describe('Versão atual: vai na sessão (presencial)'),
   "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
 })
 
@@ -2035,6 +2038,7 @@ export const SaveWorkout200Response = zod.object({
   "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
   "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
   "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionId": zod.uuid().describe('Versão atual: vai na sessão (presencial)'),
   "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
 })
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { BodyMap } from "../../../shared/ui/body-map/BodyMap";
 import type { MuscleLevels } from "../../../shared/ui/body-map/muscles";
-import { Banner } from "../../../shared/ui/Banner";
+import { Button } from "../../../shared/ui/Button";
 import { Message } from "../../../shared/ui/Message";
 import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
@@ -18,7 +18,9 @@ import {
   type TrackingType,
 } from "../../training";
 import type { ExerciseInfo, PlannedBlock, PlannedExercise } from "../domain/planned";
+import { executionStrings, useActiveSession, useStartSession } from "../../execution";
 import { usePlannedSnapshot } from "../hooks/use-planned";
+import { plannedInputOf } from "./planned-input";
 import { strings } from "./strings";
 
 const t = strings.preview;
@@ -71,6 +73,8 @@ function timingOf(block: PlannedBlock): string | null {
 export function WorkoutPreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const snapshot = usePlannedSnapshot();
+  const active = useActiveSession();
+  const start = useStartSession();
   const [open, setOpen] = useState<string | null>(null);
   const back = (
     <RoundButton
@@ -100,13 +104,40 @@ export function WorkoutPreviewScreen() {
   }
   const exercises = snapshot.data.exercises;
 
+  const program = snapshot.data.program;
+  const resuming = active.data?.workoutId === workout.id ? active.data : null;
+  const begin = () => {
+    if (resuming !== null) {
+      router.push({ pathname: "/session/[id]", params: { id: resuming.id } });
+      return;
+    }
+    if (program === null) {
+      return;
+    }
+    start.mutate(
+      { planned: plannedInputOf(workout, program, exercises), performedBy: "client" },
+      {
+        onSuccess: (session) => {
+          router.push({ pathname: "/session/[id]", params: { id: session.id } });
+        },
+      },
+    );
+  };
+
   return (
     <Screen
       header={back}
+      footer={
+        <Button
+          label={resuming === null ? executionStrings.start.start : executionStrings.start.resume}
+          icon="play"
+          loading={start.isPending}
+          onPress={begin}
+        />
+      }
       title={workout.goal ?? workout.name}
       {...(workout.goal === null ? {} : { subtitle: workout.name })}
     >
-      <Banner icon="clock" text={t.soon} />
       {workout.notes === null ? null : (
         <Text style={[typography.body, { color: palette.textSoft }]}>{workout.notes}</Text>
       )}

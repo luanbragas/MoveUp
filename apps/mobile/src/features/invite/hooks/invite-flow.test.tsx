@@ -122,6 +122,8 @@ function setup() {
     training: {} as Repositories["training"],
     syncApi: {} as Repositories["syncApi"],
     plannedStore: {} as Repositories["plannedStore"],
+    sessionStore: {} as Repositories["sessionStore"],
+    sessionSyncApi: {} as Repositories["sessionSyncApi"],
   };
   const queryClient = new QueryClient({
     defaultOptions: {

@@ -68,6 +68,7 @@ public interface ManageWorkouts {
       UUID programId,
       UUID sourceTemplateId,
       int revision,
+      UUID versionId,
       int versionNumber,
       ContentView content) {}
 

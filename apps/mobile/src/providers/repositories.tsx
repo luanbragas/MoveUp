@@ -8,6 +8,12 @@ import { createClientsApiRepository } from "../features/clients/data/api/clients
 import type { ClientsRepository } from "../features/clients/domain/ports";
 import { createExercisesApiRepository } from "../features/exercise-library/data/api/exercises-api";
 import type { ExercisesRepository } from "../features/exercise-library/domain/ports";
+import {
+  createMemorySessionStore,
+  createSqliteSessionStore,
+} from "../features/execution/data/session-stores";
+import { createSessionSyncApi } from "../features/execution/data/session-sync-api";
+import type { SessionStore, SessionSyncApi } from "../features/execution/domain/ports";
 import { createSyncApi } from "../features/sync/data/api/sync-api";
 import { createMemoryStore } from "../features/sync/data/memory-store";
 import { createSqliteStore } from "../features/sync/data/sqlite/sqlite-store";
@@ -28,6 +34,8 @@ export interface Repositories {
   readonly training: TrainingRepository;
   readonly syncApi: SyncApi;
   readonly plannedStore: PlannedStore;
+  readonly sessionStore: SessionStore;
+  readonly sessionSyncApi: SessionSyncApi;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -43,6 +51,8 @@ export function createRepositories(session: AuthSession): Repositories {
     syncApi: createSyncApi(),
     // web (prévia) não tem SQLite nativo: memória
     plannedStore: Platform.OS === "web" ? createMemoryStore() : createSqliteStore(),
+    sessionStore: Platform.OS === "web" ? createMemorySessionStore() : createSqliteSessionStore(),
+    sessionSyncApi: createSessionSyncApi(),
   };
 }
 

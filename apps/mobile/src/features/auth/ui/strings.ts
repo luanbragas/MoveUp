@@ -10,6 +10,8 @@ export const strings = {
     error: "Não conseguimos carregar sua conta. Confira a internet e tente de novo.",
     retry: "Tentar de novo",
     signOut: "Sair",
+    pendingSessions:
+      "Você tem treino registrado que ainda não foi enviado. Conecte-se à internet e tente sair de novo, para não perder nada.",
   },
   welcome: {
     title: "Treine\ncom seu\npersonal.",

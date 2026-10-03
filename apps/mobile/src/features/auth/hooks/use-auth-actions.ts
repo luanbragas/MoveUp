@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRepositories } from "../../../providers/repositories";
+import { toSyncPayload } from "../../execution";
 
 export interface Credentials {
   readonly email: string;
@@ -26,14 +27,31 @@ export function useSendPasswordReset() {
 }
 
 /** Sai da conta e limpa todo o cache (nenhum dado do usuário fica na memória). */
+/** Há treino registrado que ainda não foi para o servidor (sem internet). */
+export class PendingSessionsError extends Error {
+  constructor() {
+    super("pending-sessions");
+  }
+}
+
 export function useSignOut() {
-  const { session, plannedStore } = useRepositories();
+  const { session, plannedStore, sessionStore, sessionSyncApi } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
-    // o treino guardado no aparelho é do aluno que saiu: apaga antes de outra conta entrar
+    // o que está no aparelho é de quem saiu: envia o treino pendente e apaga tudo antes de outra
+    // conta entrar. Sem conseguir enviar, não sai (o treino registrado não pode se perder).
     mutationFn: async () => {
+      const pending = await sessionStore.pending();
+      if (pending.length > 0) {
+        try {
+          await sessionSyncApi.push(pending.map(toSyncPayload));
+        } catch {
+          throw new PendingSessionsError();
+        }
+      }
       await session.signOut();
       await plannedStore.clear();
+      await sessionStore.clear();
     },
     onSuccess: () => {
       queryClient.clear();

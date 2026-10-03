@@ -90,6 +90,7 @@ final class WorkoutMapping {
         w.programId(),
         w.sourceTemplateId(),
         w.revision(),
+        w.versionId(),
         w.versionNumber(),
         new ContentView(
             c.goal(),

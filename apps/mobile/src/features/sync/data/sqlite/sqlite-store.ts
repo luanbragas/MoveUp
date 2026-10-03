@@ -1,42 +1,10 @@
-import * as SQLite from "expo-sqlite";
+import { localDatabase as database } from "../../../../shared/lib/local-db";
 import type { ExerciseInfo, PlannedProgram, PlannedWorkout } from "../../domain/planned";
 import type { PlannedStore } from "../../domain/ports";
 
-// Fonte da verdade local do planejado (ARQUITETURA 4). Cada linha guarda o objeto inteiro em
-// JSON: o app sempre lê o programa todo, e a forma acompanha o contrato sem migração por coluna.
-// O dado é do próprio aluno, no aparelho dele; ao sair da conta, clear() apaga tudo.
-
-const SCHEMA_VERSION = 1;
-
-const MIGRATIONS = [
-  `create table if not exists sync_state (key text primary key not null, value text);
-   create table if not exists planned_program (
-     id text primary key not null, arrived integer not null, data text not null);
-   create table if not exists planned_workout (
-     id text primary key not null, program_id text not null, data text not null);
-   create index if not exists planned_workout_program on planned_workout (program_id);
-   create table if not exists exercise_info (id text primary key not null, data text not null);`,
-];
-
-let opening: Promise<SQLite.SQLiteDatabase> | null = null;
-
-async function database(): Promise<SQLite.SQLiteDatabase> {
-  opening ??= (async () => {
-    const db = await SQLite.openDatabaseAsync("moveup.db");
-    await db.execAsync("pragma journal_mode = wal;");
-    const row = await db.getFirstAsync<{ user_version: number }>("pragma user_version");
-    const current = row?.user_version ?? 0;
-    for (let v = current; v < SCHEMA_VERSION; v += 1) {
-      const step = MIGRATIONS[v];
-      if (step !== undefined) {
-        await db.execAsync(step);
-      }
-    }
-    await db.execAsync(`pragma user_version = ${String(SCHEMA_VERSION)}`);
-    return db;
-  })();
-  return opening;
-}
+// Planejado no aparelho (ARQUITETURA 4). Cada linha guarda o objeto inteiro em JSON: o app sempre
+// lê o programa todo, e a forma acompanha o contrato sem migração por coluna. Ao sair da conta,
+// clear() apaga tudo. As tabelas vêm de shared/lib/local-db.
 
 export function createSqliteStore(): PlannedStore {
   return {

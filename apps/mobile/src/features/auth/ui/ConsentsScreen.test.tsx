@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
+import { createMemorySessionStore } from "../../execution/data/session-stores";
 import { createMemoryStore } from "../../sync/data/memory-store";
 import { createFakeAccount } from "../data/fakes/fake-account";
 import { createFakeSession } from "../data/fakes/fake-session";
@@ -52,6 +53,8 @@ async function renderAs(role: "client" | "professional") {
     },
     syncApi: { changesSince: unused },
     plannedStore: createMemoryStore(),
+    sessionStore: createMemorySessionStore(),
+    sessionSyncApi: { push: unused },
   };
   const queryClient = new QueryClient({
     defaultOptions: {

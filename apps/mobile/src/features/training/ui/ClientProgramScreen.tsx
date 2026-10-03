@@ -26,6 +26,8 @@ import {
   type ProgramWorkout,
   type ScheduleMode,
 } from "../domain/program";
+import { executionStrings } from "../../execution";
+import { useStartPresencial } from "../hooks/use-presencial";
 import {
   useActiveProgram,
   useAddProgramWorkout,
@@ -33,6 +35,7 @@ import {
   useTemplates,
   useUpdateProgram,
 } from "../hooks/use-training";
+import { presencialInputOf } from "./presencial";
 import { strings } from "./strings";
 
 const t = strings.program;
@@ -302,6 +305,7 @@ function ProgramView({
   const [dirty, setDirty] = useState(false);
   const [adding, setAdding] = useState(false);
   const update = useUpdateProgram(linkId);
+  const startPresencial = useStartPresencial((workout) => presencialInputOf(workout, linkId));
   const add = useAddProgramWorkout(linkId);
   const templates = useTemplates();
   const week = programWeek(program, new Date());
@@ -309,6 +313,14 @@ function ProgramView({
 
   const openEditor = (workoutId: string) => {
     router.push({ pathname: "/workouts/[id]", params: { id: workoutId } });
+  };
+
+  const presencial = (workoutId: string) => {
+    startPresencial.mutate(workoutId, {
+      onSuccess: (session) => {
+        router.push({ pathname: "/session/[id]", params: { id: session.id } });
+      },
+    });
   };
 
   const addWorkout = (templateId: string | null) => {
@@ -427,7 +439,21 @@ function ProgramView({
                 );
               })}
             </View>
-          ) : index > 0 ? (
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${executionStrings.start.presencial}: ${workout.name}`}
+            onPress={() => {
+              presencial(workout.id);
+            }}
+            style={styles.presencial}
+          >
+            <Icon name="play" size={16} color={palette.lime} />
+            <Text style={[typography.label, { color: palette.lime }]}>
+              {executionStrings.start.presencial}
+            </Text>
+          </Pressable>
+          {!fixed && index > 0 ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`${strings.editor.moveUp}: ${workout.name}`}
@@ -522,6 +548,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dayOn: { backgroundColor: palette.lime },
+  presencial: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: MIN_TOUCH,
+    alignSelf: "flex-start",
+  },
   up: {
     alignSelf: "flex-end",
     width: MIN_TOUCH,

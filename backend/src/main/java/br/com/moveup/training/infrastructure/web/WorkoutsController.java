@@ -266,6 +266,8 @@ class WorkoutsController {
       @Schema(nullable = true, description = "Modelo de origem da cópia") UUID sourceTemplateId,
       @Schema(requiredMode = REQUIRED, description = "Mande em If-Match como \"r<revision>\"")
           int revision,
+      @Schema(requiredMode = REQUIRED, description = "Versão atual: vai na sessão (presencial)")
+          UUID versionId,
       @Schema(requiredMode = REQUIRED, description = "Sobe quando o treino já tinha sessão")
           int versionNumber,
       @Schema(requiredMode = REQUIRED) ContentResponse content) {
@@ -278,6 +280,7 @@ class WorkoutsController {
           v.programId(),
           v.sourceTemplateId(),
           v.revision(),
+          v.versionId(),
           v.versionNumber(),
           ContentResponse.from(v.content()));
     }
