@@ -1,12 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { Pressable, Text } from "react-native";
 import { z } from "zod";
 import { Button } from "../../../shared/ui/Button";
 import { Message } from "../../../shared/ui/Message";
+import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { TextField } from "../../../shared/ui/TextField";
+import { TextLink } from "../../../shared/ui/TextLink";
+import { MIN_TOUCH, palette, typography } from "../../../shared/ui/theme";
 import { useSendPasswordReset, useSignIn, useSignUp } from "../hooks/use-auth-actions";
 import { describeError } from "./describe-error";
 import { strings } from "./strings";
@@ -19,9 +23,15 @@ const FormSchema = z.object({
 });
 type Form = z.infer<typeof FormSchema>;
 
-/** Login e criação de conta por e-mail e senha (Firebase). */
+/**
+ * Entrar ou criar conta por e-mail e senha (Firebase). Google e Apple entram quando o login social
+ * for configurado; o modo inicial vem das boas-vindas (`?mode=sign-up`).
+ */
 export function SignInScreen() {
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const [mode, setMode] = useState<"sign-in" | "sign-up">(
+    params.mode === "sign-up" ? "sign-up" : "sign-in",
+  );
   const signIn = useSignIn();
   const signUp = useSignUp();
   const reset = useSendPasswordReset();
@@ -39,8 +49,60 @@ export function SignInScreen() {
     });
   });
 
+  const forgot = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t.forgot}
+      disabled={reset.isPending}
+      onPress={() => {
+        const email = getValues("email");
+        if (FormSchema.shape.email.safeParse(email).success) {
+          reset.mutate(email);
+        } else {
+          void trigger("email"); // só mostra o erro do e-mail
+        }
+      }}
+      style={{ minHeight: MIN_TOUCH, justifyContent: "center", paddingLeft: 8 }}
+    >
+      <Text style={[typography.label, { color: palette.lime }]}>{t.forgot}</Text>
+    </Pressable>
+  );
+
   return (
-    <Screen title={mode === "sign-in" ? t.titleSignIn : t.titleSignUp} subtitle={t.subtitle}>
+    <Screen
+      header={
+        router.canGoBack() ? (
+          <RoundButton
+            icon="back"
+            label={t.back}
+            onPress={() => {
+              router.back();
+            }}
+          />
+        ) : undefined
+      }
+      title={mode === "sign-in" ? t.titleSignIn : t.titleSignUp}
+      subtitle={t.subtitle}
+      footer={
+        <>
+          <Button
+            label={mode === "sign-in" ? t.submitSignIn : t.submitSignUp}
+            loading={action.isPending}
+            onPress={() => {
+              void submit();
+            }}
+          />
+          <TextLink
+            before={mode === "sign-in" ? t.noAccount : t.hasAccount}
+            label={mode === "sign-in" ? t.toSignUp : t.toSignIn}
+            onPress={() => {
+              action.reset();
+              setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+            }}
+          />
+        </>
+      }
+    >
       <Controller
         control={control}
         name="email"
@@ -72,41 +134,13 @@ export function SignInScreen() {
             autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
             textContentType={mode === "sign-in" ? "password" : "newPassword"}
             error={formState.errors.password?.message}
+            trailing={mode === "sign-in" ? forgot : undefined}
           />
         )}
       />
       {action.isError ? <Message text={describeError(action.error)} /> : null}
       {reset.isSuccess ? <Message tone="info" text={t.resetSent} /> : null}
-      <Button
-        label={mode === "sign-in" ? t.submitSignIn : t.submitSignUp}
-        loading={action.isPending}
-        onPress={() => {
-          void submit();
-        }}
-      />
-      <Button
-        label={mode === "sign-in" ? t.toggleToSignUp : t.toggleToSignIn}
-        variant="secondary"
-        onPress={() => {
-          action.reset();
-          setMode(mode === "sign-in" ? "sign-up" : "sign-in");
-        }}
-      />
-      {mode === "sign-in" ? (
-        <Button
-          label={t.forgot}
-          variant="secondary"
-          loading={reset.isPending}
-          onPress={() => {
-            const email = getValues("email");
-            if (FormSchema.shape.email.safeParse(email).success) {
-              reset.mutate(email);
-            } else {
-              void trigger("email"); // só mostra o erro do e-mail
-            }
-          }}
-        />
-      ) : null}
+      {reset.isError ? <Message text={describeError(reset.error)} /> : null}
     </Screen>
   );
 }

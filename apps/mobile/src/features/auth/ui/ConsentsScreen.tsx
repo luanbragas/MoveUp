@@ -1,10 +1,13 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Button } from "../../../shared/ui/Button";
-import { Checkbox } from "../../../shared/ui/Checkbox";
 import { Message } from "../../../shared/ui/Message";
 import { Screen } from "../../../shared/ui/Screen";
+import { Skeleton } from "../../../shared/ui/Skeleton";
+import { Steps } from "../../../shared/ui/Steps";
+import { Toggle } from "../../../shared/ui/Toggle";
+import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
 import type { ConsentKind } from "../domain/me";
 import { useAuthState } from "../hooks/use-auth-state";
 import { useMe } from "../hooks/use-me";
@@ -14,7 +17,11 @@ import { strings } from "./strings";
 
 const t = strings.consents;
 
-/** Aceite dos textos obrigatórios que faltam (versão vigente), um por um. */
+/**
+ * Último passo do cadastro: aceite dos textos que faltam, na versão vigente. Cada aceite é um
+ * interruptor que começa desligado (consentimento explícito, LGPD); dados de saúde têm o próprio,
+ * separado. Fotos de evolução são opcionais e só aparecem para o aluno.
+ */
 export function ConsentsScreen() {
   const auth = useAuthState();
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
@@ -22,7 +29,6 @@ export function ConsentsScreen() {
   const versions = useLegalVersions();
   const grant = useGrantConsents(uid ?? "");
   const [checked, setChecked] = useState<ReadonlySet<ConsentKind>>(new Set());
-  const [incomplete, setIncomplete] = useState(false);
 
   if (auth.status === "signed-out") {
     return <Redirect href="/" />;
@@ -33,55 +39,101 @@ export function ConsentsScreen() {
         {versions.isError ? (
           <Message text={describeError(versions.error)} />
         ) : (
-          <ActivityIndicator accessibilityLabel="Carregando" />
+          <>
+            <Skeleton height={64} width="100%" />
+            <Skeleton height={64} width="100%" />
+            <Skeleton height={120} width="100%" />
+          </>
         )}
       </Screen>
     );
   }
 
-  const missing = me.data.onboarding.missingConsents;
+  const account = me.data;
   const legal = versions.data;
+  const required = account.onboarding.missingConsents;
+  const optional: readonly ConsentKind[] =
+    account.role === "client" && !required.includes("photos") ? ["photos"] : [];
+  const firstMissing = required.find((kind) => !checked.has(kind));
+  const total = account.role === "professional" ? 3 : 2;
+
+  const set = (kind: ConsentKind, value: boolean) => {
+    const next = new Set(checked);
+    if (value) {
+      next.add(kind);
+    } else {
+      next.delete(kind);
+    }
+    setChecked(next);
+  };
+
+  const row = (kind: ConsentKind) => (
+    <Toggle
+      key={kind}
+      label={t.rows[kind].label}
+      description={t.rows[kind].description}
+      value={checked.has(kind)}
+      onChange={(value) => {
+        set(kind, value);
+      }}
+    />
+  );
 
   return (
-    <Screen title={t.title} subtitle={t.subtitle}>
-      <Message tone="info" text={t.draftNotice} />
-      {missing.map((kind) => (
-        <Checkbox
-          key={kind}
-          label={t.labels[kind]}
-          checked={checked.has(kind)}
-          onChange={(value) => {
-            const next = new Set(checked);
-            if (value) {
-              next.add(kind);
-            } else {
-              next.delete(kind);
-            }
-            setChecked(next);
-            setIncomplete(false);
-          }}
-        />
-      ))}
-      {incomplete ? <Message text={t.mustAcceptAll} /> : null}
+    <Screen
+      header={
+        <View style={styles.steps}>
+          <Steps current={total} total={total} />
+        </View>
+      }
+      title={t.title}
+      footer={
+        <>
+          {firstMissing === undefined ? null : (
+            <Text style={[typography.small, styles.missing]}>
+              {t.missing(t.rows[firstMissing].label)}
+            </Text>
+          )}
+          <Button
+            label={t.submit}
+            disabled={firstMissing !== undefined}
+            loading={grant.isPending}
+            onPress={() => {
+              const kinds = [...required, ...optional.filter((kind) => checked.has(kind))];
+              grant.mutate(
+                { kinds, versions: legal },
+                {
+                  onSuccess: () => {
+                    router.replace(
+                      account.role === "professional" && !account.isMinor ? "/ready" : "/",
+                    );
+                  },
+                },
+              );
+            }}
+          />
+        </>
+      }
+    >
+      <View style={styles.group}>{required.filter((kind) => kind !== "health_data").map(row)}</View>
+      {required.includes("health_data") ? (
+        <View style={[styles.group, styles.health]}>{row("health_data")}</View>
+      ) : null}
+      {optional.length > 0 ? <View style={styles.group}>{optional.map(row)}</View> : null}
+      <Text style={[typography.small, { color: palette.muted }]}>{t.draftNotice}</Text>
       {grant.isError ? <Message text={describeError(grant.error)} /> : null}
-      <Button
-        label={t.submit}
-        loading={grant.isPending}
-        onPress={() => {
-          if (!missing.every((kind) => checked.has(kind))) {
-            setIncomplete(true);
-            return;
-          }
-          grant.mutate(
-            { kinds: missing, versions: legal },
-            {
-              onSuccess: () => {
-                router.replace("/");
-              },
-            },
-          );
-        }}
-      />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  steps: { flex: 1 },
+  group: {
+    backgroundColor: palette.surface,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  health: { borderWidth: 1, borderColor: palette.line },
+  missing: { color: palette.muted, textAlign: "center" },
+});

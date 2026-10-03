@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
+import { setPendingRole } from "../../auth";
 import { normalizeInviteCode } from "../domain/invite";
 import { setPendingInviteCode } from "../hooks/pending-code";
 
@@ -12,6 +13,7 @@ export function InviteLinkScreen() {
 
   useEffect(() => {
     setPendingInviteCode(typeof code === "string" ? normalizeInviteCode(code) : null);
+    setPendingRole("client"); // quem chega pelo convite é aluno: o cadastro já começa assim
     router.replace("/");
   }, [code]);
 

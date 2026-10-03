@@ -20,5 +20,7 @@ export { SignInScreen } from "./ui/SignInScreen";
 export { RegisterScreen } from "./ui/RegisterScreen";
 export { ConsentsScreen } from "./ui/ConsentsScreen";
 export { GuardianScreen } from "./ui/GuardianScreen";
+export { ReadyScreen } from "./ui/ReadyScreen";
+export { setPendingRole } from "./hooks/pending-role";
 export { RoleGate } from "./ui/RoleGate";
 export { SignOutButton } from "./ui/SignOutButton";
