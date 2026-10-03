@@ -221,7 +221,8 @@ Proibido: Redux, Context para estado que muda com frequência, copiar dado do se
 ## 10. UI
 
 - Componentes de tela não fazem fetch nem acessam SQLite: recebem dados do hook.
-- Componentes base em `shared/ui` com *design tokens* (cores, espaçamento, tipografia, tema claro/escuro).
+- Componentes base em `shared/ui` com *design tokens* (`theme.ts`: cores, fontes, espaçamento, raios, tipografia). Tela nova usa os tokens e os componentes base; nada de cor ou fonte solta no código da feature.
+- **Sistema visual "Impacto"**, só tema escuro (fundo `#0A0A0B`). O lima (`#C6FF3D`) é ação, seleção e sucesso; o vermelho (`#FF3B3B`) só para dor, perigo e erro. Títulos em caixa alta na Archivo Expanded (uma ou duas palavras por linha); números na Archivo Black, sempre com unidade ("55 kg · 10 reps"); texto corrido na Manrope. As fontes ficam em `assets/fonts` (licença OFL) e carregam com a abertura do app.
 - **Tela de execução do treino:** botões grandes (mínimo 44 pt no iOS e 48 dp no Android, preferir maior), contraste alto, poucas ações por tela, uso com uma mão.
 - Acessibilidade: `accessibilityLabel`/`aria-label` em ícones, ordem de foco correta, fonte escalável.
 - Listas longas com **FlashList** (mobile); imagens com `expo-image` (cache).

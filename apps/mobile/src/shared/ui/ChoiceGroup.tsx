@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MIN_TOUCH, spacing, typography, useColors } from "./theme";
+import { StyleSheet, Text, View } from "react-native";
+import { Chip } from "./Chip";
+import { palette, spacing, typography } from "./theme";
 
 interface Props<T extends string> {
   readonly label: string;
@@ -9,7 +10,7 @@ interface Props<T extends string> {
   readonly error?: string | undefined;
 }
 
-/** Escolha única (papel, parentesco), anunciada como grupo de rádio. */
+/** Escolha única em pílulas (papel, parentesco, objetivo), anunciada como grupo de rádio. */
 export function ChoiceGroup<T extends string>({
   label,
   options,
@@ -17,37 +18,24 @@ export function ChoiceGroup<T extends string>({
   onChange,
   error,
 }: Props<T>) {
-  const colors = useColors();
   return (
     <View style={styles.group} accessibilityRole="radiogroup" accessibilityLabel={label}>
-      <Text style={[typography.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[typography.label, { color: palette.textSoft }]}>{label}</Text>
       <View style={styles.options}>
-        {options.map((option) => {
-          const selected = option.value === value;
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              accessibilityLabel={option.label}
-              onPress={() => {
-                onChange(option.value);
-              }}
-              style={[
-                styles.option,
-                {
-                  borderColor: selected ? colors.primary : colors.border,
-                  backgroundColor: selected ? colors.surface : colors.background,
-                },
-              ]}
-            >
-              <Text style={[typography.body, { color: colors.text }]}>{option.label}</Text>
-            </Pressable>
-          );
-        })}
+        {options.map((option) => (
+          <Chip
+            key={option.value}
+            role="radio"
+            label={option.label}
+            selected={option.value === value}
+            onPress={() => {
+              onChange(option.value);
+            }}
+          />
+        ))}
       </View>
       {error === undefined ? null : (
-        <Text accessibilityLiveRegion="polite" style={[typography.small, { color: colors.danger }]}>
+        <Text accessibilityLiveRegion="polite" style={[typography.label, { color: palette.red }]}>
           {error}
         </Text>
       )}
@@ -56,13 +44,6 @@ export function ChoiceGroup<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  group: { gap: spacing.xs },
+  group: { gap: spacing.sm },
   options: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  option: {
-    minHeight: MIN_TOUCH,
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: spacing.md,
-    justifyContent: "center",
-  },
 });

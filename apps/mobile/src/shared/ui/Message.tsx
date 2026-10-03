@@ -1,7 +1,8 @@
-import { StyleSheet, Text } from "react-native";
-import { spacing, typography, useColors } from "./theme";
+import { StyleSheet, Text, View } from "react-native";
+import { Icon } from "./Icon";
+import { palette, radius, spacing, typography } from "./theme";
 
-/** Mensagem de erro (ou aviso) da tela, anunciada ao leitor de tela. */
+/** Mensagem da tela, anunciada ao leitor de tela: erro em vermelho translúcido, aviso em grafite. */
 export function Message({
   text,
   tone = "error",
@@ -9,21 +10,34 @@ export function Message({
   readonly text: string;
   readonly tone?: "error" | "info";
 }) {
-  const colors = useColors();
+  const error = tone === "error";
   return (
-    <Text
+    <View
       accessibilityLiveRegion="polite"
-      style={[
-        typography.body,
-        styles.box,
-        { color: tone === "error" ? colors.danger : colors.textMuted, borderColor: colors.border },
-      ]}
+      style={[styles.box, { backgroundColor: error ? palette.redSoft : palette.surface }]}
     >
-      {text}
-    </Text>
+      <Icon
+        name={error ? "alert" : "check"}
+        size={20}
+        color={error ? palette.red : palette.lime}
+        strokeWidth={2.4}
+      />
+      <Text
+        style={[typography.label, styles.text, { color: error ? palette.red : palette.textSoft }]}
+      >
+        {text}
+      </Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: 10, padding: spacing.md },
+  box: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-start",
+    borderRadius: radius.md,
+    padding: spacing.md - 2,
+  },
+  text: { flex: 1, lineHeight: 20 },
 });

@@ -1,50 +1,57 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MIN_TOUCH, spacing, typography, useColors } from "./theme";
+import { Icon } from "./Icon";
+import { MIN_TOUCH, palette, radius, spacing, typography } from "./theme";
 
 interface Props {
   readonly label: string;
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
+  /** Texto de apoio abaixo (ex.: para que serve o consentimento). */
+  readonly description?: string;
 }
 
-export function Checkbox({ label, checked, onChange }: Props) {
-  const colors = useColors();
+/** Caixa de seleção para aceite explícito (consentimentos): começa sempre desmarcada. */
+export function Checkbox({ label, checked, onChange, description }: Props) {
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={label}
+      accessibilityHint={description}
       onPress={() => {
         onChange(!checked);
       }}
       style={styles.row}
     >
-      <View
-        style={[
-          styles.box,
-          {
-            borderColor: checked ? colors.primary : colors.border,
-            backgroundColor: checked ? colors.primary : colors.background,
-          },
-        ]}
-      >
-        {checked ? <Text style={[styles.mark, { color: colors.onPrimary }]}>✓</Text> : null}
+      <View style={[styles.box, checked ? styles.checked : styles.unchecked]}>
+        {checked ? <Icon name="check" size={18} color={palette.onLime} strokeWidth={3.2} /> : null}
       </View>
-      <Text style={[typography.body, styles.label, { color: colors.text }]}>{label}</Text>
+      <View style={styles.texts}>
+        <Text style={[typography.body, { color: palette.text }]}>{label}</Text>
+        {description === undefined ? null : (
+          <Text style={[typography.small, { color: palette.muted }]}>{description}</Text>
+        )}
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: spacing.md, minHeight: MIN_TOUCH },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md - 2,
+    minHeight: MIN_TOUCH,
+    paddingVertical: 6,
+  },
   box: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    borderWidth: 2,
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm - 2,
     alignItems: "center",
     justifyContent: "center",
   },
-  mark: { fontSize: 18, fontWeight: "700" },
-  label: { flex: 1 },
+  checked: { backgroundColor: palette.lime },
+  unchecked: { borderWidth: 2, borderColor: palette.muted },
+  texts: { flex: 1, gap: 2, paddingTop: 4 },
 });
