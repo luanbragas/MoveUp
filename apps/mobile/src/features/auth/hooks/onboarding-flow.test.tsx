@@ -35,6 +35,7 @@ function setup() {
       end: unused,
     },
     invite: { preview: unused, accept: unused, myLinks: unused, endMyLink: unused },
+    exercises: { search: unused, create: unused, archive: unused },
   };
   const queryClient = new QueryClient({
     defaultOptions: {

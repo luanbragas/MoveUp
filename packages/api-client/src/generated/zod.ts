@@ -470,6 +470,182 @@ export const RevokeConsent204Response = zod.void()
 
 
 /**
+ * Base do MoveUp + exercícios próprios. Busca por parte do nome ou nome parecido, sem acento; filtro opcional por músculo (principal ou secundário).
+ * @summary Busca na biblioteca
+ */
+export const searchExercisesQueryLimitDefault = 50;
+
+export const SearchExercisesQueryParams = zod.object({
+  "q": zod.string().optional(),
+  "muscle": zod.enum(['chest', 'delts', 'traps', 'abs', 'lats', 'biceps', 'triceps', 'forearms', 'quads', 'adductors', 'abductors', 'calves', 'lowerback', 'glutes', 'hamstrings']).optional(),
+  "limit": zod.int().default(searchExercisesQueryLimitDefault)
+})
+
+export const SearchExercises200ResponseItem = zod.object({
+  "custom": zod.boolean().describe('Exercício próprio (pode arquivar)'),
+  "equipment": zod.string().nullish(),
+  "id": zod.uuid(),
+  "instructions": zod.string().nullish().describe('Como executar'),
+  "mediaUrl": zod.string().nullish().describe('Vídeo (link https)'),
+  "modality": zod.enum(['strength', 'cardio', 'conditioning', 'complementary']),
+  "name": zod.string(),
+  "primaryMuscle": zod.string().nullish().describe('Código do mapa muscular'),
+  "secondaryMuscles": zod.array(zod.string()),
+  "trackingType": zod.enum(['reps_load', 'reps_only', 'time', 'distance_time']).describe('O que o aluno registra em cada série'),
+  "unilateral": zod.boolean()
+})
+export const SearchExercises200Response = zod.array(SearchExercises200ResponseItem)
+
+export const SearchExercises403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Cria um exercício próprio
+ */
+export const createExerciseBodyEquipmentMin = 0;
+export const createExerciseBodyEquipmentMax = 60;
+
+export const createExerciseBodyInstructionsMin = 0;
+export const createExerciseBodyInstructionsMax = 2000;
+
+export const createExerciseBodyMediaUrlMin = 0;
+export const createExerciseBodyMediaUrlMax = 500;
+
+export const createExerciseBodyNameMin = 0;
+export const createExerciseBodyNameMax = 120;
+
+export const createExerciseBodySecondaryMusclesMin = 0;
+export const createExerciseBodySecondaryMusclesMax = 6;
+
+
+
+export const CreateExerciseBody = zod.object({
+  "equipment": zod.string().min(createExerciseBodyEquipmentMin).max(createExerciseBodyEquipmentMax).optional(),
+  "instructions": zod.string().min(createExerciseBodyInstructionsMin).max(createExerciseBodyInstructionsMax).optional(),
+  "mediaUrl": zod.string().min(createExerciseBodyMediaUrlMin).max(createExerciseBodyMediaUrlMax).optional(),
+  "modality": zod.enum(['strength', 'cardio', 'conditioning', 'complementary']),
+  "name": zod.string().min(createExerciseBodyNameMin).max(createExerciseBodyNameMax),
+  "primaryMuscle": zod.string().nullish(),
+  "secondaryMuscles": zod.array(zod.string()).min(createExerciseBodySecondaryMusclesMin).max(createExerciseBodySecondaryMusclesMax).optional(),
+  "trackingType": zod.enum(['reps_load', 'reps_only', 'time', 'distance_time']),
+  "unilateral": zod.boolean().optional().describe('Padrão: false')
+})
+
+export const CreateExercise201Response = zod.object({
+  "custom": zod.boolean().describe('Exercício próprio (pode arquivar)'),
+  "equipment": zod.string().nullish(),
+  "id": zod.uuid(),
+  "instructions": zod.string().nullish().describe('Como executar'),
+  "mediaUrl": zod.string().nullish().describe('Vídeo (link https)'),
+  "modality": zod.enum(['strength', 'cardio', 'conditioning', 'complementary']),
+  "name": zod.string(),
+  "primaryMuscle": zod.string().nullish().describe('Código do mapa muscular'),
+  "secondaryMuscles": zod.array(zod.string()),
+  "trackingType": zod.enum(['reps_load', 'reps_only', 'time', 'distance_time']).describe('O que o aluno registra em cada série'),
+  "unilateral": zod.boolean()
+})
+
+export const CreateExercise403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateExercise409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateExercise422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Some da busca; treinos que já usam continuam mostrando.
+ * @summary Arquiva um exercício próprio
+ */
+export const ArchiveExerciseParams = zod.object({
+  "exerciseId": zod.uuid()
+})
+
+export const ArchiveExercise204Response = zod.void()
+
+export const ArchiveExercise403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ArchiveExercise409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * Guarda quando, o IP e o navegador como prova (LGPD). O link vale uma vez: depois da decisão responde 404.
  * @summary Responsável autoriza ou recusa
  */

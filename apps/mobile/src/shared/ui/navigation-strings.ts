@@ -14,6 +14,10 @@ export const navigationStrings = {
     alerts: "Atenção",
     settings: "Ajustes",
   },
+  library: {
+    title: "Biblioteca de exercícios",
+    subtitle: "Busque, veja como fazer e cadastre os seus",
+  },
   soon: {
     clientTraining: {
       title: "Treino",

@@ -19,6 +19,8 @@ tags:
   name: guardian-authorizations
 - description: Alunos e vínculos do profissional
   name: clients
+- description: Biblioteca de exercícios
+  name: exercises
 paths:
   /v1/accounts:
     post:
@@ -327,6 +329,130 @@ paths:
       summary: Revoga um aceite
       tags:
       - consents
+  /v1/exercises:
+    get:
+      description: "Base do MoveUp + exercícios próprios. Busca por parte do nome\
+        \ ou nome parecido, sem acento; filtro opcional por músculo (principal ou\
+        \ secundário)."
+      operationId: searchExercises
+      parameters:
+      - in: query
+        name: q
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: muscle
+        required: false
+        schema:
+          type: string
+          enum:
+          - chest
+          - delts
+          - traps
+          - abs
+          - lats
+          - biceps
+          - triceps
+          - forearms
+          - quads
+          - adductors
+          - abductors
+          - calves
+          - lowerback
+          - glutes
+          - hamstrings
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exercise"
+          description: Até `limit` exercícios (máx. 100)
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Busca na biblioteca
+      tags:
+      - exercises
+    post:
+      operationId: createExercise
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewExercise"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exercise"
+          description: Exercício criado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`exercise-name-taken`'
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`exercise-name-invalid`, `modality-invalid`, `tracking-type-invalid`,\
+            \ `muscle-invalid`, `instructions-invalid`, `media-url-invalid`"
+      summary: Cria um exercício próprio
+      tags:
+      - exercises
+  /v1/exercises/{exerciseId}:
+    delete:
+      description: Some da busca; treinos que já usam continuam mostrando.
+      operationId: archiveExercise
+      parameters:
+      - in: path
+        name: exerciseId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Arquivado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`base-exercise-read-only`'
+      summary: Arquiva um exercício próprio
+      tags:
+      - exercises
   /v1/guardian-authorizations/decision:
     post:
       description: "Guarda quando, o IP e o navegador como prova (LGPD). O link vale\
@@ -695,6 +821,65 @@ components:
       required:
       - docVersion
       - kind
+    Exercise:
+      type: object
+      properties:
+        custom:
+          type: boolean
+          description: Exercício próprio (pode arquivar)
+        equipment:
+          type:
+          - string
+          - "null"
+        id:
+          type: string
+          format: uuid
+        instructions:
+          type:
+          - string
+          - "null"
+          description: Como executar
+        mediaUrl:
+          type:
+          - string
+          - "null"
+          description: Vídeo (link https)
+        modality:
+          type: string
+          enum:
+          - strength
+          - cardio
+          - conditioning
+          - complementary
+        name:
+          type: string
+        primaryMuscle:
+          type:
+          - string
+          - "null"
+          description: Código do mapa muscular
+        secondaryMuscles:
+          type: array
+          items:
+            type: string
+        trackingType:
+          type: string
+          description: O que o aluno registra em cada série
+          enum:
+          - reps_load
+          - reps_only
+          - time
+          - distance_time
+        unilateral:
+          type: boolean
+      required:
+      - custom
+      - id
+      - modality
+      - name
+      - secondaryMuscles
+      - trackingType
+      - unilateral
     FieldProblem:
       type: object
       properties:
@@ -1016,6 +1201,58 @@ components:
           minLength: 0
       required:
       - name
+    NewExercise:
+      type: object
+      properties:
+        equipment:
+          type: string
+          maxLength: 60
+          minLength: 0
+        instructions:
+          type: string
+          maxLength: 2000
+          minLength: 0
+        mediaUrl:
+          type: string
+          maxLength: 500
+          minLength: 0
+        modality:
+          type: string
+          enum:
+          - strength
+          - cardio
+          - conditioning
+          - complementary
+          minLength: 1
+        name:
+          type: string
+          maxLength: 120
+          minLength: 0
+        primaryMuscle:
+          type:
+          - string
+          - "null"
+        secondaryMuscles:
+          type: array
+          items:
+            type: string
+          maxItems: 6
+          minItems: 0
+        trackingType:
+          type: string
+          enum:
+          - reps_load
+          - reps_only
+          - time
+          - distance_time
+          minLength: 1
+        unilateral:
+          type: boolean
+          description: "Padrão: false"
+      required:
+      - modality
+      - name
+      - trackingType
     Problem:
       type: object
       description: Erro no formato RFC 9457 (application/problem+json)

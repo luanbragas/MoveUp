@@ -53,6 +53,14 @@ public final class Titles {
           Map.entry("already-exists", "Registro já existe"),
           Map.entry("invalid-reference", "Referência inválida"),
           Map.entry("rate-limited", "Muitas requisições"),
+          Map.entry("exercise-name-invalid", "Nome do exercício inválido"),
+          Map.entry("exercise-name-taken", "Exercício com esse nome já existe"),
+          Map.entry("base-exercise-read-only", "Exercício da biblioteca base"),
+          Map.entry("modality-invalid", "Modalidade inválida"),
+          Map.entry("tracking-type-invalid", "Tipo de registro inválido"),
+          Map.entry("muscle-invalid", "Músculo inválido"),
+          Map.entry("instructions-invalid", "Instruções inválidas"),
+          Map.entry("media-url-invalid", "Link do vídeo inválido"),
           Map.entry("internal-error", "Erro inesperado"));
 
   private Titles() {}

@@ -5,6 +5,8 @@ import type { AccountRepository, MeRepository } from "../features/auth/domain/po
 import type { AuthSession } from "../features/auth/domain/session";
 import { createClientsApiRepository } from "../features/clients/data/api/clients-api";
 import type { ClientsRepository } from "../features/clients/domain/ports";
+import { createExercisesApiRepository } from "../features/exercise-library/data/api/exercises-api";
+import type { ExercisesRepository } from "../features/exercise-library/domain/ports";
 import { createInviteApiRepository } from "../features/invite/data/api/invite-api";
 import type { InviteRepository } from "../features/invite/domain/ports";
 
@@ -15,6 +17,7 @@ export interface Repositories {
   readonly account: AccountRepository;
   readonly clients: ClientsRepository;
   readonly invite: InviteRepository;
+  readonly exercises: ExercisesRepository;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -25,6 +28,7 @@ export function createRepositories(session: AuthSession): Repositories {
     account: createAccountApiRepository(),
     clients: createClientsApiRepository(),
     invite: createInviteApiRepository(),
+    exercises: createExercisesApiRepository(),
   };
 }
 

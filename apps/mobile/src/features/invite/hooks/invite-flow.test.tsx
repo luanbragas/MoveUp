@@ -109,7 +109,17 @@ function setup() {
   const session = createFakeSession();
   const account = createFakeAccount(session);
   const backend = createCoachingBackend();
-  const repositories: Repositories = { session, me: account, account, ...backend };
+  const repositories: Repositories = {
+    session,
+    me: account,
+    account,
+    ...backend,
+    exercises: {
+      search: () => Promise.reject(new Error("fora deste teste")),
+      create: () => Promise.reject(new Error("fora deste teste")),
+      archive: () => Promise.reject(new Error("fora deste teste")),
+    },
+  };
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },

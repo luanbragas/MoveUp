@@ -80,6 +80,58 @@ export interface ConsentGrant {
   kind: ConsentGrantKind;
 }
 
+export type ExerciseModality = typeof ExerciseModality[keyof typeof ExerciseModality];
+
+
+export const ExerciseModality = {
+  strength: 'strength',
+  cardio: 'cardio',
+  conditioning: 'conditioning',
+  complementary: 'complementary',
+} as const;
+
+/**
+ * O que o aluno registra em cada série
+ */
+export type ExerciseTrackingType = typeof ExerciseTrackingType[keyof typeof ExerciseTrackingType];
+
+
+export const ExerciseTrackingType = {
+  reps_load: 'reps_load',
+  reps_only: 'reps_only',
+  time: 'time',
+  distance_time: 'distance_time',
+} as const;
+
+export interface Exercise {
+  /** Exercício próprio (pode arquivar) */
+  custom: boolean;
+  /** @nullable */
+  equipment?: string | null;
+  id: string;
+  /**
+     * Como executar
+     * @nullable
+     */
+  instructions?: string | null;
+  /**
+     * Vídeo (link https)
+     * @nullable
+     */
+  mediaUrl?: string | null;
+  modality: ExerciseModality;
+  name: string;
+  /**
+     * Código do mapa muscular
+     * @nullable
+     */
+  primaryMuscle?: string | null;
+  secondaryMuscles: string[];
+  /** O que o aluno registra em cada série */
+  trackingType: ExerciseTrackingType;
+  unilateral: boolean;
+}
+
 export interface FieldProblem {
   code: string;
   field: string;
@@ -336,6 +388,68 @@ export interface NewClient {
 }
 
 /**
+ * @minLength 1
+ */
+export type NewExerciseModality = typeof NewExerciseModality[keyof typeof NewExerciseModality];
+
+
+export const NewExerciseModality = {
+  strength: 'strength',
+  cardio: 'cardio',
+  conditioning: 'conditioning',
+  complementary: 'complementary',
+} as const;
+
+/**
+ * @minLength 1
+ */
+export type NewExerciseTrackingType = typeof NewExerciseTrackingType[keyof typeof NewExerciseTrackingType];
+
+
+export const NewExerciseTrackingType = {
+  reps_load: 'reps_load',
+  reps_only: 'reps_only',
+  time: 'time',
+  distance_time: 'distance_time',
+} as const;
+
+export interface NewExercise {
+  /**
+     * @minLength 0
+     * @maxLength 60
+     */
+  equipment?: string;
+  /**
+     * @minLength 0
+     * @maxLength 2000
+     */
+  instructions?: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  mediaUrl?: string;
+  /** @minLength 1 */
+  modality: NewExerciseModality;
+  /**
+     * @minLength 0
+     * @maxLength 120
+     */
+  name: string;
+  /** @nullable */
+  primaryMuscle?: string | null;
+  /**
+     * @minItems 0
+     * @maxItems 6
+     */
+  secondaryMuscles?: string[];
+  /** @minLength 1 */
+  trackingType: NewExerciseTrackingType;
+  /** Padrão: false */
+  unilateral?: boolean;
+}
+
+/**
  * Erro no formato RFC 9457 (application/problem+json)
  */
 export interface Problem {
@@ -394,6 +508,33 @@ export type ListClientsParams = {
 cursor?: string;
 limit?: number;
 };
+
+export type SearchExercisesParams = {
+q?: string;
+muscle?: SearchExercisesMuscle;
+limit?: number;
+};
+
+export type SearchExercisesMuscle = typeof SearchExercisesMuscle[keyof typeof SearchExercisesMuscle];
+
+
+export const SearchExercisesMuscle = {
+  chest: 'chest',
+  delts: 'delts',
+  traps: 'traps',
+  abs: 'abs',
+  lats: 'lats',
+  biceps: 'biceps',
+  triceps: 'triceps',
+  forearms: 'forearms',
+  quads: 'quads',
+  adductors: 'adductors',
+  abductors: 'abductors',
+  calves: 'calves',
+  lowerback: 'lowerback',
+  glutes: 'glutes',
+  hamstrings: 'hamstrings',
+} as const;
 
 export type registerAccountResponse201 = {
   data: Me
@@ -943,6 +1084,173 @@ export const getRevokeConsentUrl = (kind: string,) => {
 export const revokeConsent = async (kind: string, options?: Parameters<typeof apiFetch>[1]): Promise<revokeConsentResponse> => {
 
   return apiFetch<revokeConsentResponse>(getRevokeConsentUrl(kind),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type searchExercisesResponse200 = {
+  data: Exercise[]
+  status: 200
+}
+
+export type searchExercisesResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type searchExercisesResponseSuccess = (searchExercisesResponse200) & {
+  headers: Headers;
+};
+export type searchExercisesResponseError = (searchExercisesResponse403) & {
+  headers: Headers;
+};
+
+export type searchExercisesResponse = (searchExercisesResponseSuccess | searchExercisesResponseError)
+
+export const getSearchExercisesUrl = (params?: SearchExercisesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/exercises?${stringifiedParams}` : `/v1/exercises`
+}
+
+/**
+ * Base do MoveUp + exercícios próprios. Busca por parte do nome ou nome parecido, sem acento; filtro opcional por músculo (principal ou secundário).
+ * @summary Busca na biblioteca
+ */
+export const searchExercises = async (params?: SearchExercisesParams, options?: Parameters<typeof apiFetch>[1]): Promise<searchExercisesResponse> => {
+
+  return apiFetch<searchExercisesResponse>(getSearchExercisesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createExerciseResponse201 = {
+  data: Exercise
+  status: 201
+}
+
+export type createExerciseResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type createExerciseResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type createExerciseResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type createExerciseResponseSuccess = (createExerciseResponse201) & {
+  headers: Headers;
+};
+export type createExerciseResponseError = (createExerciseResponse403 | createExerciseResponse409 | createExerciseResponse422) & {
+  headers: Headers;
+};
+
+export type createExerciseResponse = (createExerciseResponseSuccess | createExerciseResponseError)
+
+export const getCreateExerciseUrl = () => {
+
+
+
+
+  return `/v1/exercises`
+}
+
+/**
+ * @summary Cria um exercício próprio
+ */
+export const createExercise = async (newExercise: NewExercise, options?: Parameters<typeof apiFetch>[1]): Promise<createExerciseResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createExerciseResponse>(getCreateExerciseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(newExercise)
+  }
+);}
+
+
+
+export type archiveExerciseResponse204 = {
+  data: void
+  status: 204
+}
+
+export type archiveExerciseResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type archiveExerciseResponse409 = {
+  data: Problem
+  status: 409
+}
+
+export type archiveExerciseResponseSuccess = (archiveExerciseResponse204) & {
+  headers: Headers;
+};
+export type archiveExerciseResponseError = (archiveExerciseResponse403 | archiveExerciseResponse409) & {
+  headers: Headers;
+};
+
+export type archiveExerciseResponse = (archiveExerciseResponseSuccess | archiveExerciseResponseError)
+
+export const getArchiveExerciseUrl = (exerciseId: string,) => {
+
+
+
+
+  return `/v1/exercises/${exerciseId}`
+}
+
+/**
+ * Some da busca; treinos que já usam continuam mostrando.
+ * @summary Arquiva um exercício próprio
+ */
+export const archiveExercise = async (exerciseId: string, options?: Parameters<typeof apiFetch>[1]): Promise<archiveExerciseResponse> => {
+
+  return apiFetch<archiveExerciseResponse>(getArchiveExerciseUrl(exerciseId),
   {
     ...options,
     method: 'DELETE'

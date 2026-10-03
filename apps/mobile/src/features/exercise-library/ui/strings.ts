@@ -1,0 +1,80 @@
+import type { Modality, MuscleCode, TrackingType } from "../domain/exercise";
+
+// Textos da feature exercise-library (pt-BR), num lugar só e prontos para i18n.
+export const strings = {
+  library: {
+    title: "Biblioteca",
+    search: "Buscar exercício",
+    searchPlaceholder: "supino, agachamento…",
+    filter: "Filtrar por músculo",
+    all: "Todos",
+    count: (n: number) => (n === 1 ? "1 resultado" : `${String(n)} resultados`),
+    empty: "Nenhum exercício com esse nome.",
+    emptyText: "Confira a busca ou cadastre um exercício seu.",
+    create: "Novo exercício",
+    error: "Não conseguimos carregar a biblioteca.",
+    retry: "Tentar de novo",
+    custom: "seu",
+    back: "Voltar",
+    howTo: "Como fazer",
+    video: "Ver vídeo",
+    archive: "Arquivar",
+    archiveTitle: "Arquivar exercício?",
+    archiveMessage: "Ele some da busca. Treinos que já usam continuam mostrando.",
+    archiveBack: "Voltar",
+    add: (n: number) =>
+      n === 0
+        ? "Escolha os exercícios"
+        : n === 1
+          ? "Adicionar 1 exercício"
+          : `Adicionar ${String(n)} exercícios`,
+    selected: "selecionado",
+  },
+  muscles: {
+    chest: "Peito",
+    delts: "Ombros",
+    traps: "Trapézio",
+    lats: "Costas",
+    lowerback: "Lombar",
+    biceps: "Bíceps",
+    triceps: "Tríceps",
+    forearms: "Antebraço",
+    abs: "Abdômen",
+    quads: "Quadríceps",
+    hamstrings: "Posteriores",
+    glutes: "Glúteos",
+    adductors: "Adutores",
+    abductors: "Glúteo médio",
+    calves: "Panturrilha",
+  } satisfies Record<MuscleCode, string>,
+  modalities: {
+    strength: "Força",
+    cardio: "Cardio",
+    conditioning: "Condicionamento",
+    complementary: "Complementar",
+  } satisfies Record<Modality, string>,
+  tracking: {
+    reps_load: "Repetições e carga",
+    reps_only: "Só repetições",
+    time: "Tempo",
+    distance_time: "Distância e tempo",
+  } satisfies Record<TrackingType, string>,
+  form: {
+    title: "Novo\nexercício",
+    subtitle: "Fica só na sua biblioteca.",
+    name: "Nome",
+    modality: "Modalidade",
+    tracking: "O aluno registra",
+    primary: "Músculo principal",
+    secondary: "Músculos secundários",
+    equipment: "Equipamento (opcional)",
+    unilateral: "Um lado por vez",
+    unilateralHint: "Ex.: rosca alternada, afundo",
+    instructions: "Como fazer (opcional)",
+    mediaUrl: "Link do vídeo (opcional)",
+    submit: "Salvar exercício",
+    close: "Fechar",
+    nameInvalid: "O nome precisa ter de 2 a 120 caracteres.",
+    mediaInvalid: "Use um link que comece com https://",
+  },
+} as const;
