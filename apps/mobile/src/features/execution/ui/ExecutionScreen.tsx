@@ -297,24 +297,19 @@ export function ExecutionScreen({ session: initial, exercises, firstName, onClos
           key={exercise.blockIndex}
           block={block}
           exercises={blockExercises}
-          onDone={(elapsed, rounds) => {
-            let next = session;
-            for (const e of blockExercises) {
-              for (const s of e.sets) {
-                next = act.setSet(
-                  next,
-                  e.id,
-                  s.id,
-                  {
-                    completed: true,
-                    durationSeconds: elapsed,
-                    ...(rounds === null ? {} : { reps: rounds }),
-                  },
-                  new Date(),
-                );
-              }
-            }
-            commit(next);
+          onDone={(elapsed, rounds, extraReps) => {
+            commit(
+              act.blockDone(
+                session,
+                {
+                  blockIndex: exercise.blockIndex,
+                  roundsCompleted: rounds,
+                  extraReps,
+                  totalSeconds: elapsed,
+                },
+                new Date(),
+              ),
+            );
             const after = session.exercises.findIndex((e) => e.blockIndex > exercise.blockIndex);
             if (after >= 0) {
               goTo(after);

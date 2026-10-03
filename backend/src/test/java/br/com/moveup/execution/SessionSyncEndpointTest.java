@@ -78,6 +78,8 @@ class SessionSyncEndpointTest {
             "sets": [
               {"id": "%s", "setNumber": 1, "reps": %d, "loadKg": 55, "completed": true},
               {"id": "%s", "setNumber": 2, "reps": 8, "loadKg": 55, "completed": true}]}],
+          "blockResults": [{"blockIndex": 1, "roundsCompleted": 5, "extraReps": 3,
+            "totalSeconds": 600}],
           "feedback": {"effort": 7, "comment": "Pesado hoje", "pains": [%s]}
         }]}
         """
@@ -116,6 +118,13 @@ class SessionSyncEndpointTest {
                 id))
         .isEqualTo(2);
     assertThat(count("select count(*) from pain_report where session_id = ?", id)).isEqualTo(1);
+    // AMRAP: rodadas e reps da incompleta, pela posição do bloco (não pelo id, ver V20)
+    assertThat(
+            count(
+                "select count(*) from block_result where session_id = ? and block_index = 1"
+                    + " and rounds_completed = 5 and extra_reps = 3",
+                id))
+        .isEqualTo(1);
     assertThat(single("select performed_by from workout_session where id = ?", id))
         .isEqualTo("client");
     assertThat(
@@ -201,5 +210,13 @@ class SessionSyncEndpointTest {
                 "{\"id\": \"" + UUID.randomUUID() + "\", \"bodyRegion\": \"nariz\"}")),
         422,
         "pain-invalid");
+    expectProblem(
+        api.asJson(
+            student,
+            post("/v1/sync"),
+            session(UUID.randomUUID(), "completed", "2026-10-05T13:00:00Z", 10, "")
+                .replace("\"blockIndex\": 1", "\"blockIndex\": -1")),
+        422,
+        "block-result-invalid");
   }
 }

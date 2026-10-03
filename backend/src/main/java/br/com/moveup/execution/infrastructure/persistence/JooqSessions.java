@@ -1,5 +1,6 @@
 package br.com.moveup.execution.infrastructure.persistence;
 
+import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.BLOCK_RESULT;
 import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.OUTBOX_EVENT;
 import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.PAIN_REPORT;
 import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.PERFORMED_EXERCISE;
@@ -22,7 +23,8 @@ import org.springframework.stereotype.Repository;
 
 /**
  * Sessões realizadas, com RLS (dado do aluno). A sessão é gravada inteira: na edição mais recente
- * os filhos (exercícios, séries, feedback, dores) são substituídos pelos do aparelho.
+ * os filhos (exercícios, séries, blocos por tempo, feedback, dores) são substituídos pelos do
+ * aparelho.
  */
 @Repository
 public class JooqSessions implements Sessions {
@@ -82,6 +84,20 @@ public class JooqSessions implements Sessions {
     // filhos: o aparelho manda o estado inteiro
     dsl.deleteFrom(PERFORMED_EXERCISE).where(PERFORMED_EXERCISE.SESSION_ID.eq(s.id())).execute();
     dsl.deleteFrom(SESSION_FEEDBACK).where(SESSION_FEEDBACK.SESSION_ID.eq(s.id())).execute();
+    dsl.deleteFrom(BLOCK_RESULT).where(BLOCK_RESULT.SESSION_ID.eq(s.id())).execute();
+    for (var b : s.blockResults()) {
+      dsl.insertInto(BLOCK_RESULT)
+          .set(BLOCK_RESULT.SESSION_ID, s.id())
+          .set(BLOCK_RESULT.CLIENT_ID, clientId)
+          .set(BLOCK_RESULT.BLOCK_INDEX, (short) b.blockIndex())
+          .set(
+              BLOCK_RESULT.ROUNDS_COMPLETED,
+              b.roundsCompleted() == null ? null : b.roundsCompleted().shortValue())
+          .set(BLOCK_RESULT.EXTRA_REPS, b.extraReps() == null ? null : b.extraReps().shortValue())
+          .set(BLOCK_RESULT.TOTAL_SECONDS, b.totalSeconds())
+          .set(BLOCK_RESULT.CLIENT_UPDATED_AT, utc(s.clientUpdatedAt()))
+          .execute();
+    }
     for (var e : s.exercises()) {
       dsl.insertInto(PERFORMED_EXERCISE)
           .set(PERFORMED_EXERCISE.ID, e.id())

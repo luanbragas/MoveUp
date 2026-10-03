@@ -56,10 +56,26 @@ export function phaseAt(block: BlockTiming, elapsed: number) {
   };
 }
 
+/** Rodadas de um bloco que terminou no tempo (HIIT e intervalado: as do bloco; EMOM: minutos). */
+function roundsOf(block: BlockTiming): number | null {
+  if (block.method === "hiit" || block.method === "intervals") {
+    return block.rounds ?? 8;
+  }
+  if (block.method === "emom") {
+    return Math.ceil((block.durationSeconds ?? 600) / 60);
+  }
+  return null;
+}
+
 interface Props {
   readonly block: BlockTiming;
   readonly exercises: readonly SessionExercise[];
-  readonly onDone: (elapsedSeconds: number, rounds: number | null) => void;
+  /** Rodadas feitas (AMRAP: contadas; demais: as do bloco) e reps da rodada incompleta (AMRAP). */
+  readonly onDone: (
+    elapsedSeconds: number,
+    rounds: number | null,
+    extraReps: number | null,
+  ) => void;
 }
 
 /** Bloco por tempo (HIIT/Tabata, intervalado, EMOM, AMRAP) em tela cheia. */
@@ -69,6 +85,7 @@ export function TimedBlock({ block, exercises, onDone }: Props) {
   const [running, setRunning] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [rounds, setRounds] = useState(0);
+  const [extraReps, setExtraReps] = useState(0);
   const lastWorking = useRef<boolean | null>(null);
 
   const elapsed =
@@ -154,6 +171,34 @@ export function TimedBlock({ block, exercises, onDone }: Props) {
           </Pressable>
         </View>
       ) : null}
+      {amrap ? (
+        <View style={styles.extra}>
+          <Text style={[typography.small, styles.inkOnLime]}>{t.extraReps}</Text>
+          <View style={styles.extraControls}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t.removeExtraRep}
+              onPress={() => {
+                setExtraReps(Math.max(0, extraReps - 1));
+              }}
+              style={styles.smallButton}
+            >
+              <Icon name="close" size={16} color={palette.onLime} />
+            </Pressable>
+            <Text style={[styles.extraValue, styles.inkOnLime]}>{extraReps}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t.addExtraRep}
+              onPress={() => {
+                setExtraReps(extraReps + 1);
+              }}
+              style={styles.smallButton}
+            >
+              <Icon name="plus" size={16} color={palette.onLime} />
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
       {amrap || block.method === "emom" ? (
         <View style={{ gap: 2 }}>
           {exercises.map((e) => (
@@ -170,7 +215,11 @@ export function TimedBlock({ block, exercises, onDone }: Props) {
             icon="check"
             onLime={phase.working}
             onPress={() => {
-              onDone(Math.min(elapsed, phase.total), amrap ? rounds : null);
+              onDone(
+                Math.min(elapsed, phase.total),
+                amrap ? rounds : roundsOf(block),
+                amrap ? extraReps : null,
+              );
             }}
           />
         ) : (
@@ -218,5 +267,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   roundsValue: { fontFamily: fonts.number, fontSize: 48 },
+  extra: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  extraControls: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  extraValue: { fontFamily: fonts.number, fontSize: 24, minWidth: 32, textAlign: "center" },
+  smallButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: palette.onLime,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   actions: { marginTop: spacing.sm },
 });

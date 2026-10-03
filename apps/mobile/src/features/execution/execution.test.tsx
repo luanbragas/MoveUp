@@ -166,6 +166,30 @@ describe("treino no aparelho", () => {
     });
   });
 
+  it("bloco por tempo: rodadas no resultado do bloco, não nas reps (não vira volume)", () => {
+    const amrap: PlannedInput = {
+      ...PLANNED,
+      blocks: PLANNED.blocks.map((b) => ({ ...b, method: "amrap", durationSeconds: 600 })),
+    };
+    let s = startSession(amrap, "client", T0, newId);
+    s = act.blockDone(
+      s,
+      { blockIndex: 0, roundsCompleted: 5, extraReps: 3, totalSeconds: 600 },
+      at(12),
+    );
+    s = act.blockDone(
+      s,
+      { blockIndex: 0, roundsCompleted: 6, extraReps: 0, totalSeconds: 600 },
+      at(13),
+    );
+
+    expect(isComplete(s)).toBe(true);
+    expect(s.exercises[0]?.sets[0]).toMatchObject({ reps: 10, durationSeconds: 600 });
+    expect(toSyncPayload(s).blockResults).toEqual([
+      { blockIndex: 0, roundsCompleted: 6, extraReps: 0, totalSeconds: 600 },
+    ]);
+  });
+
   it("compara a maior carga com a última vez do mesmo treino", () => {
     const before = act.finish(doAll(), { effort: 7, comment: null, pains: [] }, at(40));
     let today = startSession(PLANNED, "client", at(60 * 24 * 3), newId);

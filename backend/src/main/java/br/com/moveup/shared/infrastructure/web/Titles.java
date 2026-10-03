@@ -101,6 +101,7 @@ public final class Titles {
           Map.entry("set-invalid", "Série inválida"),
           Map.entry("exercise-invalid", "Exercício da sessão inválido"),
           Map.entry("pain-invalid", "Relato de dor inválido"),
+          Map.entry("block-result-invalid", "Resultado de bloco inválido"),
           Map.entry("comment-invalid", "Comentário inválido"),
           Map.entry("sync-too-big", "Lote de sincronização grande demais"),
           Map.entry("internal-error", "Erro inesperado"));

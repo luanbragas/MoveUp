@@ -9,7 +9,7 @@ import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { Skeleton } from "../../../shared/ui/Skeleton";
 import { palette, spacing, typography } from "../../../shared/ui/theme";
-import { act, durationSeconds, volumeKg, type Session } from "../domain/session";
+import { act, durationSeconds, volumeKg, type BlockResult, type Session } from "../domain/session";
 import { useHistory, useSaveSession, useSession } from "../hooks/use-sessions";
 import { SetTable } from "./ExecutionScreen";
 import { strings } from "./strings";
@@ -20,6 +20,18 @@ const dateFormat = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
   month: "2-digit",
 });
+
+function blockLine(result: BlockResult): string {
+  const parts: string[] = [];
+  if (result.roundsCompleted !== null) {
+    parts.push(t.rounds(result.roundsCompleted, result.extraReps ?? 0));
+  }
+  if (result.totalSeconds !== null) {
+    const m = Math.floor(result.totalSeconds / 60);
+    parts.push(`${String(m)}:${String(result.totalSeconds % 60).padStart(2, "0")}`);
+  }
+  return parts.join(" · ");
+}
 
 function subtitle(session: Session): string {
   const minutes = Math.round((durationSeconds(session) ?? 0) / 60);
@@ -133,34 +145,45 @@ function SessionEditor({
       }
     >
       {save.isSuccess && !dirty ? <Message tone="info" text={t.edited} /> : null}
-      {session.exercises.map((exercise) => (
-        <View key={exercise.id} style={{ gap: spacing.sm }}>
-          <Text style={[typography.headline, { color: palette.text }]}>{exercise.name}</Text>
-          {exercise.status === "skipped" ? (
-            <Text style={[typography.small, { color: palette.muted }]}>{strings.run.skipped}</Text>
-          ) : (
-            <SetTable
-              exercise={exercise}
-              onChange={(set, values) => {
-                setSession(act.setSet(session, exercise.id, set.id, values, new Date()));
-                setDirty(true);
-              }}
-              onConfirm={(set) => {
-                setSession(
-                  act.setSet(
-                    session,
-                    exercise.id,
-                    set.id,
-                    { completed: !set.completed },
-                    new Date(),
-                  ),
-                );
-                setDirty(true);
-              }}
-            />
-          )}
-        </View>
-      ))}
+      {session.exercises.map((exercise, i) => {
+        const block =
+          session.exercises[i - 1]?.blockIndex === exercise.blockIndex
+            ? undefined
+            : session.blockResults.find((b) => b.blockIndex === exercise.blockIndex);
+        return (
+          <View key={exercise.id} style={{ gap: spacing.sm }}>
+            {block === undefined ? null : (
+              <Text style={[typography.label, { color: palette.lime }]}>{blockLine(block)}</Text>
+            )}
+            <Text style={[typography.headline, { color: palette.text }]}>{exercise.name}</Text>
+            {exercise.status === "skipped" ? (
+              <Text style={[typography.small, { color: palette.muted }]}>
+                {strings.run.skipped}
+              </Text>
+            ) : (
+              <SetTable
+                exercise={exercise}
+                onChange={(set, values) => {
+                  setSession(act.setSet(session, exercise.id, set.id, values, new Date()));
+                  setDirty(true);
+                }}
+                onConfirm={(set) => {
+                  setSession(
+                    act.setSet(
+                      session,
+                      exercise.id,
+                      set.id,
+                      { completed: !set.completed },
+                      new Date(),
+                    ),
+                  );
+                  setDirty(true);
+                }}
+              />
+            )}
+          </View>
+        );
+      })}
     </Screen>
   );
 }

@@ -57,6 +57,9 @@ export const strings = {
     done: "Bloco feito",
     addRound: "Mais uma rodada",
     removeRound: "Menos uma rodada",
+    extraReps: "Reps da rodada incompleta",
+    addExtraRep: "Mais uma rep",
+    removeExtraRep: "Menos uma rep",
   },
   feedback: {
     title: "Como foi\no treino?",
@@ -117,6 +120,10 @@ export const strings = {
     save: "Salvar correção",
     back: "Voltar",
     edited: "Correção salva. Vai para o personal assim que possível.",
+    rounds: (rounds: number, extra: number) =>
+      extra > 0
+        ? `${String(rounds)} rodadas + ${String(extra)} reps`
+        : `${String(rounds)} ${rounds === 1 ? "rodada" : "rodadas"}`,
   },
   start: {
     start: "Começar treino",

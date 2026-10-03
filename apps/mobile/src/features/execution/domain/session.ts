@@ -71,6 +71,14 @@ export interface Feedback {
   readonly pains: readonly PainEntry[];
 }
 
+/** Resultado de um bloco por tempo; o bloco é a posição dele na versão do treino. */
+export interface BlockResult {
+  readonly blockIndex: number;
+  readonly roundsCompleted: number | null;
+  readonly extraReps: number | null;
+  readonly totalSeconds: number | null;
+}
+
 export interface Session {
   readonly id: string;
   readonly linkId: string;
@@ -85,6 +93,7 @@ export interface Session {
   readonly clientUpdatedAt: string;
   readonly blocks: readonly BlockTiming[];
   readonly exercises: readonly SessionExercise[];
+  readonly blockResults: readonly BlockResult[];
   readonly feedback: Feedback | null;
   /** Edição depois de enviada volta a pendente. */
   readonly syncStatus: SyncStatus;
@@ -196,6 +205,7 @@ export function startSession(
       name: b.name,
     })),
     exercises,
+    blockResults: [],
     feedback: null,
     syncStatus: "pending",
   };
@@ -285,6 +295,34 @@ export const act = {
       status: "substituted",
       substitutedFrom: e.substitutedFrom ?? e.exerciseId,
     }));
+  },
+  /**
+   * Fim de um bloco por tempo: as séries do bloco ficam feitas com o tempo, e as rodadas vão no
+   * resultado do bloco (não nas reps, para não virar volume).
+   */
+  blockDone(session: Session, result: BlockResult, now: Date): Session {
+    const done = touch(session, now, {
+      blockResults: [
+        ...session.blockResults.filter((b) => b.blockIndex !== result.blockIndex),
+        result,
+      ].sort((a, b) => a.blockIndex - b.blockIndex),
+    });
+    return touch(done, now, {
+      exercises: done.exercises.map((e) =>
+        e.blockIndex === result.blockIndex
+          ? {
+              ...e,
+              status: e.status === "skipped" ? "done" : e.status,
+              sets: e.sets.map((x) => ({
+                ...x,
+                completed: true,
+                completedAt: x.completedAt ?? iso(now),
+                durationSeconds: result.totalSeconds,
+              })),
+            }
+          : e,
+      ),
+    });
   },
   finish(session: Session, feedback: Feedback, now: Date): Session {
     return touch(session, now, {
@@ -417,6 +455,7 @@ export function toSyncPayload(session: Session) {
         completedAt: s.completedAt,
       })),
     })),
+    blockResults: session.blockResults.map((b) => ({ ...b })),
     feedback:
       session.feedback === null
         ? null

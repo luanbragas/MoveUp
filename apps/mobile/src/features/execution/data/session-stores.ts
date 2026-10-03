@@ -51,10 +51,17 @@ export function createMemorySessionStore(): SessionStore {
   };
 }
 
-const parse = (row: { data: string; sync_status: string }): Session => ({
-  ...(JSON.parse(row.data) as Session),
-  syncStatus: row.sync_status === "synced" ? "synced" : "pending",
-});
+const parse = (row: { data: string; sync_status: string }): Session => {
+  // sessões gravadas antes do resultado de bloco não têm o campo
+  const stored = JSON.parse(row.data) as Omit<Session, "blockResults"> & {
+    blockResults?: Session["blockResults"];
+  };
+  return {
+    ...stored,
+    blockResults: stored.blockResults ?? [],
+    syncStatus: row.sync_status === "synced" ? "synced" : "pending",
+  };
+};
 
 /** Sessões no SQLite: uma linha por sessão, com o objeto inteiro em JSON. */
 export function createSqliteSessionStore(): SessionStore {

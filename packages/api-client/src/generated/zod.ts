@@ -1507,6 +1507,9 @@ export const GetSyncChanges403Response = zod.object({
  * Idempotente: reenviar não duplica. Vence a edição mais recente no aparelho (clientUpdatedAt); a sessão vai inteira e substitui a gravada.
  * @summary Envia treinos registrados no aparelho
  */
+export const pushSessionsBodySessionsItemBlockResultsMin = 0;
+export const pushSessionsBodySessionsItemBlockResultsMax = 40;
+
 export const pushSessionsBodySessionsItemExercisesItemNotesMin = 0;
 export const pushSessionsBodySessionsItemExercisesItemNotesMax = 500;
 
@@ -1532,6 +1535,12 @@ export const pushSessionsBodySessionsMax = 50;
 
 export const PushSessionsBody = zod.object({
   "sessions": zod.array(zod.object({
+  "blockResults": zod.array(zod.object({
+  "blockIndex": zod.int().describe('Posição do bloco na versão do treino (0…)'),
+  "extraReps": zod.int().optional().describe('Reps da rodada incompleta (AMRAP)'),
+  "roundsCompleted": zod.int().optional().describe('Rodadas completas (AMRAP) ou feitas (HIIT, intervalado)'),
+  "totalSeconds": zod.int().optional().describe('Tempo total do bloco')
+})).min(pushSessionsBodySessionsItemBlockResultsMin).max(pushSessionsBodySessionsItemBlockResultsMax).optional().describe('Blocos por tempo (HIIT, intervalado, EMOM, AMRAP)'),
   "clientUpdatedAt": zod.iso.datetime({"offset":true}).describe('Hora da última edição no aparelho'),
   "completionRatio": zod.number().optional().describe('0 a 1: base da adesão'),
   "durationSeconds": zod.int().optional(),

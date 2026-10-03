@@ -28,6 +28,7 @@ public record PerformedSession(
     PerformedBy performedBy,
     Instant clientUpdatedAt,
     List<Exercise> exercises,
+    List<BlockResult> blockResults,
     Feedback feedback) {
 
   public static final int MAX_EXERCISES = 40;
@@ -175,6 +176,26 @@ public record PerformedSession(
     }
   }
 
+  /**
+   * Resultado de um bloco por tempo (HIIT, intervalado, EMOM, AMRAP): rodadas completas, reps a
+   * mais na rodada incompleta e o tempo total. O bloco é a posição dele na versão do treino.
+   */
+  public record BlockResult(
+      int blockIndex, Integer roundsCompleted, Integer extraReps, Integer totalSeconds) {
+
+    public BlockResult {
+      if (blockIndex < 0 || blockIndex >= MAX_EXERCISES) {
+        throw new InvalidSessionData("block-result-invalid", "Bloco inválido.");
+      }
+      if ((roundsCompleted != null && (roundsCompleted < 0 || roundsCompleted > 1000))
+          || (extraReps != null && (extraReps < 0 || extraReps > 1000))
+          || (totalSeconds != null && (totalSeconds < 0 || totalSeconds > 24 * 3600))) {
+        throw new InvalidSessionData(
+            "block-result-invalid", "Resultado do bloco fora do intervalo.");
+      }
+    }
+  }
+
   /** Como foi o treino: esforço 0–10, comentário e as dores relatadas. */
   public record Feedback(int effort, String comment, List<Pain> pains) {
 
@@ -213,6 +234,7 @@ public record PerformedSession(
         by,
         clientUpdatedAt,
         exercises,
+        blockResults,
         feedback);
   }
 
@@ -238,6 +260,11 @@ public record PerformedSession(
     exercises = List.copyOf(exercises == null ? List.of() : exercises);
     if (exercises.size() > MAX_EXERCISES) {
       throw new InvalidSessionData("session-invalid", "Exercícios demais na sessão.");
+    }
+    blockResults = List.copyOf(blockResults == null ? List.of() : blockResults);
+    var blocks = new HashSet<Integer>();
+    if (blockResults.stream().anyMatch(b -> !blocks.add(b.blockIndex()))) {
+      throw new InvalidSessionData("block-result-invalid", "Bloco repetido na sessão.");
     }
     var ids = new HashSet<UUID>();
     for (var e : exercises) {

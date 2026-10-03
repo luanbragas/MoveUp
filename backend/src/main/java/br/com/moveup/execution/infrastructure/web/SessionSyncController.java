@@ -99,6 +99,15 @@ class SessionSyncController {
       Integer intensity,
       @Size(max = 500) String description) {}
 
+  @Schema(name = "BlockResultInput")
+  record BlockResultDto(
+      @Schema(requiredMode = REQUIRED, description = "Posição do bloco na versão do treino (0…)")
+          int blockIndex,
+      @Schema(description = "Rodadas completas (AMRAP) ou feitas (HIIT, intervalado)")
+          Integer roundsCompleted,
+      @Schema(description = "Reps da rodada incompleta (AMRAP)") Integer extraReps,
+      @Schema(description = "Tempo total do bloco") Integer totalSeconds) {}
+
   @Schema(name = "SessionFeedbackInput")
   record FeedbackDto(
       @Schema(requiredMode = REQUIRED, description = "Esforço percebido 0–10") int effort,
@@ -125,6 +134,8 @@ class SessionSyncController {
       @Schema(requiredMode = REQUIRED, description = "Hora da última edição no aparelho") @NotNull
           Instant clientUpdatedAt,
       @Size(max = 40) List<@Valid ExerciseDto> exercises,
+      @Schema(description = "Blocos por tempo (HIIT, intervalado, EMOM, AMRAP)") @Size(max = 40)
+          List<@Valid BlockResultDto> blockResults,
       @Valid FeedbackDto feedback) {
 
     PerformedSession toDomain(PerformedBy by) {
@@ -172,6 +183,14 @@ class SessionSyncController {
                                                   s.completed(),
                                                   s.completedAt()))
                                       .toList()))
+                  .toList(),
+          blockResults == null
+              ? List.of()
+              : blockResults.stream()
+                  .map(
+                      b ->
+                          new PerformedSession.BlockResult(
+                              b.blockIndex(), b.roundsCompleted(), b.extraReps(), b.totalSeconds()))
                   .toList(),
           feedback == null
               ? null

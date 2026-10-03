@@ -1190,6 +1190,27 @@ components:
           format: uuid
       required:
       - linkId
+    BlockResultInput:
+      type: object
+      properties:
+        blockIndex:
+          type: integer
+          format: int32
+          description: Posição do bloco na versão do treino (0…)
+        extraReps:
+          type: integer
+          format: int32
+          description: Reps da rodada incompleta (AMRAP)
+        roundsCompleted:
+          type: integer
+          format: int32
+          description: "Rodadas completas (AMRAP) ou feitas (HIIT, intervalado)"
+        totalSeconds:
+          type: integer
+          format: int32
+          description: Tempo total do bloco
+      required:
+      - blockIndex
     ClientItem:
       type: object
       properties:
@@ -1809,6 +1830,13 @@ components:
     PerformedSessionInput:
       type: object
       properties:
+        blockResults:
+          type: array
+          description: "Blocos por tempo (HIIT, intervalado, EMOM, AMRAP)"
+          items:
+            $ref: "#/components/schemas/BlockResultInput"
+          maxItems: 40
+          minItems: 0
         clientUpdatedAt:
           type: string
           format: date-time

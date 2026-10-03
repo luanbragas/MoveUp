@@ -10,6 +10,17 @@ export interface AcceptedInvite {
   linkId: string;
 }
 
+export interface BlockResultInput {
+  /** Posição do bloco na versão do treino (0…) */
+  blockIndex: number;
+  /** Reps da rodada incompleta (AMRAP) */
+  extraReps?: number;
+  /** Rodadas completas (AMRAP) ou feitas (HIIT, intervalado) */
+  roundsCompleted?: number;
+  /** Tempo total do bloco */
+  totalSeconds?: number;
+}
+
 export type ClientItemStatus = typeof ClientItemStatus[keyof typeof ClientItemStatus];
 
 
@@ -599,6 +610,12 @@ export interface SessionFeedbackInput {
 }
 
 export interface PerformedSessionInput {
+  /**
+     * Blocos por tempo (HIIT, intervalado, EMOM, AMRAP)
+     * @minItems 0
+     * @maxItems 40
+     */
+  blockResults?: BlockResultInput[];
   /** Hora da última edição no aparelho */
   clientUpdatedAt: string;
   /** 0 a 1: base da adesão */
