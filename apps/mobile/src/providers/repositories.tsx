@@ -12,8 +12,9 @@ import {
   createMemorySessionStore,
   createSqliteSessionStore,
 } from "../features/execution/data/session-stores";
+import { createNoRestAlarm, createRestAlarm } from "../features/execution/data/rest-alarm";
 import { createSessionSyncApi } from "../features/execution/data/session-sync-api";
-import type { SessionStore, SessionSyncApi } from "../features/execution/domain/ports";
+import type { RestAlarm, SessionStore, SessionSyncApi } from "../features/execution/domain/ports";
 import { createSyncApi } from "../features/sync/data/api/sync-api";
 import { createMemoryStore } from "../features/sync/data/memory-store";
 import { createSqliteStore } from "../features/sync/data/sqlite/sqlite-store";
@@ -36,6 +37,7 @@ export interface Repositories {
   readonly plannedStore: PlannedStore;
   readonly sessionStore: SessionStore;
   readonly sessionSyncApi: SessionSyncApi;
+  readonly restAlarm: RestAlarm;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -53,6 +55,7 @@ export function createRepositories(session: AuthSession): Repositories {
     plannedStore: Platform.OS === "web" ? createMemoryStore() : createSqliteStore(),
     sessionStore: Platform.OS === "web" ? createMemorySessionStore() : createSqliteSessionStore(),
     sessionSyncApi: createSessionSyncApi(),
+    restAlarm: Platform.OS === "web" ? createNoRestAlarm() : createRestAlarm(),
   };
 }
 

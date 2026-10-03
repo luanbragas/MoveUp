@@ -2,7 +2,7 @@
 export type { SessionStore, SessionSyncApi } from "./domain/ports";
 export type { PlannedInput, Session } from "./domain/session";
 export { toSyncPayload } from "./domain/session";
-export { useActiveSession, usePushSessions } from "./hooks/use-sessions";
+export { useActiveSession, usePushSessions, useSession } from "./hooks/use-sessions";
 export { useStartSession } from "./hooks/use-start";
 export { AutoPush } from "./ui/AutoPush";
 export type { ExerciseInfoLite } from "./ui/ExecutionScreen";

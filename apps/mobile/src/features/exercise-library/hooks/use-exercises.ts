@@ -1,6 +1,12 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRepositories } from "../../../providers/repositories";
-import type { MuscleCode, NewExerciseInput } from "../domain/exercise";
+import type { Exercise, MuscleCode, NewExerciseInput } from "../domain/exercise";
 
 /** A biblioteca muda pouco: 10 minutos de cache por busca. */
 const LIBRARY_STALE_TIME_MS = 10 * 60 * 1000;
@@ -37,5 +43,25 @@ export function useArchiveExercise() {
   return useMutation({
     mutationFn: (exerciseId: string) => exercises.archive(exerciseId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: exerciseKeys.all }),
+  });
+}
+
+/**
+ * A biblioteca dos músculos pedidos, num mapa por id (treino presencial: como fazer e troca
+ * pelo mesmo músculo). Uma busca por músculo, com o mesmo cache da tela da biblioteca.
+ */
+export function useExercisesByMuscle(muscles: readonly MuscleCode[]) {
+  const { exercises } = useRepositories();
+  return useQueries({
+    queries: [...new Set(muscles)].map((muscle) => ({
+      queryKey: exerciseKeys.search("", muscle),
+      queryFn: () => exercises.search("", muscle),
+      staleTime: LIBRARY_STALE_TIME_MS,
+    })),
+    combine: (results) => {
+      const map = new Map<string, Exercise>();
+      results.forEach((r) => r.data?.forEach((e) => map.set(e.id, e)));
+      return map;
+    },
   });
 }

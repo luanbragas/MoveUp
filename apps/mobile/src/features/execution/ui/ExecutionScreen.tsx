@@ -439,7 +439,9 @@ export function ExecutionScreen({ session: initial, exercises, firstName, onClos
               ) : (
                 <>
                   <Text style={[typography.small, { color: palette.muted }]}>
-                    {t.substituteHint}
+                    {session.performedBy === "professional"
+                      ? t.substituteHintLibrary
+                      : t.substituteHint}
                   </Text>
                   {candidates.map((c) => (
                     <Pressable

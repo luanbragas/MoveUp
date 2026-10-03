@@ -124,6 +124,7 @@ function setup() {
     plannedStore: {} as Repositories["plannedStore"],
     sessionStore: {} as Repositories["sessionStore"],
     sessionSyncApi: {} as Repositories["sessionSyncApi"],
+    restAlarm: { schedule: () => Promise.resolve(null), cancel: () => Promise.resolve() },
   };
   const queryClient = new QueryClient({
     defaultOptions: {

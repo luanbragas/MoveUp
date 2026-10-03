@@ -67,6 +67,11 @@ const PLANNED: PlannedInput = {
   ],
 };
 
+const restAlarm = {
+  schedule: jest.fn(() => Promise.resolve("alarm-1")),
+  cancel: jest.fn(() => Promise.resolve()),
+};
+
 let n = 0;
 const newId = () => {
   n += 1;
@@ -78,6 +83,7 @@ async function renderRun() {
   const repositories = {
     sessionStore: store,
     sessionSyncApi: { push: () => Promise.resolve({ written: [], unchanged: [] }) },
+    restAlarm,
   } as unknown as Repositories;
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -115,7 +121,12 @@ describe("execução do treino", () => {
 
     await fireEvent.press(screen.getByRole("button", { name: "Confirmar série 1" }));
     expect(await screen.findByText("Descanso")).toBeOnTheScreen();
+    // aviso do fim agendado para tocar com a tela bloqueada; pular cancela
+    await waitFor(() => {
+      expect(restAlarm.schedule).toHaveBeenCalledTimes(1);
+    });
     await fireEvent.press(screen.getByRole("button", { name: "Pular descanso" }));
+    expect(restAlarm.cancel).toHaveBeenCalledWith("alarm-1");
 
     // cada toque já está no aparelho
     await waitFor(async () => {

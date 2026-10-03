@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, Vibration, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../../shared/ui/Button";
 import { fonts, palette, spacing, typography } from "../../../shared/ui/theme";
+import { useRestAlarm } from "../hooks/use-rest-alarm";
 import { strings } from "./strings";
 
 const t = strings.rest;
@@ -24,6 +25,7 @@ interface Props {
 export function RestTimer({ endsAt, nextLabel, onDone, onExtend }: Props) {
   const [now, setNow] = useState(() => Date.now());
   const left = Math.ceil((endsAt - now) / 1000);
+  useRestAlarm(endsAt);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -36,6 +38,8 @@ export function RestTimer({ endsAt, nextLabel, onDone, onExtend }: Props) {
 
   useEffect(() => {
     if (left <= 0) {
+      // na tela: vibra; com a tela bloqueada quem avisa é a notificação agendada
+      Vibration.vibrate([0, 300, 150, 300]);
       onDone();
     }
   }, [left, onDone]);

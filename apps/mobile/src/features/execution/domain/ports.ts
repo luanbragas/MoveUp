@@ -23,3 +23,13 @@ export interface SessionSyncApi {
     readonly unchanged: readonly string[];
   }>;
 }
+
+/**
+ * Aviso de fim do descanso que toca com a tela bloqueada ou o app em segundo plano
+ * (notificação local agendada; nada sai do aparelho). Sem permissão, não agenda e não quebra.
+ */
+export interface RestAlarm {
+  /** Agenda para o horário (ms); devolve o id para cancelar, ou null se não deu. */
+  schedule(endsAt: number): Promise<string | null>;
+  cancel(id: string): Promise<void>;
+}

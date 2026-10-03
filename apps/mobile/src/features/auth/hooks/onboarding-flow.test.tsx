@@ -58,6 +58,7 @@ function setup() {
     plannedStore: createMemoryStore(),
     sessionStore: createMemorySessionStore(),
     sessionSyncApi: { push: unused },
+    restAlarm: { schedule: () => Promise.resolve(null), cancel: () => Promise.resolve() },
   };
   const queryClient = new QueryClient({
     defaultOptions: {

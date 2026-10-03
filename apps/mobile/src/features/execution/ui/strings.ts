@@ -25,6 +25,7 @@ export const strings = {
     substitutedFrom: (name: string) => `no lugar de ${name}`,
     substituteTitle: "Trocar por",
     substituteHint: "Exercícios do seu programa para o mesmo músculo.",
+    substituteHintLibrary: "Exercícios da biblioteca para o mesmo músculo.",
     noSubstitute: "Nenhum outro exercício do programa trabalha esse músculo.",
     close: "Fechar",
     notes: "Recado do personal",
