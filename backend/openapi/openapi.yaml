@@ -13,6 +13,8 @@ tags:
   name: accounts
 - description: Consentimentos do usuário (LGPD)
   name: consents
+- description: Treinos e modelos
+  name: workouts
 - description: Convite do ponto de vista do aluno
   name: invites
 - description: Autorização do responsável pelo menor
@@ -721,6 +723,195 @@ paths:
       summary: O aluno encerra o próprio vínculo
       tags:
       - invites
+  /v1/workout-templates:
+    get:
+      description: Do editado mais recente ao mais antigo; sem os arquivados.
+      operationId: listWorkoutTemplates
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkoutSummary"
+          description: Modelos
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Modelos da organização
+      tags:
+      - workouts
+    post:
+      operationId: createWorkoutTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutWrite"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+          description: Modelo criado
+          headers:
+            ETag:
+              description: Revisão para o If-Match
+              style: simple
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "Regra do treino (`block-empty`, `superset-needs-two`, `exercise-unknown`…\
+            )"
+      summary: Cria um modelo de treino
+      tags:
+      - workouts
+  /v1/workouts/{workoutId}:
+    delete:
+      description: Some das listas e do app do aluno; sessões antigas continuam.
+      operationId: archiveWorkout
+      parameters:
+      - in: path
+        name: workoutId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: '"r<revision>" da última leitura'
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Arquivado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "412":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`version-mismatch`'
+      summary: Arquiva o treino
+      tags:
+      - workouts
+    get:
+      operationId: getWorkout
+      parameters:
+      - in: path
+        name: workoutId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+          description: Treino
+          headers:
+            ETag:
+              description: Revisão para o If-Match
+              style: simple
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`resource-not-found` (inexistente, arquivado ou de outra organizaç\
+            ão)"
+      summary: Treino com o conteúdo da versão atual
+      tags:
+      - workouts
+    put:
+      description: "Se a versão atual já foi usada numa sessão, cria versão nova (a\
+        \ sessão continua comparando com o planejado dela); senão, substitui a atual."
+      operationId: saveWorkout
+      parameters:
+      - in: path
+        name: workoutId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - description: '"r<revision>" da última leitura'
+        in: header
+        name: If-Match
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkoutWrite"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+          description: Treino salvo
+          headers:
+            ETag:
+              description: Nova revisão
+              style: simple
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "412":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`version-mismatch` (salvo em outro aparelho)'
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Regra do treino
+        "428":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`if-match-required`'
+      summary: Salva o treino inteiro
+      tags:
+      - workouts
 components:
   schemas:
     AcceptedInvite:
@@ -1253,6 +1444,100 @@ components:
       - modality
       - name
       - trackingType
+    PrescribedExercise:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type:
+          - string
+          - "null"
+        notes:
+          type: string
+        primaryMuscle:
+          type:
+          - string
+          - "null"
+        restSeconds:
+          type: integer
+          format: int32
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescribedSet"
+        trackingType:
+          type:
+          - string
+          - "null"
+          enum:
+          - reps_load
+          - reps_only
+          - time
+          - distance_time
+      required:
+      - exerciseId
+      - sets
+    PrescribedExerciseInput:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+          maxLength: 500
+          minLength: 0
+        restSeconds:
+          type: integer
+          format: int32
+        sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescribedSet"
+          maxItems: 20
+          minItems: 0
+      required:
+      - exerciseId
+    PrescribedSet:
+      type: object
+      properties:
+        distanceM:
+          type: integer
+          format: int32
+        durationSeconds:
+          type: integer
+          format: int32
+        loadKg:
+          type: number
+          description: Carga em kg (até 3 casas)
+        repsMax:
+          type: integer
+          format: int32
+        repsMin:
+          type: integer
+          format: int32
+          description: "Faixa: 8 a 12 = repsMin 8, repsMax 12"
+        restSeconds:
+          type: integer
+          format: int32
+        targetRir:
+          type: integer
+          format: int32
+          description: Repetições em reserva 0 a 10
+        targetRpe:
+          type: number
+          description: Esforço alvo 0 a 10 (use RPE ou RIR)
+        type:
+          type: string
+          description: "Padrão: normal"
+          enum:
+          - warmup
+          - normal
+          - drop
+          - rest_pause
+          - failure
     Problem:
       type: object
       description: Erro no formato RFC 9457 (application/problem+json)
@@ -1323,6 +1608,206 @@ components:
       required:
       - name
       - role
+    Workout:
+      type: object
+      properties:
+        content:
+          $ref: "#/components/schemas/WorkoutContent"
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        programId:
+          type:
+          - string
+          - "null"
+          format: uuid
+        revision:
+          type: integer
+          format: int32
+          description: Mande em If-Match como "r<revision>"
+        sourceTemplateId:
+          type:
+          - string
+          - "null"
+          format: uuid
+          description: Modelo de origem da cópia
+        template:
+          type: boolean
+          description: Modelo (sem programa)
+        versionNumber:
+          type: integer
+          format: int32
+          description: Sobe quando o treino já tinha sessão
+      required:
+      - content
+      - id
+      - name
+      - revision
+      - template
+      - versionNumber
+    WorkoutBlock:
+      type: object
+      properties:
+        durationSeconds:
+          type: integer
+          format: int32
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescribedExercise"
+        method:
+          type: string
+        name:
+          type: string
+        notes:
+          type: string
+        preset:
+          type: string
+        restBetweenRounds:
+          type: integer
+          format: int32
+        restSeconds:
+          type: integer
+          format: int32
+        rounds:
+          type: integer
+          format: int32
+        workSeconds:
+          type: integer
+          format: int32
+      required:
+      - exercises
+      - method
+    WorkoutBlockInput:
+      type: object
+      properties:
+        durationSeconds:
+          type: integer
+          format: int32
+          description: EMOM e AMRAP
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrescribedExerciseInput"
+          maxItems: 12
+          minItems: 0
+        method:
+          type: string
+          enum:
+          - sequential
+          - superset
+          - circuit
+          - hiit
+          - emom
+          - amrap
+          - intervals
+          minLength: 1
+        name:
+          type: string
+          maxLength: 80
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 500
+          minLength: 0
+        preset:
+          type:
+          - string
+          - "null"
+          description: Só `tabata` (HIIT 20 s/10 s × 8)
+        restBetweenRounds:
+          type: integer
+          format: int32
+        restSeconds:
+          type: integer
+          format: int32
+        rounds:
+          type: integer
+          format: int32
+        workSeconds:
+          type: integer
+          format: int32
+      required:
+      - exercises
+      - method
+    WorkoutContent:
+      type: object
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutBlock"
+        estimatedMinutes:
+          type: integer
+          format: int32
+        goal:
+          type: string
+        notes:
+          type: string
+      required:
+      - blocks
+    WorkoutContentInput:
+      type: object
+      properties:
+        blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutBlockInput"
+          maxItems: 20
+          minItems: 0
+        estimatedMinutes:
+          type: integer
+          format: int32
+        goal:
+          type: string
+          maxLength: 120
+          minLength: 0
+        notes:
+          type: string
+          maxLength: 1000
+          minLength: 0
+      required:
+      - blocks
+    WorkoutSummary:
+      type: object
+      properties:
+        blocks:
+          type: integer
+          format: int32
+        estimatedMinutes:
+          type: integer
+          format: int32
+        exercises:
+          type: integer
+          format: int32
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - blocks
+      - exercises
+      - id
+      - name
+      - updatedAt
+    WorkoutWrite:
+      type: object
+      properties:
+        content:
+          $ref: "#/components/schemas/WorkoutContentInput"
+        name:
+          type: string
+          maxLength: 60
+          minLength: 0
+      required:
+      - content
+      - name
   securitySchemes:
     bearerAuth:
       bearerFormat: JWT

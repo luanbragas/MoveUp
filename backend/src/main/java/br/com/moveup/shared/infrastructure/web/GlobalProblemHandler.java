@@ -4,6 +4,7 @@ import br.com.moveup.shared.domain.ConflictException;
 import br.com.moveup.shared.domain.DomainException;
 import br.com.moveup.shared.domain.Forbidden;
 import br.com.moveup.shared.domain.ResourceNotFound;
+import br.com.moveup.shared.domain.VersionMismatch;
 import jakarta.servlet.http.HttpServletRequest;
 import java.sql.SQLException;
 import java.util.List;
@@ -63,6 +64,15 @@ public class GlobalProblemHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(Forbidden.class)
   ProblemDetail forbidden(Forbidden ex, HttpServletRequest request) {
     return problem(HttpStatus.FORBIDDEN, ex.code(), ex.getMessage(), request.getRequestURI());
+  }
+
+  @ExceptionHandler(VersionMismatch.class)
+  ProblemDetail versionMismatch(VersionMismatch ex, HttpServletRequest request) {
+    return problem(
+        ex.missing() ? HttpStatus.PRECONDITION_REQUIRED : HttpStatus.PRECONDITION_FAILED,
+        ex.code(),
+        ex.getMessage(),
+        request.getRequestURI());
   }
 
   @ExceptionHandler(ConflictException.class)
