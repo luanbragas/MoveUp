@@ -1,5 +1,11 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Platform } from "react-native";
+import { createAnamnesisApiRepository } from "../features/anamnesis/data/api/anamnesis-api";
+import {
+  createMemoryAnamnesisDraft,
+  createSqliteAnamnesisDraft,
+} from "../features/anamnesis/data/draft-store";
+import type { AnamnesisDraftStore, AnamnesisRepository } from "../features/anamnesis/domain/ports";
 import { createAlertsApiRepository } from "../features/alerts/data/api/alerts-api";
 import {
   createExpoPushTokenSource,
@@ -51,6 +57,8 @@ export interface Repositories {
   readonly workoutDrafts: WorkoutDraftStore;
   readonly alerts: AlertsRepository;
   readonly pushTokens: PushTokenSource;
+  readonly anamnesis: AnamnesisRepository;
+  readonly anamnesisDraft: AnamnesisDraftStore;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -72,6 +80,9 @@ export function createRepositories(session: AuthSession): Repositories {
     workoutDrafts: Platform.OS === "web" ? createMemoryDraftStore() : createSqliteDraftStore(),
     alerts: createAlertsApiRepository(),
     pushTokens: Platform.OS === "web" ? createNoPushTokenSource() : createExpoPushTokenSource(),
+    anamnesis: createAnamnesisApiRepository(),
+    anamnesisDraft:
+      Platform.OS === "web" ? createMemoryAnamnesisDraft() : createSqliteAnamnesisDraft(),
   };
 }
 

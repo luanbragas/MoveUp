@@ -17,6 +17,7 @@ import { TextField } from "../../../shared/ui/TextField";
 import { TextLink } from "../../../shared/ui/TextLink";
 import { Title } from "../../../shared/ui/Title";
 import { MIN_TOUCH, palette, radius, spacing, typography } from "../../../shared/ui/theme";
+import { RestrictionBanner, RestrictionWarning } from "../../anamnesis";
 import { ExerciseLibraryScreen } from "../../exercise-library";
 import type { StoredDraft } from "../domain/ports";
 import {
@@ -51,7 +52,7 @@ type Mode =
 
 /** Rota /workouts/[id]: carrega o treino e o rascunho do celular, e abre o editor. */
 export function WorkoutEditorRoute() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, linkId } = useLocalSearchParams<{ id: string; linkId?: string }>();
   const workout = useWorkout(id);
   const stored = useStoredDraft(id);
 
@@ -95,6 +96,7 @@ export function WorkoutEditorRoute() {
       key={`${workout.data.id}-${String(workout.data.revision)}`}
       workout={workout.data}
       recovered={stored.data ?? null}
+      linkId={linkId ?? null}
       reload={() => workout.refetch()}
     />
   );
@@ -140,9 +142,12 @@ function moveActions(index: number, last: boolean, label: string) {
 export function WorkoutEditor({
   workout,
   recovered = null,
+  linkId = null,
   reload,
 }: {
   readonly workout: Workout;
+  /** Treino de um aluno (aberto pelo perfil dele): avisa das restrições ativas. */
+  readonly linkId?: string | null;
   /** Rascunho deste celular (o app fechou ou caiu a internet antes de salvar). */
   readonly recovered?: StoredDraft | null;
   readonly reload: () => Promise<unknown>;
@@ -324,6 +329,7 @@ export function WorkoutEditor({
       }
     >
       <Title size={36}>{draft.name.trim() === "" ? t.name : draft.name}</Title>
+      {linkId === null ? null : <RestrictionBanner linkId={linkId} compact />}
       {notice === "restored" ? (
         <View style={styles.notice}>
           <Text style={[typography.small, { color: palette.textSoft }]}>{t.draftRestored}</Text>
@@ -413,6 +419,7 @@ export function WorkoutEditor({
             index={index}
             last={index === draft.blocks.length - 1}
             drag={drag}
+            linkId={linkId}
             problem={problems.find((p) => p.blockKey === block.key)?.code ?? null}
             onChange={change}
             onDragChange={setDragging}
@@ -487,6 +494,7 @@ function BlockCard({
   index,
   last,
   drag,
+  linkId,
   problem,
   draft,
   onChange,
@@ -498,6 +506,7 @@ function BlockCard({
   readonly index: number;
   readonly last: boolean;
   readonly drag: DragHandle;
+  readonly linkId: string | null;
   readonly problem: keyof typeof t.problems | null;
   readonly draft: WorkoutDraft;
   readonly onChange: (draft: WorkoutDraft) => void;
@@ -653,6 +662,9 @@ function BlockCard({
                 <Text style={[typography.small, { color: palette.textSoft }]}>
                   {summarize(exercise)}
                 </Text>
+                {linkId === null ? null : (
+                  <RestrictionWarning linkId={linkId} muscle={exercise.primaryMuscle} />
+                )}
               </View>
             </Pressable>
             <SmallIcon

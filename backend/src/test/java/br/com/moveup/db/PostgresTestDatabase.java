@@ -108,8 +108,32 @@ public final class PostgresTestDatabase {
     registry.add("spring.datasource.password", PostgresTestDatabase::apiPassword);
     // cada contexto do Spring guardado em cache segura o seu pool: pequeno para não esgotar o
     // max_connections do Postgres de teste com vários contextos vivos
+    registry.add("moveup.crypto.local-kek", PostgresTestDatabase::testKek);
     registry.add("spring.datasource.hikari.maximum-pool-size", () -> "4");
     registry.add("spring.datasource.hikari.minimum-idle", () -> "0");
+  }
+
+  private static volatile String testKek;
+
+  /** Chave mestra só deste processo de testes (keyset Tink novo, em base64). */
+  public static synchronized String testKek() {
+    if (testKek == null) {
+      try {
+        com.google.crypto.tink.aead.AeadConfig.register();
+        var handle =
+            com.google.crypto.tink.KeysetHandle.generateNew(
+                com.google.crypto.tink.aead.PredefinedAeadParameters.AES256_GCM);
+        var json =
+            com.google.crypto.tink.TinkJsonProtoKeysetFormat.serializeKeyset(
+                handle, com.google.crypto.tink.InsecureSecretKeyAccess.get());
+        testKek =
+            java.util.Base64.getEncoder()
+                .encodeToString(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      } catch (java.security.GeneralSecurityException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+    return testKek;
   }
 
   public static String workerUser() {

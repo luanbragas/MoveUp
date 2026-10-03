@@ -43,6 +43,7 @@ export const AlertItemType = {
   session_edited: 'session_edited',
   inactive: 'inactive',
   low_adherence: 'low_adherence',
+  clearance_pending: 'clearance_pending',
 } as const;
 
 export interface AlertItem {
@@ -81,6 +82,7 @@ export const AlertSettingType = {
   session_edited: 'session_edited',
   inactive: 'inactive',
   low_adherence: 'low_adherence',
+  clearance_pending: 'clearance_pending',
 } as const;
 
 export interface AlertSetting {
@@ -105,6 +107,123 @@ export interface AlertSnooze {
   days: number;
 }
 
+/**
+ * Código da pergunta → resposta (texto, sim/não, número ou lista)
+ */
+export type AnamnesisAnswers = {[key: string]: unknown};
+
+export type AnamnesisClearance = typeof AnamnesisClearance[keyof typeof AnamnesisClearance];
+
+
+export const AnamnesisClearance = {
+  not_required: 'not_required',
+  pending: 'pending',
+  cleared: 'cleared',
+} as const;
+
+export interface Anamnesis {
+  /** Código da pergunta → resposta (texto, sim/não, número ou lista) */
+  answers: AnamnesisAnswers;
+  clearance: AnamnesisClearance;
+  clearanceDate?: string;
+  createdAt: string;
+  parqPositive: boolean;
+  reviewed: boolean;
+  reviewedAt?: string;
+  versionNumber: number;
+}
+
+export interface AnamnesisOption {
+  label: string;
+  value: string;
+}
+
+export type AnamnesisQuestionSection = typeof AnamnesisQuestionSection[keyof typeof AnamnesisQuestionSection];
+
+
+export const AnamnesisQuestionSection = {
+  goal: 'goal',
+  routine: 'routine',
+  parq: 'parq',
+  health: 'health',
+} as const;
+
+export type AnamnesisQuestionType = typeof AnamnesisQuestionType[keyof typeof AnamnesisQuestionType];
+
+
+export const AnamnesisQuestionType = {
+  single: 'single',
+  multi: 'multi',
+  yes_no: 'yes_no',
+  integer: 'integer',
+  text: 'text',
+} as const;
+
+export interface AnamnesisQuestion {
+  code: string;
+  label: string;
+  max?: number;
+  min?: number;
+  options: AnamnesisOption[];
+  required: boolean;
+  section: AnamnesisQuestionSection;
+  type: AnamnesisQuestionType;
+}
+
+/**
+ * Respostas com o complemento do personal
+ */
+export type AnamnesisReviewAnswers = {[key: string]: unknown};
+
+/**
+ * @minLength 1
+ */
+export type AnamnesisReviewClearance = typeof AnamnesisReviewClearance[keyof typeof AnamnesisReviewClearance];
+
+
+export const AnamnesisReviewClearance = {
+  not_required: 'not_required',
+  pending: 'pending',
+  cleared: 'cleared',
+} as const;
+
+export interface AnamnesisReview {
+  /** Respostas com o complemento do personal */
+  answers: AnamnesisReviewAnswers;
+  /** @minLength 1 */
+  clearance: AnamnesisReviewClearance;
+  /** Obrigatória quando clearance = cleared */
+  clearanceDate?: string;
+}
+
+export type AnamnesisSubmitAnswers = {[key: string]: unknown};
+
+export interface AnamnesisSubmit {
+  answers: AnamnesisSubmitAnswers;
+}
+
+export interface AnamnesisTemplate {
+  questions: AnamnesisQuestion[];
+  version: number;
+}
+
+export type AnamnesisVersionClearance = typeof AnamnesisVersionClearance[keyof typeof AnamnesisVersionClearance];
+
+
+export const AnamnesisVersionClearance = {
+  not_required: 'not_required',
+  pending: 'pending',
+  cleared: 'cleared',
+} as const;
+
+export interface AnamnesisVersion {
+  clearance: AnamnesisVersionClearance;
+  createdAt: string;
+  parqPositive: boolean;
+  reviewedAt?: string;
+  versionNumber: number;
+}
+
 export interface BlockResultInput {
   /** Posição do bloco na versão do treino (0…) */
   blockIndex: number;
@@ -114,6 +233,12 @@ export interface BlockResultInput {
   roundsCompleted?: number;
   /** Tempo total do bloco */
   totalSeconds?: number;
+}
+
+export interface ClientAnamnesis {
+  /** Ausente se o aluno ainda não enviou */
+  latest?: Anamnesis;
+  versions: AnamnesisVersion[];
 }
 
 export type ClientItemStatus = typeof ClientItemStatus[keyof typeof ClientItemStatus];
@@ -359,6 +484,55 @@ export interface GuardianRequestStatus {
   status: GuardianRequestStatusStatus;
 }
 
+export type HealthRestrictionKind = typeof HealthRestrictionKind[keyof typeof HealthRestrictionKind];
+
+
+export const HealthRestrictionKind = {
+  injury: 'injury',
+  surgery: 'surgery',
+  pain: 'pain',
+  condition: 'condition',
+} as const;
+
+export interface HealthRestriction {
+  /** Mesma lista de regiões do relato de dor */
+  bodyRegion?: string;
+  description: string;
+  fromAnamnesis: boolean;
+  id: string;
+  kind: HealthRestrictionKind;
+  /** Ausente = ativa */
+  resolvedOn?: string;
+  /** 1 leve, 2 moderada, 3 grave */
+  severity?: number;
+}
+
+/**
+ * @minLength 1
+ */
+export type HealthRestrictionInputKind = typeof HealthRestrictionInputKind[keyof typeof HealthRestrictionInputKind];
+
+
+export const HealthRestrictionInputKind = {
+  injury: 'injury',
+  surgery: 'surgery',
+  pain: 'pain',
+  condition: 'condition',
+} as const;
+
+export interface HealthRestrictionInput {
+  bodyRegion?: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  description: string;
+  /** @minLength 1 */
+  kind: HealthRestrictionInputKind;
+  resolvedOn?: string;
+  severity?: number;
+}
+
 /**
  * Convite para compartilhar (link, código ou QR)
  */
@@ -449,6 +623,11 @@ export interface Me {
   role?: MeRole;
   timezone: string;
   weightUnit: MeWeightUnit;
+}
+
+export interface MyAnamnesis {
+  /** Ausente antes do primeiro envio */
+  anamnesis?: Anamnesis;
 }
 
 export type MyCoachingLinkStatus = typeof MyCoachingLinkStatus[keyof typeof MyCoachingLinkStatus];
@@ -1194,6 +1373,10 @@ cursor?: string;
 limit?: number;
 };
 
+export type ListRestrictionsParams = {
+includeResolved?: boolean;
+};
+
 export type SearchExercisesParams = {
 q?: string;
 muscle?: SearchExercisesMuscle;
@@ -1558,6 +1741,49 @@ return apiFetch<snoozeAlertResponse>(getSnoozeAlertUrl(alertId),
 
 
 
+export type getAnamnesisTemplateResponse200 = {
+  data: AnamnesisTemplate
+  status: 200
+}
+
+export type getAnamnesisTemplateResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getAnamnesisTemplateResponseSuccess = (getAnamnesisTemplateResponse200) & {
+  headers: Headers;
+};
+export type getAnamnesisTemplateResponseError = (getAnamnesisTemplateResponse404) & {
+  headers: Headers;
+};
+
+export type getAnamnesisTemplateResponse = (getAnamnesisTemplateResponseSuccess | getAnamnesisTemplateResponseError)
+
+export const getGetAnamnesisTemplateUrl = () => {
+
+
+
+
+  return `/v1/anamnesis/template`
+}
+
+/**
+ * @summary Perguntas da anamnese (modelo atual)
+ */
+export const getAnamnesisTemplate = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAnamnesisTemplateResponse> => {
+
+  return apiFetch<getAnamnesisTemplateResponse>(getGetAnamnesisTemplateUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
 export type listClientsResponse200 = {
   data: ClientPage
   status: 200
@@ -1721,6 +1947,159 @@ export const getClientSeats = async ( options?: Parameters<typeof apiFetch>[1]):
 
 
 
+export type getClientAnamnesisResponse200 = {
+  data: ClientAnamnesis
+  status: 200
+}
+
+export type getClientAnamnesisResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getClientAnamnesisResponseSuccess = (getClientAnamnesisResponse200) & {
+  headers: Headers;
+};
+export type getClientAnamnesisResponseError = (getClientAnamnesisResponse404) & {
+  headers: Headers;
+};
+
+export type getClientAnamnesisResponse = (getClientAnamnesisResponseSuccess | getClientAnamnesisResponseError)
+
+export const getGetClientAnamnesisUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/anamnesis`
+}
+
+/**
+ * Abrir fica registrado na trilha de auditoria (view_anamnesis).
+ * @summary Anamnese do aluno (mais recente e versões)
+ */
+export const getClientAnamnesis = async (linkId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getClientAnamnesisResponse> => {
+
+  return apiFetch<getClientAnamnesisResponse>(getGetClientAnamnesisUrl(linkId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type reviewClientAnamnesisResponse200 = {
+  data: Anamnesis
+  status: 200
+}
+
+export type reviewClientAnamnesisResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type reviewClientAnamnesisResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type reviewClientAnamnesisResponseSuccess = (reviewClientAnamnesisResponse200) & {
+  headers: Headers;
+};
+export type reviewClientAnamnesisResponseError = (reviewClientAnamnesisResponse404 | reviewClientAnamnesisResponse422) & {
+  headers: Headers;
+};
+
+export type reviewClientAnamnesisResponse = (reviewClientAnamnesisResponseSuccess | reviewClientAnamnesisResponseError)
+
+export const getReviewClientAnamnesisUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/anamnesis/review`
+}
+
+/**
+ * Revisada fica imutável; revisar de novo cria uma versão nova.
+ * @summary Revisa a anamnese (complemento e liberação médica)
+ */
+export const reviewClientAnamnesis = async (linkId: string,
+    anamnesisReview: AnamnesisReview, options?: Parameters<typeof apiFetch>[1]): Promise<reviewClientAnamnesisResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<reviewClientAnamnesisResponse>(getReviewClientAnamnesisUrl(linkId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(anamnesisReview)
+  }
+);}
+
+
+
+export type getClientAnamnesisVersionResponse200 = {
+  data: Anamnesis
+  status: 200
+}
+
+export type getClientAnamnesisVersionResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getClientAnamnesisVersionResponseSuccess = (getClientAnamnesisVersionResponse200) & {
+  headers: Headers;
+};
+export type getClientAnamnesisVersionResponseError = (getClientAnamnesisVersionResponse404) & {
+  headers: Headers;
+};
+
+export type getClientAnamnesisVersionResponse = (getClientAnamnesisVersionResponseSuccess | getClientAnamnesisVersionResponseError)
+
+export const getGetClientAnamnesisVersionUrl = (linkId: string,
+    versionNumber: number,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/anamnesis/versions/${versionNumber}`
+}
+
+/**
+ * @summary Uma versão da anamnese
+ */
+export const getClientAnamnesisVersion = async (linkId: string,
+    versionNumber: number, options?: Parameters<typeof apiFetch>[1]): Promise<getClientAnamnesisVersionResponse> => {
+
+  return apiFetch<getClientAnamnesisVersionResponse>(getGetClientAnamnesisVersionUrl(linkId,versionNumber),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
 export type cancelInviteResponse204 = {
   data: void
   status: 204
@@ -1808,6 +2187,226 @@ export const resendInvite = async (linkId: string, options?: Parameters<typeof a
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type listRestrictionsResponse200 = {
+  data: HealthRestriction[]
+  status: 200
+}
+
+export type listRestrictionsResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type listRestrictionsResponseSuccess = (listRestrictionsResponse200) & {
+  headers: Headers;
+};
+export type listRestrictionsResponseError = (listRestrictionsResponse404) & {
+  headers: Headers;
+};
+
+export type listRestrictionsResponse = (listRestrictionsResponseSuccess | listRestrictionsResponseError)
+
+export const getListRestrictionsUrl = (linkId: string,
+    params?: ListRestrictionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/clients/${linkId}/restrictions?${stringifiedParams}` : `/v1/clients/${linkId}/restrictions`
+}
+
+/**
+ * @summary Restrições do aluno (ativas primeiro)
+ */
+export const listRestrictions = async (linkId: string,
+    params?: ListRestrictionsParams, options?: Parameters<typeof apiFetch>[1]): Promise<listRestrictionsResponse> => {
+
+  return apiFetch<listRestrictionsResponse>(getListRestrictionsUrl(linkId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createRestrictionResponse201 = {
+  data: HealthRestriction
+  status: 201
+}
+
+export type createRestrictionResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type createRestrictionResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type createRestrictionResponseSuccess = (createRestrictionResponse201) & {
+  headers: Headers;
+};
+export type createRestrictionResponseError = (createRestrictionResponse404 | createRestrictionResponse422) & {
+  headers: Headers;
+};
+
+export type createRestrictionResponse = (createRestrictionResponseSuccess | createRestrictionResponseError)
+
+export const getCreateRestrictionUrl = (linkId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/restrictions`
+}
+
+/**
+ * @summary Nova restrição
+ */
+export const createRestriction = async (linkId: string,
+    healthRestrictionInput: HealthRestrictionInput, options?: Parameters<typeof apiFetch>[1]): Promise<createRestrictionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createRestrictionResponse>(getCreateRestrictionUrl(linkId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(healthRestrictionInput)
+  }
+);}
+
+
+
+export type deleteRestrictionResponse204 = {
+  data: void
+  status: 204
+}
+
+export type deleteRestrictionResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type deleteRestrictionResponseSuccess = (deleteRestrictionResponse204) & {
+  headers: Headers;
+};
+export type deleteRestrictionResponseError = (deleteRestrictionResponse404) & {
+  headers: Headers;
+};
+
+export type deleteRestrictionResponse = (deleteRestrictionResponseSuccess | deleteRestrictionResponseError)
+
+export const getDeleteRestrictionUrl = (linkId: string,
+    restrictionId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/restrictions/${restrictionId}`
+}
+
+/**
+ * @summary Exclui uma restrição lançada errado
+ */
+export const deleteRestriction = async (linkId: string,
+    restrictionId: string, options?: Parameters<typeof apiFetch>[1]): Promise<deleteRestrictionResponse> => {
+
+  return apiFetch<deleteRestrictionResponse>(getDeleteRestrictionUrl(linkId,restrictionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type updateRestrictionResponse200 = {
+  data: HealthRestriction
+  status: 200
+}
+
+export type updateRestrictionResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type updateRestrictionResponseSuccess = (updateRestrictionResponse200) & {
+  headers: Headers;
+};
+export type updateRestrictionResponseError = (updateRestrictionResponse404) & {
+  headers: Headers;
+};
+
+export type updateRestrictionResponse = (updateRestrictionResponseSuccess | updateRestrictionResponseError)
+
+export const getUpdateRestrictionUrl = (linkId: string,
+    restrictionId: string,) => {
+
+
+
+
+  return `/v1/clients/${linkId}/restrictions/${restrictionId}`
+}
+
+/**
+ * @summary Altera ou resolve uma restrição
+ */
+export const updateRestriction = async (linkId: string,
+    restrictionId: string,
+    healthRestrictionInput: HealthRestrictionInput, options?: Parameters<typeof apiFetch>[1]): Promise<updateRestrictionResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<updateRestrictionResponse>(getUpdateRestrictionUrl(linkId,restrictionId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(healthRestrictionInput)
   }
 );}
 
@@ -2778,6 +3377,112 @@ export const getMe = async ( options?: Parameters<typeof apiFetch>[1]): Promise<
     method: 'GET'
 
 
+  }
+);}
+
+
+
+export type getMyAnamnesisResponse200 = {
+  data: MyAnamnesis
+  status: 200
+}
+
+export type getMyAnamnesisResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getMyAnamnesisResponseSuccess = (getMyAnamnesisResponse200) & {
+  headers: Headers;
+};
+export type getMyAnamnesisResponseError = (getMyAnamnesisResponse404) & {
+  headers: Headers;
+};
+
+export type getMyAnamnesisResponse = (getMyAnamnesisResponseSuccess | getMyAnamnesisResponseError)
+
+export const getGetMyAnamnesisUrl = () => {
+
+
+
+
+  return `/v1/me/anamnesis`
+}
+
+/**
+ * @summary A anamnese mais recente do aluno
+ */
+export const getMyAnamnesis = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getMyAnamnesisResponse> => {
+
+  return apiFetch<getMyAnamnesisResponse>(getGetMyAnamnesisUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type submitMyAnamnesisResponse200 = {
+  data: Anamnesis
+  status: 200
+}
+
+export type submitMyAnamnesisResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type submitMyAnamnesisResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type submitMyAnamnesisResponseSuccess = (submitMyAnamnesisResponse200) & {
+  headers: Headers;
+};
+export type submitMyAnamnesisResponseError = (submitMyAnamnesisResponse404 | submitMyAnamnesisResponse422) & {
+  headers: Headers;
+};
+
+export type submitMyAnamnesisResponse = (submitMyAnamnesisResponseSuccess | submitMyAnamnesisResponseError)
+
+export const getSubmitMyAnamnesisUrl = () => {
+
+
+
+
+  return `/v1/me/anamnesis`
+}
+
+/**
+ * Antes da revisão do personal substitui a versão atual; depois, cria uma versão nova.
+ * @summary Envia a anamnese
+ */
+export const submitMyAnamnesis = async (anamnesisSubmit: AnamnesisSubmit, options?: Parameters<typeof apiFetch>[1]): Promise<submitMyAnamnesisResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<submitMyAnamnesisResponse>(getSubmitMyAnamnesisUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(anamnesisSubmit)
   }
 );}
 

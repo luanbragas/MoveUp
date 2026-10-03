@@ -18,7 +18,9 @@ public interface AuditTrail {
   enum Action {
     LINK_CREATED("link_created"),
     LINK_CHANGED("link_changed"),
-    LINK_ENDED("link_ended");
+    LINK_ENDED("link_ended"),
+    /** O personal abriu a anamnese ou as restrições de um aluno (dado de saúde). */
+    VIEW_ANAMNESIS("view_anamnesis");
 
     private final String code;
 

@@ -89,7 +89,7 @@ export const GetAlertSettings200ResponseItem = zod.object({
   "enabled": zod.boolean(),
   "push": zod.boolean(),
   "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
-  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence', 'clearance_pending'])
 })
 export const GetAlertSettings200Response = zod.array(GetAlertSettings200ResponseItem)
 
@@ -122,7 +122,7 @@ export const UpdateAlertSettingsBody = zod.object({
   "enabled": zod.boolean(),
   "push": zod.boolean(),
   "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
-  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence', 'clearance_pending'])
 })).min(updateAlertSettingsBodySettingsMin).max(updateAlertSettingsBodySettingsMax)
 })
 
@@ -130,7 +130,7 @@ export const UpdateAlertSettings200ResponseItem = zod.object({
   "enabled": zod.boolean(),
   "push": zod.boolean(),
   "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
-  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence', 'clearance_pending'])
 })
 export const UpdateAlertSettings200Response = zod.array(UpdateAlertSettings200ResponseItem)
 
@@ -188,7 +188,7 @@ export const ListAlerts200Response = zod.object({
   "severity": zod.enum(['info', 'warning', 'urgent']),
   "snoozedUntil": zod.iso.datetime({"offset":true}).optional(),
   "status": zod.enum(['open', 'snoozed', 'resolved']),
-  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence', 'clearance_pending'])
 })),
   "next": zod.uuid().optional().describe('Cursor da próxima página (ausente no fim)'),
   "openCount": zod.int().describe('Abertos no total (badge)')
@@ -279,6 +279,42 @@ export const SnoozeAlert403Response = zod.object({
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
 
 export const SnoozeAlert422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Perguntas da anamnese (modelo atual)
+ */
+export const GetAnamnesisTemplate200Response = zod.object({
+  "questions": zod.array(zod.object({
+  "code": zod.string(),
+  "label": zod.string(),
+  "max": zod.int().optional(),
+  "min": zod.int().optional(),
+  "options": zod.array(zod.object({
+  "label": zod.string(),
+  "value": zod.string()
+})),
+  "required": zod.boolean(),
+  "section": zod.enum(['goal', 'routine', 'parq', 'health']),
+  "type": zod.enum(['single', 'multi', 'yes_no', 'integer', 'text'])
+})),
+  "version": zod.int()
+})
+
+export const GetAnamnesisTemplate404Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({
@@ -441,6 +477,141 @@ export const GetClientSeats403Response = zod.object({
 
 
 /**
+ * Abrir fica registrado na trilha de auditoria (view_anamnesis).
+ * @summary Anamnese do aluno (mais recente e versões)
+ */
+export const GetClientAnamnesisParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const GetClientAnamnesis200Response = zod.object({
+  "latest": zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Código da pergunta → resposta (texto, sim/não, número ou lista)'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewed": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+}).optional().describe('Ausente se o aluno ainda não enviou'),
+  "versions": zod.array(zod.object({
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+}))
+})
+
+export const GetClientAnamnesis404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Revisada fica imutável; revisar de novo cria uma versão nova.
+ * @summary Revisa a anamnese (complemento e liberação médica)
+ */
+export const ReviewClientAnamnesisParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const ReviewClientAnamnesisBody = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Respostas com o complemento do personal'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional().describe('Obrigatória quando clearance = cleared')
+})
+
+export const ReviewClientAnamnesis200Response = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Código da pergunta → resposta (texto, sim/não, número ou lista)'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewed": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+})
+
+export const ReviewClientAnamnesis404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ReviewClientAnamnesis422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Uma versão da anamnese
+ */
+export const GetClientAnamnesisVersionParams = zod.object({
+  "linkId": zod.uuid(),
+  "versionNumber": zod.int()
+})
+
+export const GetClientAnamnesisVersion200Response = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Código da pergunta → resposta (texto, sim/não, número ou lista)'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewed": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+})
+
+export const GetClientAnamnesisVersion404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * @summary Cancela o convite pendente
  */
 export const CancelInviteParams = zod.object({
@@ -497,6 +668,180 @@ export const ResendInvite403Response = zod.object({
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
 
 export const ResendInvite409Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Restrições do aluno (ativas primeiro)
+ */
+export const ListRestrictionsParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const listRestrictionsQueryIncludeResolvedDefault = false;
+
+export const ListRestrictionsQueryParams = zod.object({
+  "includeResolved": zod.boolean().default(listRestrictionsQueryIncludeResolvedDefault)
+})
+
+export const ListRestrictions200ResponseItem = zod.object({
+  "bodyRegion": zod.string().optional().describe('Mesma lista de regiões do relato de dor'),
+  "description": zod.string(),
+  "fromAnamnesis": zod.boolean(),
+  "id": zod.uuid(),
+  "kind": zod.enum(['injury', 'surgery', 'pain', 'condition']),
+  "resolvedOn": zod.iso.date().optional().describe('Ausente = ativa'),
+  "severity": zod.int().optional().describe('1 leve, 2 moderada, 3 grave')
+})
+export const ListRestrictions200Response = zod.array(ListRestrictions200ResponseItem)
+
+export const ListRestrictions404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Nova restrição
+ */
+export const CreateRestrictionParams = zod.object({
+  "linkId": zod.uuid()
+})
+
+export const createRestrictionBodyDescriptionMin = 0;
+export const createRestrictionBodyDescriptionMax = 500;
+
+
+
+export const CreateRestrictionBody = zod.object({
+  "bodyRegion": zod.string().optional(),
+  "description": zod.string().min(createRestrictionBodyDescriptionMin).max(createRestrictionBodyDescriptionMax),
+  "kind": zod.enum(['injury', 'surgery', 'pain', 'condition']),
+  "resolvedOn": zod.iso.date().optional(),
+  "severity": zod.int().optional()
+})
+
+export const CreateRestriction201Response = zod.object({
+  "bodyRegion": zod.string().optional().describe('Mesma lista de regiões do relato de dor'),
+  "description": zod.string(),
+  "fromAnamnesis": zod.boolean(),
+  "id": zod.uuid(),
+  "kind": zod.enum(['injury', 'surgery', 'pain', 'condition']),
+  "resolvedOn": zod.iso.date().optional().describe('Ausente = ativa'),
+  "severity": zod.int().optional().describe('1 leve, 2 moderada, 3 grave')
+})
+
+export const CreateRestriction404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateRestriction422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Exclui uma restrição lançada errado
+ */
+export const DeleteRestrictionParams = zod.object({
+  "linkId": zod.uuid(),
+  "restrictionId": zod.uuid()
+})
+
+export const DeleteRestriction204Response = zod.void()
+
+export const DeleteRestriction404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Altera ou resolve uma restrição
+ */
+export const UpdateRestrictionParams = zod.object({
+  "linkId": zod.uuid(),
+  "restrictionId": zod.uuid()
+})
+
+export const updateRestrictionBodyDescriptionMin = 0;
+export const updateRestrictionBodyDescriptionMax = 500;
+
+
+
+export const UpdateRestrictionBody = zod.object({
+  "bodyRegion": zod.string().optional(),
+  "description": zod.string().min(updateRestrictionBodyDescriptionMin).max(updateRestrictionBodyDescriptionMax),
+  "kind": zod.enum(['injury', 'surgery', 'pain', 'condition']),
+  "resolvedOn": zod.iso.date().optional(),
+  "severity": zod.int().optional()
+})
+
+export const UpdateRestriction200Response = zod.object({
+  "bodyRegion": zod.string().optional().describe('Mesma lista de regiões do relato de dor'),
+  "description": zod.string(),
+  "fromAnamnesis": zod.boolean(),
+  "id": zod.uuid(),
+  "kind": zod.enum(['injury', 'surgery', 'pain', 'condition']),
+  "resolvedOn": zod.iso.date().optional().describe('Ausente = ativa'),
+  "severity": zod.int().optional().describe('1 leve, 2 moderada, 3 grave')
+})
+
+export const UpdateRestriction404Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({
@@ -1309,6 +1654,88 @@ export const GetMe401Response = zod.object({
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
 
 export const GetMe404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary A anamnese mais recente do aluno
+ */
+export const GetMyAnamnesis200Response = zod.object({
+  "anamnesis": zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Código da pergunta → resposta (texto, sim/não, número ou lista)'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewed": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+}).optional().describe('Ausente antes do primeiro envio')
+})
+
+export const GetMyAnamnesis404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Antes da revisão do personal substitui a versão atual; depois, cria uma versão nova.
+ * @summary Envia a anamnese
+ */
+export const SubmitMyAnamnesisBody = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown())
+})
+
+export const SubmitMyAnamnesis200Response = zod.object({
+  "answers": zod.record(zod.string(), zod.unknown()).describe('Código da pergunta → resposta (texto, sim/não, número ou lista)'),
+  "clearance": zod.enum(['not_required', 'pending', 'cleared']),
+  "clearanceDate": zod.iso.date().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "parqPositive": zod.boolean(),
+  "reviewed": zod.boolean(),
+  "reviewedAt": zod.iso.datetime({"offset":true}).optional(),
+  "versionNumber": zod.int()
+})
+
+export const SubmitMyAnamnesis404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const SubmitMyAnamnesis422Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({

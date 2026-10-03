@@ -30,6 +30,8 @@ const MIGRATIONS: readonly string[] = [
      base_revision integer not null,
      saved_at text not null,
      data text not null);`,
+  // 4: valores soltos do usuário no aparelho (ex.: rascunho da anamnese)
+  `create table if not exists local_value (key text primary key not null, value text not null);`,
 ];
 
 let opening: Promise<SQLite.SQLiteDatabase> | null = null;

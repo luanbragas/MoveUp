@@ -38,6 +38,24 @@ public class JooqCoachingRoster implements CoachingRoster {
   }
 
   @Override
+  public Optional<ClientSelf> clientOfUser(UUID userId) {
+    return dsl.select(CLIENT.ID)
+        .from(CLIENT)
+        .where(CLIENT.USER_ID.eq(userId))
+        .fetchOptional(CLIENT.ID)
+        .map(
+            clientId ->
+                new ClientSelf(
+                    clientId,
+                    dsl.select(COACHING_LINK.ID)
+                        .from(COACHING_LINK)
+                        .where(COACHING_LINK.CLIENT_ID.eq(clientId))
+                        .and(COACHING_LINK.STATUS.eq("active"))
+                        .fetchOptional(COACHING_LINK.ID)
+                        .orElse(null)));
+  }
+
+  @Override
   public Map<UUID, ClientRef> clientsOf(UUID professionalId, Collection<UUID> clientIds) {
     if (clientIds.isEmpty()) {
       return Map.of();

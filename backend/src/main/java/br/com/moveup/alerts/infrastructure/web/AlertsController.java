@@ -66,7 +66,8 @@ class AlertsController {
                 "new_feedback",
                 "session_edited",
                 "inactive",
-                "low_adherence"
+                "low_adherence",
+                "clearance_pending"
               })
           String type,
       @Schema(
@@ -106,7 +107,8 @@ class AlertsController {
                 "new_feedback",
                 "session_edited",
                 "inactive",
-                "low_adherence"
+                "low_adherence",
+                "clearance_pending"
               })
           @NotBlank
           String type,

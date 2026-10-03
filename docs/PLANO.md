@@ -110,7 +110,7 @@ Tudo o que as outras fases assumem que já existe.
 
 - [x] Poller do outbox (`FOR UPDATE SKIP LOCKED`, backoff, `last_error`) e db-scheduler para jobs recorrentes. *(Um evento por transação, junto com os efeitos no banco; `last_error` guarda só o tipo do erro. db-scheduler 16.12 (starter do Boot 4): alertas diários às 7h e limpezas.)*
 - [x] Recordes pessoais com histórico (`is_current`), recalculados quando a sessão é editada. *(Cálculo determinístico refeito a partir das séries; a correção publica `session.edited`. Ainda não aparecem no app: entram com a evolução do aluno.)*
-- [ ] Alertas por evento (dor, feedback, esforço alto, sessão editada) e por job diário (inatividade, adesão, avaliação atrasada, liberação pendente), com deduplicação. *(Feito (03/10/2026): dor, comentário, esforço alto, sessão editada, inatividade e adesão, com deduplicação e resolução automática quando deixa de valer. Faltam avaliação atrasada e liberação pendente, que dependem das Fases 7 e 5.)*
+- [ ] Alertas por evento (dor, feedback, esforço alto, sessão editada) e por job diário (inatividade, adesão, avaliação atrasada, liberação pendente), com deduplicação. *(Feito (03/10/2026): dor, comentário, esforço alto, sessão editada, inatividade e adesão, com deduplicação e resolução automática quando deixa de valer. Liberação pendente entrou na Fase 5; falta avaliação atrasada, que depende da Fase 7.)*
 - [x] Central de atenção no app do profissional (resolver, adiar) e configurações de alerta.
 - [ ] Push com texto neutro (Expo Push) e registro de `push_device`. *(Código feito (03/10/2026): fila `push_message` com no máximo uma entrega (marcada `sending` antes de chamar o Expo; se o worker cair no meio, vira `failed` sem reenviar), token removido quando o Expo avisa, registro e remoção do aparelho no app. Falta o primeiro build EAS: o token de push exige o `projectId` do EAS e não funciona no Expo Go.)*
 - [x] Adesão calculada a partir da agenda. *(Dias fixos: cada treino agendado no dia conta; sequência: meta semanal proporcional. Usada no alerta de adesão baixa (14 dias).)*
@@ -123,14 +123,16 @@ Tudo o que as outras fases assumem que já existe.
 
 ## Fase 5 — Anamnese e restrições · M
 
-- [ ] Modelo de perguntas v1 (sistema) com PAR-Q.
-- [ ] Preenchimento pelo aluno ao aceitar o convite; revisão e complemento pelo profissional.
-- [ ] Versionamento e imutabilidade após revisão.
-- [ ] Restrições (`health_restriction`) com aviso no perfil e na tela de montar treino.
-- [ ] Liberação médica pendente gera alerta.
-- [ ] Criptografia de campo com `FieldCipher` (Tink + DEK por aluno em `client_key`).
+- [x] Modelo de perguntas v1 (sistema) com PAR-Q. *(V22: objetivo, rotina, 7 perguntas de prontidão no estilo PAR-Q com texto próprio, dores, histórico e remédios.)*
+- [x] Preenchimento pelo aluno ao aceitar o convite; revisão e complemento pelo profissional. *(4 passos com rascunho no aparelho e aviso fixo na Home até enviar; o personal revisa, complementa e decide a liberação médica.)*
+- [x] Versionamento e imutabilidade após revisão. *(Antes da revisão o reenvio substitui a versão; depois, toda mudança vira versão nova. O trigger da V4 recusa alterar revisada.)*
+- [x] Restrições (`health_restriction`) com aviso no perfil e na tela de montar treino. *(Aviso por exercício quando o músculo principal envolve a região restrita; não bloqueia. O aviso na execução do aluno fica para quando as restrições forem no sync.)*
+- [x] Liberação médica pendente gera alerta. *(Evento da anamnese → worker; liberar ou dispensar na revisão resolve.)*
+- [x] Criptografia de campo com `FieldCipher` (Tink + DEK por aluno em `client_key`). *(Tink 1.23, AES-256-GCM com dado associado por campo e aluno; cifra respostas da anamnese, descrição da restrição, comentário do feedback e descrição da dor. Chave mestra local pelo `.env`; o adaptador do AWS KMS entra com a infra de produção (Fase 9). `client_note.body` cifra quando as notas existirem.)*
 
 **Pronto quando:** um dump do banco não mostra respostas da anamnese em texto e a restrição aparece ao montar treino para o aluno certo.
+
+> Critério atendido nos testes: `AnamnesisEndpointTest` lê as colunas cruas como superusuário (só `v1.<cifrado>`, nada do que o aluno escreveu) e confirma que outro personal recebe 404 nas restrições; no app, o editor aberto pelo perfil do aluno mostra o aviso no exercício da região restrita.
 
 ---
 

@@ -41,7 +41,7 @@ class WorkerContextTest {
 
   @Test
   void workerSobeComHandlersLacosEJobs() {
-    assertThat(handlers).hasSize(2);
+    assertThat(handlers).hasSize(3);
     assertThat(loops).hasSize(2).allMatch(WorkerLoop::isRunning);
     assertThat(tasks)
         .extracting(t -> t.getName())

@@ -26,6 +26,7 @@
     <archunit.version>1.5.1</archunit.version>
     <springdoc.version>3.1.1</springdoc.version>
     <db-scheduler.version>16.12.0</db-scheduler.version>
+    <tink.version>1.23.0</tink.version>
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
@@ -104,6 +105,12 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <!-- Criptografia de campo (ARQUITETURA 7.3): AES-256-GCM com uma DEK por aluno -->
+    <dependency>
+      <groupId>com.google.crypto.tink</groupId>
+      <artifactId>tink</artifactId>
+      <version>${tink.version}</version>
     </dependency>
     <!-- Jobs recorrentes do worker com trava no banco (uma execução por vez entre instâncias) -->
     <dependency>

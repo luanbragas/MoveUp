@@ -62,6 +62,11 @@ export const strings = {
           title: `${plural(n("days"), "dia", "dias")} sem treinar`,
           detail: "Um toque agora costuma trazer o aluno de volta.",
         };
+      case "clearance_pending":
+        return {
+          title: "Liberação médica pendente",
+          detail: 'O PAR-Q teve "sim". Veja a anamnese e registre o atestado.',
+        };
       case "low_adherence":
         return {
           title: `Adesão de ${String(n("percent"))}%`,
@@ -87,6 +92,7 @@ export const strings = {
       session_edited: { label: "Treino corrigido", unit: null },
       inactive: { label: "Aluno sem treinar", unit: "dias sem treinar" },
       low_adherence: { label: "Adesão baixa", unit: "% mínima em 14 dias" },
+      clearance_pending: { label: "Liberação médica pendente", unit: null },
     } satisfies Record<AlertType, { label: string; unit: string | null }>,
   },
 } as const;

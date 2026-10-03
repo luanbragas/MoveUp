@@ -7,6 +7,7 @@ export const ALERT_TYPES = [
   "session_edited",
   "inactive",
   "low_adherence",
+  "clearance_pending",
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 export type Severity = "info" | "warning" | "urgent";

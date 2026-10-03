@@ -49,10 +49,13 @@ export function AlertsScreen() {
           ? undefined
           : () => {
               if (alert.linkId !== null) {
-                router.push({
-                  pathname: "/clients/[linkId]",
-                  params: { linkId: alert.linkId, name: alert.clientName ?? "" },
-                });
+                const params = { linkId: alert.linkId, name: alert.clientName ?? "" };
+                // liberação médica abre direto a anamnese; o resto, o perfil do aluno
+                router.push(
+                  alert.type === "clearance_pending"
+                    ? { pathname: "/anamnesis/[linkId]", params }
+                    : { pathname: "/clients/[linkId]", params },
+                );
               }
             }
       }

@@ -74,6 +74,10 @@ moveup:
     expo-push-url: https://exp.host/--/api/v2/push/send
     # Fuso dos jobs diários (inatividade, adesão)
     zone: America/Sao_Paulo
+  crypto:
+    # Chave mestra (keyset Tink em base64) que cifra a chave de dados de cada aluno. Só local e
+    # testes: produção usa o AWS KMS. Gere com: node backend/scripts/generate-local-kek.mjs
+    local-kek: ${MOVEUP_LOCAL_KEK:}
   auth:
     firebase:
       # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>

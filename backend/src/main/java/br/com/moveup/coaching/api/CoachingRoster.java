@@ -21,6 +21,11 @@ public interface CoachingRoster {
   /** Nome e vínculo mais recente de cada aluno com este profissional. */
   Map<UUID, ClientRef> clientsOf(UUID professionalId, Collection<UUID> clientIds);
 
+  /** O cadastro de aluno desta conta e o vínculo ativo (nulo sem vínculo ativo). */
+  Optional<ClientSelf> clientOfUser(UUID userId);
+
+  record ClientSelf(UUID clientId, UUID activeLinkId) {}
+
   record LinkOwner(
       UUID linkId,
       UUID clientId,

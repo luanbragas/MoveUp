@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { createFakeAnamnesis } from "../../anamnesis/data/fakes/fake-anamnesis";
+import { createMemoryAnamnesisDraft } from "../../anamnesis/data/draft-store";
 import { createFakeAlerts, createFakePushTokens } from "../../alerts/data/fakes/fake-alerts";
 import { createMemoryDraftStore } from "../../training/data/draft-store";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
@@ -64,6 +66,8 @@ function setup() {
     workoutDrafts: createMemoryDraftStore(),
     alerts: createFakeAlerts(),
     pushTokens: createFakePushTokens(),
+    anamnesis: createFakeAnamnesis(),
+    anamnesisDraft: createMemoryAnamnesisDraft(),
   };
   const queryClient = new QueryClient({
     defaultOptions: {

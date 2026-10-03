@@ -4,8 +4,8 @@ import br.com.moveup.alerts.domain.exception.InvalidAlertData;
 import java.util.Locale;
 
 /**
- * Tipos de alerta que o sistema gera hoje, com o padrão de cada um. Avaliação atrasada e liberação
- * médica pendente chegam com as Fases 5 e 7 (o banco já aceita os códigos).
+ * Tipos de alerta que o sistema gera hoje, com o padrão de cada um. Avaliação atrasada chega com a
+ * Fase 7 (o banco já aceita o código).
  */
 public enum AlertType {
   PAIN_REPORTED(Severity.URGENT, true, null, null),
@@ -15,7 +15,9 @@ public enum AlertType {
   /** Limite: dias sem treinar. */
   INACTIVE(Severity.WARNING, true, 7, new int[] {2, 60}),
   /** Limite: adesão mínima em % nos últimos 14 dias. */
-  LOW_ADHERENCE(Severity.WARNING, false, 50, new int[] {10, 100});
+  LOW_ADHERENCE(Severity.WARNING, false, 50, new int[] {10, 100}),
+  /** PAR-Q com "sim" e liberação médica ainda pendente na anamnese. */
+  CLEARANCE_PENDING(Severity.WARNING, false, null, null);
 
   private final Severity severity;
   private final boolean defaultPush;

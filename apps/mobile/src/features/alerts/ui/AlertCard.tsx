@@ -13,6 +13,7 @@ const ICON: Record<AlertType, IconName> = {
   session_edited: "edit",
   inactive: "clock",
   low_adherence: "chart",
+  clearance_pending: "shield",
 };
 
 const dayFormat = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });

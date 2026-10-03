@@ -1,14 +1,17 @@
 package br.com.moveup.support;
 
 import br.com.moveup.alerts.application.port.out.PushGateway;
+import br.com.moveup.alerts.application.usecase.ClearanceAlertsUseCase;
 import br.com.moveup.alerts.application.usecase.DailyAlertsUseCase;
 import br.com.moveup.alerts.application.usecase.SendPushesUseCase;
 import br.com.moveup.alerts.application.usecase.SessionAlertsUseCase;
+import br.com.moveup.alerts.infrastructure.messaging.AnamnesisAlertsHandler;
 import br.com.moveup.alerts.infrastructure.messaging.SessionAlertsHandler;
 import br.com.moveup.alerts.infrastructure.persistence.JooqAlertSettings;
 import br.com.moveup.alerts.infrastructure.persistence.JooqAlerts;
 import br.com.moveup.alerts.infrastructure.persistence.JooqPushDevices;
 import br.com.moveup.alerts.infrastructure.persistence.JooqPushQueue;
+import br.com.moveup.anamnesis.infrastructure.persistence.JooqClearanceFacts;
 import br.com.moveup.coaching.infrastructure.persistence.JooqCoachingRoster;
 import br.com.moveup.db.PostgresTestDatabase;
 import br.com.moveup.execution.application.usecase.RecalculateRecordsUseCase;
@@ -63,6 +66,15 @@ public final class WorkerHarness {
     handlers.add(
         new SessionRecordsHandler(new RecalculateRecordsUseCase(new JooqRecordHistory(dsl))));
     handlers.add(new SessionAlertsHandler(sessionAlerts()));
+    handlers.add(
+        new AnamnesisAlertsHandler(
+            new ClearanceAlertsUseCase(
+                new JooqClearanceFacts(dsl),
+                new JooqCoachingRoster(dsl),
+                new JooqAlerts(dsl),
+                new JooqAlertSettings(dsl),
+                pushQueue,
+                clock)));
   }
 
   public SessionAlertsUseCase sessionAlerts() {

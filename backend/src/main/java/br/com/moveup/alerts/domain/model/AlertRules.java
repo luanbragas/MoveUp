@@ -53,6 +53,18 @@ public final class AlertRules {
         : Optional.empty();
   }
 
+  public static String clearanceKey(UUID clientId) {
+    return "clearance:" + clientId;
+  }
+
+  /** Liberação médica pendente (a revisão do personal que libera ou dispensa resolve). */
+  public static Optional<NewAlert> clearancePending(
+      Recipient to, Map<AlertType, AlertSetting> settings) {
+    return on(settings, AlertType.CLEARANCE_PENDING)
+        ? Optional.of(alert(to, AlertType.CLEARANCE_PENDING, Map.of(), clearanceKey(to.clientId())))
+        : Optional.empty();
+  }
+
   /** Chave do alerta de inatividade (o treino feito o resolve). */
   public static String inactiveKey(UUID clientId) {
     return "inactive:" + clientId;

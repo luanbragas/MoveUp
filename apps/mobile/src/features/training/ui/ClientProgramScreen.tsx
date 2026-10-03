@@ -27,6 +27,7 @@ import {
   type ScheduleMode,
 } from "../domain/program";
 import { executionStrings } from "../../execution";
+import { RestrictionBanner } from "../../anamnesis";
 import { useStartPresencial } from "../hooks/use-presencial";
 import {
   useActiveProgram,
@@ -145,6 +146,7 @@ function NewProgramForm({
   if (!open) {
     return (
       <Screen header={header} title={clientName}>
+        <RestrictionBanner linkId={linkId} name={clientName} />
         <EmptyState
           icon="dumbbell"
           title={t.noneTitle}
@@ -312,7 +314,8 @@ function ProgramView({
   const fixed = program.scheduleMode === "fixed_days";
 
   const openEditor = (workoutId: string) => {
-    router.push({ pathname: "/workouts/[id]", params: { id: workoutId } });
+    // o editor recebe o vínculo para avisar das restrições do aluno
+    router.push({ pathname: "/workouts/[id]", params: { id: workoutId, linkId } });
   };
 
   const presencial = (workoutId: string) => {
@@ -378,6 +381,7 @@ function ProgramView({
         ) : undefined
       }
     >
+      <RestrictionBanner linkId={linkId} />
       {order.map((workout, index) => (
         <View key={workout.id} style={styles.workout}>
           <Pressable

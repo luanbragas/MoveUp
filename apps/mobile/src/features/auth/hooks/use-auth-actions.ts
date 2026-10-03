@@ -35,8 +35,16 @@ export class PendingSessionsError extends Error {
 }
 
 export function useSignOut() {
-  const { session, plannedStore, sessionStore, sessionSyncApi, workoutDrafts, alerts, pushTokens } =
-    useRepositories();
+  const {
+    session,
+    plannedStore,
+    sessionStore,
+    sessionSyncApi,
+    workoutDrafts,
+    alerts,
+    pushTokens,
+    anamnesisDraft,
+  } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
     // o que está no aparelho é de quem saiu: envia o treino pendente e apaga tudo antes de outra
@@ -63,6 +71,7 @@ export function useSignOut() {
       await plannedStore.clear();
       await sessionStore.clear();
       await workoutDrafts.clear();
+      await anamnesisDraft.clear();
     },
     onSuccess: () => {
       queryClient.clear();

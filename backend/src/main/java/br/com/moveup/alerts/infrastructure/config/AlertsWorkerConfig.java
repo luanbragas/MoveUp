@@ -4,12 +4,15 @@ import br.com.moveup.alerts.application.port.out.AlertSettings;
 import br.com.moveup.alerts.application.port.out.Alerts;
 import br.com.moveup.alerts.application.port.out.PushDevices;
 import br.com.moveup.alerts.application.port.out.PushGateway;
+import br.com.moveup.alerts.application.usecase.ClearanceAlertsUseCase;
 import br.com.moveup.alerts.application.usecase.DailyAlertsUseCase;
 import br.com.moveup.alerts.application.usecase.SendPushesUseCase;
 import br.com.moveup.alerts.application.usecase.SessionAlertsUseCase;
+import br.com.moveup.alerts.infrastructure.messaging.AnamnesisAlertsHandler;
 import br.com.moveup.alerts.infrastructure.messaging.SessionAlertsHandler;
 import br.com.moveup.alerts.infrastructure.persistence.JooqPushQueue;
 import br.com.moveup.alerts.infrastructure.push.ExpoPushGateway;
+import br.com.moveup.anamnesis.api.ClearanceFacts;
 import br.com.moveup.coaching.api.CoachingRoster;
 import br.com.moveup.execution.api.ExecutionActivity;
 import br.com.moveup.execution.api.SessionFacts;
@@ -59,6 +62,18 @@ class AlertsWorkerConfig {
   @Bean
   OutboxHandler sessionAlertsHandler(SessionAlertsUseCase alerts) {
     return new SessionAlertsHandler(alerts);
+  }
+
+  @Bean
+  OutboxHandler anamnesisAlertsHandler(
+      ClearanceFacts clearance,
+      CoachingRoster roster,
+      Alerts alerts,
+      AlertSettings settings,
+      JooqPushQueue pushes,
+      Clock clock) {
+    return new AnamnesisAlertsHandler(
+        new ClearanceAlertsUseCase(clearance, roster, alerts, settings, pushes, clock));
   }
 
   @Bean

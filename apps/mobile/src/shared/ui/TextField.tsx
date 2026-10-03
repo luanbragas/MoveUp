@@ -18,6 +18,8 @@ type Props = {
   | "autoComplete"
   | "textContentType"
   | "placeholder"
+  | "multiline"
+  | "maxLength"
 >;
 
 /** Campo grande com o rótulo dentro; anel lima quando ativo, vermelho com erro (anunciado ao leitor de tela). */
@@ -35,7 +37,12 @@ export function TextField({ label, error, trailing, onBlur, ...input }: Props) {
             placeholderTextColor={palette.muted}
             selectionColor={palette.lime}
             cursorColor={palette.lime}
-            style={[typography.headline, styles.input]}
+            style={[
+              typography.headline,
+              styles.input,
+              // texto longo (anamnese, restrição): fonte de corpo e altura mínima de 3 linhas
+              input.multiline === true ? styles.multiline : null,
+            ]}
             onFocus={() => {
               setFocused(true);
             }}
@@ -58,6 +65,7 @@ export function TextField({ label, error, trailing, onBlur, ...input }: Props) {
 }
 
 const styles = StyleSheet.create({
+  multiline: { ...typography.body, minHeight: 72, textAlignVertical: "top" },
   field: { gap: spacing.xs + 2 },
   box: {
     minHeight: 68,

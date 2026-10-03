@@ -11,6 +11,7 @@ import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.WORKOU
 import br.com.moveup.execution.application.port.out.Sessions;
 import br.com.moveup.execution.domain.model.PerformedSession;
 import br.com.moveup.execution.domain.model.SyncOutcome;
+import br.com.moveup.shared.application.crypto.FieldCipher;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -29,10 +30,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class JooqSessions implements Sessions {
 
-  private final DSLContext dsl;
+  static final String FEEDBACK_COMMENT = "session_feedback.comment";
+  static final String PAIN_DESCRIPTION = "pain_report.description";
 
-  public JooqSessions(DSLContext dsl) {
+  private final DSLContext dsl;
+  private final FieldCipher cipher;
+
+  public JooqSessions(DSLContext dsl, FieldCipher cipher) {
     this.dsl = dsl;
+    this.cipher = cipher;
   }
 
   @Override
@@ -136,7 +142,10 @@ public class JooqSessions implements Sessions {
           .set(SESSION_FEEDBACK.SESSION_ID, s.id())
           .set(SESSION_FEEDBACK.CLIENT_ID, clientId)
           .set(SESSION_FEEDBACK.EFFORT, (short) feedback.effort())
-          .set(SESSION_FEEDBACK.COMMENT, feedback.comment())
+          // texto do aluno: cifrado com a chave dele (ARQUITETURA 7.3)
+          .set(
+              SESSION_FEEDBACK.COMMENT,
+              cipher.encryptNullable(clientId, FEEDBACK_COMMENT, feedback.comment()))
           .set(SESSION_FEEDBACK.HAS_PAIN, feedback.hasPain())
           .execute();
       for (var pain : feedback.pains()) {
@@ -149,7 +158,9 @@ public class JooqSessions implements Sessions {
             .set(
                 PAIN_REPORT.INTENSITY,
                 pain.intensity() == null ? null : pain.intensity().shortValue())
-            .set(PAIN_REPORT.DESCRIPTION, pain.description())
+            .set(
+                PAIN_REPORT.DESCRIPTION,
+                cipher.encryptNullable(clientId, PAIN_DESCRIPTION, pain.description()))
             .execute();
       }
     }

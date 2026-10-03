@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { toAppError } from "../../../shared/lib/http";
@@ -11,6 +12,7 @@ import { Skeleton } from "../../../shared/ui/Skeleton";
 import { TextLink } from "../../../shared/ui/TextLink";
 import { Title } from "../../../shared/ui/Title";
 import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
+import { AnamnesisBanner } from "../../anamnesis";
 import { useAuthState, useMe } from "../../auth";
 import { ProgramWorkouts, TodayCard, usePlannedSnapshot, useSyncPlanned } from "../../sync";
 import { currentLink, type MyLink } from "../domain/invite";
@@ -46,6 +48,8 @@ export function ClientHomeScreen() {
             label={t.go}
             onPress={() => {
               setWelcomed(null);
+              // depois do aceite vem a anamnese (SCREEN-FLOWS 1.2); dá para terminar depois
+              router.push("/anamnesis");
             }}
           />
         }
@@ -103,6 +107,7 @@ export function ClientHomeScreen() {
         },
       }}
     >
+      <AnamnesisBanner />
       {planned.data?.program != null && planned.data.workouts.length > 0 ? (
         <>
           <TodayCard snapshot={planned.data} date={today} />
