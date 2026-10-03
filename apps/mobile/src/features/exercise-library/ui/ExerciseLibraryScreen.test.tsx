@@ -47,7 +47,10 @@ async function renderLibrary(onPick?: (picked: readonly Exercise[]) => void) {
     exercises: { search, create: jest.fn(), archive: jest.fn() },
   } as unknown as Repositories;
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Number.POSITIVE_INFINITY } },
+    defaultOptions: {
+      queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },
+      mutations: { gcTime: Number.POSITIVE_INFINITY },
+    },
   });
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>

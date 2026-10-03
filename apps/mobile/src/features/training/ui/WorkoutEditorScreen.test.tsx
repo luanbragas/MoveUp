@@ -55,7 +55,10 @@ const WORKOUT: Workout = {
 async function renderEditor(saveWorkout: jest.Mock, reload = jest.fn(() => Promise.resolve({}))) {
   const repositories = { training: { saveWorkout } } as unknown as Repositories;
   const queryClient = new QueryClient({
-    defaultOptions: { mutations: { gcTime: Number.POSITIVE_INFINITY } },
+    defaultOptions: {
+      queries: { gcTime: Number.POSITIVE_INFINITY },
+      mutations: { gcTime: Number.POSITIVE_INFINITY },
+    },
   });
   await render(
     <SafeAreaProvider initialMetrics={METRICS}>
