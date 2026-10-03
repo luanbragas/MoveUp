@@ -23,6 +23,8 @@ tags:
   name: guardian-authorizations
 - description: Alunos e vínculos do profissional
   name: clients
+- description: Sincronização offline do app do aluno
+  name: sync
 - description: Biblioteca de exercícios
   name: exercises
 paths:
@@ -939,6 +941,35 @@ paths:
       summary: Adiciona um treino ao programa
       tags:
       - programs
+  /v1/sync:
+    get:
+      description: "Programas (com treinos e agenda) alterados desde o cursor, com\
+        \ janela de 2 minutos; aplique por upsert. Sem cursor, tudo que vale hoje."
+      operationId: getSyncChanges
+      parameters:
+      - description: Cursor da última sincronização (ISO-8601)
+        in: query
+        name: since
+        required: false
+        schema:
+          type: string
+          format: date-time
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncChanges"
+          description: Mudanças e o cursor novo
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`forbidden` (conta não é de aluno)'
+      summary: O que mudou no planejado do aluno
+      tags:
+      - sync
   /v1/workout-templates:
     get:
       description: Do editado mais recente ao mais antigo; sem os arquivados.
@@ -1984,6 +2015,104 @@ components:
       required:
       - name
       - role
+    SyncChanges:
+      type: object
+      properties:
+        cursor:
+          type: string
+          format: date-time
+          description: Mande em ?since= na próxima vez
+        exercises:
+          type: array
+          description: Exercícios usados nos treinos enviados
+          items:
+            $ref: "#/components/schemas/Exercise"
+        programs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncProgram"
+      required:
+      - cursor
+      - exercises
+      - programs
+    SyncProgram:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+          description: "Tombstone: apague o programa e os treinos"
+        endsOn:
+          type: string
+          format: date
+        goal:
+          type: string
+        id:
+          type: string
+          format: uuid
+        linkId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        scheduleMode:
+          type: string
+          enum:
+          - fixed_days
+          - sequence
+        startsOn:
+          type: string
+          format: date
+        weeklyTarget:
+          type: integer
+          format: int32
+        workouts:
+          type: array
+          description: "Todos os treinos ativos, na ordem (substituem os do app)"
+          items:
+            $ref: "#/components/schemas/SyncWorkout"
+      required:
+      - deleted
+      - id
+      - linkId
+      - name
+      - scheduleMode
+      - workouts
+    SyncWorkout:
+      type: object
+      properties:
+        content:
+          $ref: "#/components/schemas/WorkoutContent"
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        position:
+          type: integer
+          format: int32
+          description: Ordem na agenda (A = 1)
+        versionId:
+          type: string
+          format: uuid
+          description: Vai na sessão (o planejado daquele dia)
+        versionNumber:
+          type: integer
+          format: int32
+        weekdays:
+          type: array
+          description: 0 = domingo
+          items:
+            type: integer
+            format: int32
+          uniqueItems: true
+      required:
+      - content
+      - id
+      - name
+      - position
+      - versionId
+      - versionNumber
+      - weekdays
     Workout:
       type: object
       properties:

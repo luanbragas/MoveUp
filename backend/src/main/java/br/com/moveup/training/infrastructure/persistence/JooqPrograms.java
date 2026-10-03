@@ -9,9 +9,12 @@ import static br.com.moveup.shared.infrastructure.persistence.jooq.Tables.WORKOU
 
 import br.com.moveup.training.application.port.out.Programs;
 import br.com.moveup.training.domain.model.Program;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -87,6 +90,30 @@ public class JooqPrograms implements Programs {
         .orderBy(PROGRAM.CREATED_AT.desc())
         .limit(1)
         .fetchOptional(PROGRAM.ID);
+  }
+
+  @Override
+  public List<UUID> changedForOwnClient(Instant since) {
+    var own = DSL.field("own_client_id()", UUID.class);
+    var changedWorkout =
+        DSL.exists(
+            DSL.selectOne()
+                .from(WORKOUT)
+                .where(WORKOUT.PROGRAM_ID.eq(PROGRAM.ID))
+                .and(WORKOUT.UPDATED_AT.gt(since.atOffset(ZoneOffset.UTC))));
+    var condition = PROGRAM.CLIENT_ID.eq(own);
+    if (since != Instant.EPOCH) {
+      condition =
+          condition.and(PROGRAM.UPDATED_AT.gt(since.atOffset(ZoneOffset.UTC)).or(changedWorkout));
+    } else {
+      // primeira sincronização: só o que vale (sem tombstones antigos)
+      condition = condition.and(PROGRAM.STATUS.eq("active")).and(PROGRAM.DELETED_AT.isNull());
+    }
+    return dsl.select(PROGRAM.ID)
+        .from(PROGRAM)
+        .where(condition)
+        .orderBy(PROGRAM.CREATED_AT)
+        .fetch(PROGRAM.ID);
   }
 
   @Override

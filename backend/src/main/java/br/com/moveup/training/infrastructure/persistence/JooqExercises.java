@@ -8,6 +8,7 @@ import br.com.moveup.training.application.port.out.Exercises;
 import br.com.moveup.training.domain.model.Exercise;
 import br.com.moveup.training.domain.model.Muscle;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -77,6 +78,16 @@ public class JooqExercises implements Exercises {
     return dsl.selectFrom(EXERCISE)
         .where(EXERCISE.ID.eq(exerciseId))
         .fetchOptional(JooqExercises::toDomain);
+  }
+
+  @Override
+  public List<Exercise> findAll(Collection<UUID> exerciseIds) {
+    if (exerciseIds.isEmpty()) {
+      return List.of();
+    }
+    return dsl.selectFrom(EXERCISE)
+        .where(EXERCISE.ID.in(exerciseIds))
+        .fetch(JooqExercises::toDomain);
   }
 
   @Override

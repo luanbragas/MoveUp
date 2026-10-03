@@ -1,6 +1,8 @@
 package br.com.moveup.training.application.port.out;
 
 import br.com.moveup.training.domain.model.Program;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,6 +13,13 @@ public interface Programs {
   Optional<Program> find(UUID programId);
 
   Optional<UUID> activeFor(UUID linkId);
+
+  /**
+   * Programas do próprio aluno (usuário da transação) alterados desde o instante, inclusive os
+   * arquivados (tombstones). Mudança na agenda ou num treino sobe o updated_at do programa ou do
+   * treino; os dois contam.
+   */
+  List<UUID> changedForOwnClient(Instant since);
 
   void insert(Program program);
 

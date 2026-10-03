@@ -7,6 +7,7 @@ import br.com.moveup.shared.domain.IdGenerator;
 import br.com.moveup.training.application.port.in.ManageExercises;
 import br.com.moveup.training.application.port.in.ManagePrograms;
 import br.com.moveup.training.application.port.in.ManageWorkouts;
+import br.com.moveup.training.application.port.in.PlannedSync;
 import br.com.moveup.training.application.port.out.ExerciseCatalog;
 import br.com.moveup.training.application.port.out.Exercises;
 import br.com.moveup.training.application.port.out.Programs;
@@ -14,6 +15,8 @@ import br.com.moveup.training.application.port.out.Workouts;
 import br.com.moveup.training.application.usecase.ManageExercisesUseCase;
 import br.com.moveup.training.application.usecase.ManageProgramsUseCase;
 import br.com.moveup.training.application.usecase.ManageWorkoutsUseCase;
+import br.com.moveup.training.application.usecase.PlannedSyncUseCase;
+import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -44,5 +47,15 @@ class TrainingModuleConfig {
       ExerciseCatalog catalog,
       IdGenerator ids) {
     return new ManageProgramsUseCase(links, programs, workouts, catalog, ids);
+  }
+
+  @Bean
+  PlannedSync plannedSync(
+      AccountDirectory accounts,
+      Programs programs,
+      Workouts workouts,
+      Exercises exercises,
+      Clock clock) {
+    return new PlannedSyncUseCase(accounts, programs, workouts, exercises, clock);
   }
 }

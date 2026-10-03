@@ -1408,6 +1408,101 @@ export const AddProgramWorkout404Response = zod.object({
 
 
 /**
+ * Programas (com treinos e agenda) alterados desde o cursor, com janela de 2 minutos; aplique por upsert. Sem cursor, tudo que vale hoje.
+ * @summary O que mudou no planejado do aluno
+ */
+export const GetSyncChangesQueryParams = zod.object({
+  "since": zod.iso.datetime({"offset":true}).optional().describe('Cursor da última sincronização (ISO-8601)')
+})
+
+export const GetSyncChanges200Response = zod.object({
+  "cursor": zod.iso.datetime({"offset":true}).describe('Mande em ?since= na próxima vez'),
+  "exercises": zod.array(zod.object({
+  "custom": zod.boolean().describe('Exercício próprio (pode arquivar)'),
+  "equipment": zod.string().nullish(),
+  "id": zod.uuid(),
+  "instructions": zod.string().nullish().describe('Como executar'),
+  "mediaUrl": zod.string().nullish().describe('Vídeo (link https)'),
+  "modality": zod.enum(['strength', 'cardio', 'conditioning', 'complementary']),
+  "name": zod.string(),
+  "primaryMuscle": zod.string().nullish().describe('Código do mapa muscular'),
+  "secondaryMuscles": zod.array(zod.string()),
+  "trackingType": zod.enum(['reps_load', 'reps_only', 'time', 'distance_time']).describe('O que o aluno registra em cada série'),
+  "unilateral": zod.boolean()
+})).describe('Exercícios usados nos treinos enviados'),
+  "programs": zod.array(zod.object({
+  "deleted": zod.boolean().describe('Tombstone: apague o programa e os treinos'),
+  "endsOn": zod.iso.date().optional(),
+  "goal": zod.string().optional(),
+  "id": zod.uuid(),
+  "linkId": zod.uuid(),
+  "name": zod.string(),
+  "scheduleMode": zod.enum(['fixed_days', 'sequence']),
+  "startsOn": zod.iso.date().optional(),
+  "weeklyTarget": zod.int().optional(),
+  "workouts": zod.array(zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "exerciseName": zod.string().nullish(),
+  "notes": zod.string().optional(),
+  "primaryMuscle": zod.string().nullish(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})),
+  "trackingType": zod.union([zod.literal('reps_load'),zod.literal('reps_only'),zod.literal('time'),zod.literal('distance_time'),zod.literal(null)]).nullish()
+})),
+  "method": zod.string(),
+  "name": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "preset": zod.string().optional(),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().optional(),
+  "notes": zod.string().optional()
+}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "position": zod.int().describe('Ordem na agenda (A = 1)'),
+  "versionId": zod.uuid().describe('Vai na sessão (o planejado daquele dia)'),
+  "versionNumber": zod.int(),
+  "weekdays": zod.array(zod.int()).describe('0 = domingo')
+})).describe('Todos os treinos ativos, na ordem (substituem os do app)')
+}))
+})
+
+export const GetSyncChanges403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * Do editado mais recente ao mais antigo; sem os arquivados.
  * @summary Modelos da organização
  */

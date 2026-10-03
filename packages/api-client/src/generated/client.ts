@@ -698,6 +698,14 @@ export interface RegisterAccount {
   role: RegisterAccountRole;
 }
 
+export type SyncProgramScheduleMode = typeof SyncProgramScheduleMode[keyof typeof SyncProgramScheduleMode];
+
+
+export const SyncProgramScheduleMode = {
+  fixed_days: 'fixed_days',
+  sequence: 'sequence',
+} as const;
+
 export interface WorkoutBlock {
   durationSeconds?: number;
   exercises: PrescribedExercise[];
@@ -716,6 +724,42 @@ export interface WorkoutContent {
   estimatedMinutes?: number;
   goal?: string;
   notes?: string;
+}
+
+export interface SyncWorkout {
+  content: WorkoutContent;
+  id: string;
+  name: string;
+  /** Ordem na agenda (A = 1) */
+  position: number;
+  /** Vai na sessão (o planejado daquele dia) */
+  versionId: string;
+  versionNumber: number;
+  /** 0 = domingo */
+  weekdays: number[];
+}
+
+export interface SyncProgram {
+  /** Tombstone: apague o programa e os treinos */
+  deleted: boolean;
+  endsOn?: string;
+  goal?: string;
+  id: string;
+  linkId: string;
+  name: string;
+  scheduleMode: SyncProgramScheduleMode;
+  startsOn?: string;
+  weeklyTarget?: number;
+  /** Todos os treinos ativos, na ordem (substituem os do app) */
+  workouts: SyncWorkout[];
+}
+
+export interface SyncChanges {
+  /** Mande em ?since= na próxima vez */
+  cursor: string;
+  /** Exercícios usados nos treinos enviados */
+  exercises: Exercise[];
+  programs: SyncProgram[];
 }
 
 export interface Workout {
@@ -852,6 +896,13 @@ export const SearchExercisesMuscle = {
   glutes: 'glutes',
   hamstrings: 'hamstrings',
 } as const;
+
+export type GetSyncChangesParams = {
+/**
+ * Cursor da última sincronização (ISO-8601)
+ */
+since?: string;
+};
 
 export type registerAccountResponse201 = {
   data: Me
@@ -2430,6 +2481,57 @@ return apiFetch<addProgramWorkoutResponse>(getAddProgramWorkoutUrl(programId),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(newProgramWorkout)
+  }
+);}
+
+
+
+export type getSyncChangesResponse200 = {
+  data: SyncChanges
+  status: 200
+}
+
+export type getSyncChangesResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type getSyncChangesResponseSuccess = (getSyncChangesResponse200) & {
+  headers: Headers;
+};
+export type getSyncChangesResponseError = (getSyncChangesResponse403) & {
+  headers: Headers;
+};
+
+export type getSyncChangesResponse = (getSyncChangesResponseSuccess | getSyncChangesResponseError)
+
+export const getGetSyncChangesUrl = (params?: GetSyncChangesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/sync?${stringifiedParams}` : `/v1/sync`
+}
+
+/**
+ * Programas (com treinos e agenda) alterados desde o cursor, com janela de 2 minutos; aplique por upsert. Sem cursor, tudo que vale hoje.
+ * @summary O que mudou no planejado do aluno
+ */
+export const getSyncChanges = async (params?: GetSyncChangesParams, options?: Parameters<typeof apiFetch>[1]): Promise<getSyncChangesResponse> => {
+
+  return apiFetch<getSyncChangesResponse>(getGetSyncChangesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
   }
 );}
 

@@ -3,6 +3,7 @@ package br.com.moveup.training.application.port.out;
 import br.com.moveup.training.application.port.in.ManageExercises.ExerciseView;
 import br.com.moveup.training.domain.model.Exercise;
 import br.com.moveup.training.domain.model.Muscle;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,9 @@ public interface Exercises {
   List<ExerciseView> search(UUID organizationId, String query, Muscle muscle, int limit);
 
   Optional<Exercise> find(UUID exerciseId);
+
+  /** Vários de uma vez (sync do aluno), inclusive arquivados. */
+  List<Exercise> findAll(Collection<UUID> exerciseIds);
 
   /** Já existe exercício ativo com esse nome (sem acento e caixa) na organização ou na base. */
   boolean nameTaken(UUID organizationId, String name);
