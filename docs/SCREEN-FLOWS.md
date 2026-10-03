@@ -101,6 +101,29 @@ flowchart TD
 - Sem convite, o app abre na tela "Peça o link ao seu personal", com campo para digitar o código. No MVP o aluno não usa o app sem vínculo.
 - A anamnese pode ser salva como rascunho e terminada depois. Enquanto não for enviada, a Home mostra um aviso fixo.
 
+### 1.2b Aluno menor: autorização do responsável (LGPD, art. 14)
+
+Decisão de 03/10/2026: o menor só **indica** o responsável; quem autoriza é o próprio responsável,
+pelo link que recebe no celular dele. Sem autorização, o menor não aceita convite.
+
+```mermaid
+flowchart TD
+  consent["Consentimentos do menor"] --> who["'Quem autoriza?'<br/>nome e parentesco do responsável"]
+  who --> share[["App cria o pedido e abre o compartilhamento<br/>(WhatsApp, SMS...) com o link"]]
+  share --> wait["'Falta a Marta.'<br/>app confere a cada 10 s"]
+  wait -- "Mandar o link de novo" --> share
+  wait -- "Trocar responsável" --> who
+  share -.-> page["Responsável abre moveup-site.pages.dev/autorizar/#segredo<br/>(sem login)"]
+  page --> decide{"Autoriza?"}
+  decide -- "sim" --> free(["App do menor libera sozinho<br/>e segue para o convite"])
+  decide -- "não" --> declined["Menor vê 'Marta não autorizou'<br/>e pode pedir de novo"] --> who
+```
+
+- O link vale 7 dias e uma vez; reenviar troca o link (o anterior para de valer). O banco guarda
+  só o hash do segredo, e a página manda o segredo no corpo da requisição (nunca na URL).
+- A página mostra só o primeiro nome do menor e o que o app guarda; nenhum dado de saúde.
+- Não guardamos telefone nem e-mail do responsável: o link vai pelo celular do menor.
+
 ### 1.3 Treino do dia e execução (offline-first)
 
 ```mermaid

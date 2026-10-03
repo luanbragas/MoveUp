@@ -52,7 +52,8 @@ pnpm api:generate                          # regenera packages/api-client a part
 cp apps/mobile/.env.example apps/mobile/.env   # uma vez; URL da API para o app
 pnpm --filter mobile start                 # app (Expo)
 pnpm typecheck && pnpm lint && pnpm test   # o mesmo que o CI roda
-pnpm --filter @moveup/site build:preview   # site estático (convite) em site/dist; produção: ver site/README.md
+pnpm --filter @moveup/site build:preview   # site estático (convite, responsável) em site/dist; produção: ver site/README.md
+pnpm --filter mobile body-map:generate     # regenera o mapa muscular depois de mudar apps/mobile/assets/body/*.svg
 ```
 
 ## Regras inegociáveis

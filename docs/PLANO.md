@@ -32,7 +32,7 @@ flowchart LR
 | Prazos de retenção (anamnese, fotos, audit, backups) e RIPD | Fases 7 e 9 | Jurídico | Aberta |
 | Novo personal vê o histórico do aluno com o anterior? | Fase 1 (policies de leitura) | Produto | **Decidida (02/10/2026): vê** (o histórico acompanha o aluno; informado no consentimento) |
 | Provedor de login (Cognito, Auth0, Clerk, Firebase) | Fase 0 | Técnico | **Decidida (01/10/2026): Firebase Auth** |
-| Alunos menores de idade no MVP | Fase 1 | Produto + jurídico | **Decidida (02/10/2026): aceitos com consentimento do responsável** (revisão jurídica antes do lançamento, Fase 9) |
+| Alunos menores de idade no MVP | Fase 1 | Produto + jurídico | **Decidida (02/10/2026): aceitos com consentimento do responsável**; em 03/10/2026, o próprio responsável autoriza por link no celular dele (SCREEN-FLOWS 1.2b). Revisão jurídica antes do lançamento, Fase 9 |
 | Preço dos planos e plano gratuito | Fase 8 | Produto | Aberta |
 | Cobrança dentro do app: compra da loja (IAP / Google Play Billing) ou pagamento alternativo/link externo | Fase 8 | Produto + técnico | Aberta (ver Fase 8) |
 | Nome do produto e pacote base | Fase 0 | Produto | **Decidida (01/10/2026): MoveUp, `br.com.moveup`** |
@@ -69,7 +69,8 @@ Tudo o que as outras fases assumem que já existe.
 - [x] Plano de teste/gratuito semeado e assinatura `trialing` criada para toda organização nova.
 - [x] Inativar, reativar (com checagem de limite) e encerrar vínculo.
 - [x] Escolha de perfil no cadastro (profissional ou aluno via convite) e navegação separada por perfil no mesmo app.
-- [x] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno).
+- [x] Telas: login, onboarding do profissional, lista de alunos e convite (perfil profissional); aceite de convite (perfil aluno). *Refeitas no sistema visual Impacto em 03/10/2026 (abas em pílula, estados de vazio/carregando/sem internet/erro).*
+- [x] Autorização do responsável pelo aluno menor por link (V16, página `/autorizar/` no site, tela de espera no app).
 - [ ] Universal links / app links do convite (`site/` com `apple-app-site-association` e `assetlinks.json`). *Código pronto (02/10/2026): página `/i/<código>`, geração dos dois arquivos no build e `associatedDomains`/`intentFilters` no app. Sem domínio pago por decisão (02/10/2026): site em `moveup-site.pages.dev` (Cloudflare Pages grátis). Falta o SHA-256 do certificado Android (primeiro build EAS); iPhone sem universal link até existir conta Apple Developer (lá o convite entra pelo código). Marcar quando o link abrir o app num build Android.*
 
 **Pronto quando:** dois profissionais e três alunos em teste E2E mostram isolamento completo (RLS + autorização no caso de uso), e o limite do plano barra o aceite excedente.
