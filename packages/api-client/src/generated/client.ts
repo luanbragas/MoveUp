@@ -450,6 +450,78 @@ export interface NewExercise {
 }
 
 /**
+ * @nullable
+ */
+export type PrescribedExerciseTrackingType = typeof PrescribedExerciseTrackingType[keyof typeof PrescribedExerciseTrackingType] | null;
+
+
+export const PrescribedExerciseTrackingType = {
+  reps_load: 'reps_load',
+  reps_only: 'reps_only',
+  time: 'time',
+  distance_time: 'distance_time',
+} as const;
+
+/**
+ * Padrão: normal
+ */
+export type PrescribedSetType = typeof PrescribedSetType[keyof typeof PrescribedSetType];
+
+
+export const PrescribedSetType = {
+  warmup: 'warmup',
+  normal: 'normal',
+  drop: 'drop',
+  rest_pause: 'rest_pause',
+  failure: 'failure',
+} as const;
+
+export interface PrescribedSet {
+  distanceM?: number;
+  durationSeconds?: number;
+  /** Carga em kg (até 3 casas) */
+  loadKg?: number;
+  repsMax?: number;
+  /** Faixa: 8 a 12 = repsMin 8, repsMax 12 */
+  repsMin?: number;
+  restSeconds?: number;
+  /** Repetições em reserva 0 a 10 */
+  targetRir?: number;
+  /** Esforço alvo 0 a 10 (use RPE ou RIR) */
+  targetRpe?: number;
+  /** Padrão: normal */
+  type?: PrescribedSetType;
+}
+
+export interface PrescribedExercise {
+  exerciseId: string;
+  /** @nullable */
+  exerciseName?: string | null;
+  notes?: string;
+  /** @nullable */
+  primaryMuscle?: string | null;
+  restSeconds?: number;
+  sets: PrescribedSet[];
+  /** @nullable */
+  trackingType?: PrescribedExerciseTrackingType;
+}
+
+export interface PrescribedExerciseInput {
+  exerciseId: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  notes?: string;
+  restSeconds?: number;
+  /**
+     * @minItems 0
+     * @maxItems 20
+     */
+  sets?: PrescribedSet[];
+}
+
+/**
  * Erro no formato RFC 9457 (application/problem+json)
  */
 export interface Problem {
@@ -502,6 +574,129 @@ export interface RegisterAccount {
      * @pattern professional|client
      */
   role: RegisterAccountRole;
+}
+
+export interface WorkoutBlock {
+  durationSeconds?: number;
+  exercises: PrescribedExercise[];
+  method: string;
+  name?: string;
+  notes?: string;
+  preset?: string;
+  restBetweenRounds?: number;
+  restSeconds?: number;
+  rounds?: number;
+  workSeconds?: number;
+}
+
+export interface WorkoutContent {
+  blocks: WorkoutBlock[];
+  estimatedMinutes?: number;
+  goal?: string;
+  notes?: string;
+}
+
+export interface Workout {
+  content: WorkoutContent;
+  id: string;
+  name: string;
+  /** @nullable */
+  programId?: string | null;
+  /** Mande em If-Match como "r<revision>" */
+  revision: number;
+  /**
+     * Modelo de origem da cópia
+     * @nullable
+     */
+  sourceTemplateId?: string | null;
+  /** Modelo (sem programa) */
+  template: boolean;
+  /** Sobe quando o treino já tinha sessão */
+  versionNumber: number;
+}
+
+/**
+ * @minLength 1
+ */
+export type WorkoutBlockInputMethod = typeof WorkoutBlockInputMethod[keyof typeof WorkoutBlockInputMethod];
+
+
+export const WorkoutBlockInputMethod = {
+  sequential: 'sequential',
+  superset: 'superset',
+  circuit: 'circuit',
+  hiit: 'hiit',
+  emom: 'emom',
+  amrap: 'amrap',
+  intervals: 'intervals',
+} as const;
+
+export interface WorkoutBlockInput {
+  /** EMOM e AMRAP */
+  durationSeconds?: number;
+  /**
+     * @minItems 0
+     * @maxItems 12
+     */
+  exercises: PrescribedExerciseInput[];
+  /** @minLength 1 */
+  method: WorkoutBlockInputMethod;
+  /**
+     * @minLength 0
+     * @maxLength 80
+     */
+  name?: string;
+  /**
+     * @minLength 0
+     * @maxLength 500
+     */
+  notes?: string;
+  /**
+     * Só `tabata` (HIIT 20 s/10 s × 8)
+     * @nullable
+     */
+  preset?: string | null;
+  restBetweenRounds?: number;
+  restSeconds?: number;
+  rounds?: number;
+  workSeconds?: number;
+}
+
+export interface WorkoutContentInput {
+  /**
+     * @minItems 0
+     * @maxItems 20
+     */
+  blocks: WorkoutBlockInput[];
+  estimatedMinutes?: number;
+  /**
+     * @minLength 0
+     * @maxLength 120
+     */
+  goal?: string;
+  /**
+     * @minLength 0
+     * @maxLength 1000
+     */
+  notes?: string;
+}
+
+export interface WorkoutSummary {
+  blocks: number;
+  estimatedMinutes?: number;
+  exercises: number;
+  id: string;
+  name: string;
+  updatedAt: string;
+}
+
+export interface WorkoutWrite {
+  content: WorkoutContentInput;
+  /**
+     * @minLength 0
+     * @maxLength 60
+     */
+  name: string;
 }
 
 export type ListClientsParams = {
@@ -1782,5 +1977,282 @@ export const endMyLink = async (linkId: string, options?: Parameters<typeof apiF
     method: 'POST'
 
 
+  }
+);}
+
+
+
+export type listWorkoutTemplatesResponse200 = {
+  data: WorkoutSummary[]
+  status: 200
+}
+
+export type listWorkoutTemplatesResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type listWorkoutTemplatesResponseSuccess = (listWorkoutTemplatesResponse200) & {
+  headers: Headers;
+};
+export type listWorkoutTemplatesResponseError = (listWorkoutTemplatesResponse403) & {
+  headers: Headers;
+};
+
+export type listWorkoutTemplatesResponse = (listWorkoutTemplatesResponseSuccess | listWorkoutTemplatesResponseError)
+
+export const getListWorkoutTemplatesUrl = () => {
+
+
+
+
+  return `/v1/workout-templates`
+}
+
+/**
+ * Do editado mais recente ao mais antigo; sem os arquivados.
+ * @summary Modelos da organização
+ */
+export const listWorkoutTemplates = async ( options?: Parameters<typeof apiFetch>[1]): Promise<listWorkoutTemplatesResponse> => {
+
+  return apiFetch<listWorkoutTemplatesResponse>(getListWorkoutTemplatesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type createWorkoutTemplateResponse201 = {
+  data: Workout
+  status: 201
+}
+
+export type createWorkoutTemplateResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type createWorkoutTemplateResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type createWorkoutTemplateResponseSuccess = (createWorkoutTemplateResponse201) & {
+  headers: Headers;
+};
+export type createWorkoutTemplateResponseError = (createWorkoutTemplateResponse403 | createWorkoutTemplateResponse422) & {
+  headers: Headers;
+};
+
+export type createWorkoutTemplateResponse = (createWorkoutTemplateResponseSuccess | createWorkoutTemplateResponseError)
+
+export const getCreateWorkoutTemplateUrl = () => {
+
+
+
+
+  return `/v1/workout-templates`
+}
+
+/**
+ * @summary Cria um modelo de treino
+ */
+export const createWorkoutTemplate = async (workoutWrite: WorkoutWrite, options?: Parameters<typeof apiFetch>[1]): Promise<createWorkoutTemplateResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<createWorkoutTemplateResponse>(getCreateWorkoutTemplateUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(workoutWrite)
+  }
+);}
+
+
+
+export type archiveWorkoutResponse204 = {
+  data: void
+  status: 204
+}
+
+export type archiveWorkoutResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type archiveWorkoutResponse412 = {
+  data: Problem
+  status: 412
+}
+
+export type archiveWorkoutResponseSuccess = (archiveWorkoutResponse204) & {
+  headers: Headers;
+};
+export type archiveWorkoutResponseError = (archiveWorkoutResponse403 | archiveWorkoutResponse412) & {
+  headers: Headers;
+};
+
+export type archiveWorkoutResponse = (archiveWorkoutResponseSuccess | archiveWorkoutResponseError)
+
+export const getArchiveWorkoutUrl = (workoutId: string,) => {
+
+
+
+
+  return `/v1/workouts/${workoutId}`
+}
+
+/**
+ * Some das listas e do app do aluno; sessões antigas continuam.
+ * @summary Arquiva o treino
+ */
+export const archiveWorkout = async (workoutId: string, options?: Parameters<typeof apiFetch>[1]): Promise<archiveWorkoutResponse> => {
+
+  return apiFetch<archiveWorkoutResponse>(getArchiveWorkoutUrl(workoutId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+export type getWorkoutResponse200 = {
+  data: Workout
+  status: 200
+}
+
+export type getWorkoutResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type getWorkoutResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type getWorkoutResponseSuccess = (getWorkoutResponse200) & {
+  headers: Headers;
+};
+export type getWorkoutResponseError = (getWorkoutResponse403 | getWorkoutResponse404) & {
+  headers: Headers;
+};
+
+export type getWorkoutResponse = (getWorkoutResponseSuccess | getWorkoutResponseError)
+
+export const getGetWorkoutUrl = (workoutId: string,) => {
+
+
+
+
+  return `/v1/workouts/${workoutId}`
+}
+
+/**
+ * @summary Treino com o conteúdo da versão atual
+ */
+export const getWorkout = async (workoutId: string, options?: Parameters<typeof apiFetch>[1]): Promise<getWorkoutResponse> => {
+
+  return apiFetch<getWorkoutResponse>(getGetWorkoutUrl(workoutId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type saveWorkoutResponse200 = {
+  data: Workout
+  status: 200
+}
+
+export type saveWorkoutResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type saveWorkoutResponse412 = {
+  data: Problem
+  status: 412
+}
+
+export type saveWorkoutResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type saveWorkoutResponse428 = {
+  data: Problem
+  status: 428
+}
+
+export type saveWorkoutResponseSuccess = (saveWorkoutResponse200) & {
+  headers: Headers;
+};
+export type saveWorkoutResponseError = (saveWorkoutResponse403 | saveWorkoutResponse412 | saveWorkoutResponse422 | saveWorkoutResponse428) & {
+  headers: Headers;
+};
+
+export type saveWorkoutResponse = (saveWorkoutResponseSuccess | saveWorkoutResponseError)
+
+export const getSaveWorkoutUrl = (workoutId: string,) => {
+
+
+
+
+  return `/v1/workouts/${workoutId}`
+}
+
+/**
+ * Se a versão atual já foi usada numa sessão, cria versão nova (a sessão continua comparando com o planejado dela); senão, substitui a atual.
+ * @summary Salva o treino inteiro
+ */
+export const saveWorkout = async (workoutId: string,
+    workoutWrite: WorkoutWrite, options?: Parameters<typeof apiFetch>[1]): Promise<saveWorkoutResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<saveWorkoutResponse>(getSaveWorkoutUrl(workoutId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(workoutWrite)
   }
 );}

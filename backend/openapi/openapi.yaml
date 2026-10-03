@@ -759,11 +759,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workout"
-          description: Modelo criado
-          headers:
-            ETag:
-              description: Revisão para o If-Match
-              style: simple
+          description: Modelo criado (cabeçalho ETag com a revisão)
         "403":
           content:
             application/problem+json:
@@ -830,11 +826,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workout"
-          description: Treino
-          headers:
-            ETag:
-              description: Revisão para o If-Match
-              style: simple
+          description: Treino (cabeçalho ETag com a revisão)
         "403":
           content:
             application/problem+json:
@@ -880,11 +872,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workout"
-          description: Treino salvo
-          headers:
-            ETag:
-              description: Nova revisão
-              style: simple
+          description: Treino salvo (cabeçalho ETag com a revisão)
         "403":
           content:
             application/problem+json:

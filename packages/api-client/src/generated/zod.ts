@@ -995,3 +995,488 @@ export const EndMyLink404Response = zod.object({
   "traceId": zod.string(),
   "type": zod.string()
 }).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Do editado mais recente ao mais antigo; sem os arquivados.
+ * @summary Modelos da organização
+ */
+export const ListWorkoutTemplates200ResponseItem = zod.object({
+  "blocks": zod.int(),
+  "estimatedMinutes": zod.int().optional(),
+  "exercises": zod.int(),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "updatedAt": zod.iso.datetime({"offset":true})
+})
+export const ListWorkoutTemplates200Response = zod.array(ListWorkoutTemplates200ResponseItem)
+
+export const ListWorkoutTemplates403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Cria um modelo de treino
+ */
+export const createWorkoutTemplateBodyContentBlocksItemExercisesItemNotesMin = 0;
+export const createWorkoutTemplateBodyContentBlocksItemExercisesItemNotesMax = 500;
+
+export const createWorkoutTemplateBodyContentBlocksItemExercisesItemSetsMin = 0;
+export const createWorkoutTemplateBodyContentBlocksItemExercisesItemSetsMax = 20;
+
+export const createWorkoutTemplateBodyContentBlocksItemExercisesMin = 0;
+export const createWorkoutTemplateBodyContentBlocksItemExercisesMax = 12;
+
+export const createWorkoutTemplateBodyContentBlocksItemNameMin = 0;
+export const createWorkoutTemplateBodyContentBlocksItemNameMax = 80;
+
+export const createWorkoutTemplateBodyContentBlocksItemNotesMin = 0;
+export const createWorkoutTemplateBodyContentBlocksItemNotesMax = 500;
+
+export const createWorkoutTemplateBodyContentBlocksMin = 0;
+export const createWorkoutTemplateBodyContentBlocksMax = 20;
+
+export const createWorkoutTemplateBodyContentGoalMin = 0;
+export const createWorkoutTemplateBodyContentGoalMax = 120;
+
+export const createWorkoutTemplateBodyContentNotesMin = 0;
+export const createWorkoutTemplateBodyContentNotesMax = 1000;
+
+export const createWorkoutTemplateBodyNameMin = 0;
+export const createWorkoutTemplateBodyNameMax = 60;
+
+
+
+export const CreateWorkoutTemplateBody = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional().describe('EMOM e AMRAP'),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "notes": zod.string().min(createWorkoutTemplateBodyContentBlocksItemExercisesItemNotesMin).max(createWorkoutTemplateBodyContentBlocksItemExercisesItemNotesMax).optional(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})).min(createWorkoutTemplateBodyContentBlocksItemExercisesItemSetsMin).max(createWorkoutTemplateBodyContentBlocksItemExercisesItemSetsMax).optional()
+})).min(createWorkoutTemplateBodyContentBlocksItemExercisesMin).max(createWorkoutTemplateBodyContentBlocksItemExercisesMax),
+  "method": zod.enum(['sequential', 'superset', 'circuit', 'hiit', 'emom', 'amrap', 'intervals']),
+  "name": zod.string().min(createWorkoutTemplateBodyContentBlocksItemNameMin).max(createWorkoutTemplateBodyContentBlocksItemNameMax).optional(),
+  "notes": zod.string().min(createWorkoutTemplateBodyContentBlocksItemNotesMin).max(createWorkoutTemplateBodyContentBlocksItemNotesMax).optional(),
+  "preset": zod.string().nullish().describe('Só `tabata` (HIIT 20 s/10 s × 8)'),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})).min(createWorkoutTemplateBodyContentBlocksMin).max(createWorkoutTemplateBodyContentBlocksMax),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().min(createWorkoutTemplateBodyContentGoalMin).max(createWorkoutTemplateBodyContentGoalMax).optional(),
+  "notes": zod.string().min(createWorkoutTemplateBodyContentNotesMin).max(createWorkoutTemplateBodyContentNotesMax).optional()
+}),
+  "name": zod.string().min(createWorkoutTemplateBodyNameMin).max(createWorkoutTemplateBodyNameMax)
+})
+
+export const CreateWorkoutTemplate201Response = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "exerciseName": zod.string().nullish(),
+  "notes": zod.string().optional(),
+  "primaryMuscle": zod.string().nullish(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})),
+  "trackingType": zod.union([zod.literal('reps_load'),zod.literal('reps_only'),zod.literal('time'),zod.literal('distance_time'),zod.literal(null)]).nullish()
+})),
+  "method": zod.string(),
+  "name": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "preset": zod.string().optional(),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().optional(),
+  "notes": zod.string().optional()
+}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "programId": zod.uuid().nullish(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
+  "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
+})
+
+export const CreateWorkoutTemplate403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const CreateWorkoutTemplate422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Some das listas e do app do aluno; sessões antigas continuam.
+ * @summary Arquiva o treino
+ */
+export const ArchiveWorkoutParams = zod.object({
+  "workoutId": zod.uuid()
+})
+
+export const ArchiveWorkoutHeader = zod.object({
+  "If-Match": zod.string().describe('"r<revision>" da última leitura')
+})
+
+export const ArchiveWorkout204Response = zod.void()
+
+export const ArchiveWorkout403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ArchiveWorkout412Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Treino com o conteúdo da versão atual
+ */
+export const GetWorkoutParams = zod.object({
+  "workoutId": zod.uuid()
+})
+
+export const GetWorkout200Response = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "exerciseName": zod.string().nullish(),
+  "notes": zod.string().optional(),
+  "primaryMuscle": zod.string().nullish(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})),
+  "trackingType": zod.union([zod.literal('reps_load'),zod.literal('reps_only'),zod.literal('time'),zod.literal('distance_time'),zod.literal(null)]).nullish()
+})),
+  "method": zod.string(),
+  "name": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "preset": zod.string().optional(),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().optional(),
+  "notes": zod.string().optional()
+}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "programId": zod.uuid().nullish(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
+  "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
+})
+
+export const GetWorkout403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const GetWorkout404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * Se a versão atual já foi usada numa sessão, cria versão nova (a sessão continua comparando com o planejado dela); senão, substitui a atual.
+ * @summary Salva o treino inteiro
+ */
+export const SaveWorkoutParams = zod.object({
+  "workoutId": zod.uuid()
+})
+
+export const SaveWorkoutHeader = zod.object({
+  "If-Match": zod.string().describe('"r<revision>" da última leitura')
+})
+
+export const saveWorkoutBodyContentBlocksItemExercisesItemNotesMin = 0;
+export const saveWorkoutBodyContentBlocksItemExercisesItemNotesMax = 500;
+
+export const saveWorkoutBodyContentBlocksItemExercisesItemSetsMin = 0;
+export const saveWorkoutBodyContentBlocksItemExercisesItemSetsMax = 20;
+
+export const saveWorkoutBodyContentBlocksItemExercisesMin = 0;
+export const saveWorkoutBodyContentBlocksItemExercisesMax = 12;
+
+export const saveWorkoutBodyContentBlocksItemNameMin = 0;
+export const saveWorkoutBodyContentBlocksItemNameMax = 80;
+
+export const saveWorkoutBodyContentBlocksItemNotesMin = 0;
+export const saveWorkoutBodyContentBlocksItemNotesMax = 500;
+
+export const saveWorkoutBodyContentBlocksMin = 0;
+export const saveWorkoutBodyContentBlocksMax = 20;
+
+export const saveWorkoutBodyContentGoalMin = 0;
+export const saveWorkoutBodyContentGoalMax = 120;
+
+export const saveWorkoutBodyContentNotesMin = 0;
+export const saveWorkoutBodyContentNotesMax = 1000;
+
+export const saveWorkoutBodyNameMin = 0;
+export const saveWorkoutBodyNameMax = 60;
+
+
+
+export const SaveWorkoutBody = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional().describe('EMOM e AMRAP'),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "notes": zod.string().min(saveWorkoutBodyContentBlocksItemExercisesItemNotesMin).max(saveWorkoutBodyContentBlocksItemExercisesItemNotesMax).optional(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})).min(saveWorkoutBodyContentBlocksItemExercisesItemSetsMin).max(saveWorkoutBodyContentBlocksItemExercisesItemSetsMax).optional()
+})).min(saveWorkoutBodyContentBlocksItemExercisesMin).max(saveWorkoutBodyContentBlocksItemExercisesMax),
+  "method": zod.enum(['sequential', 'superset', 'circuit', 'hiit', 'emom', 'amrap', 'intervals']),
+  "name": zod.string().min(saveWorkoutBodyContentBlocksItemNameMin).max(saveWorkoutBodyContentBlocksItemNameMax).optional(),
+  "notes": zod.string().min(saveWorkoutBodyContentBlocksItemNotesMin).max(saveWorkoutBodyContentBlocksItemNotesMax).optional(),
+  "preset": zod.string().nullish().describe('Só `tabata` (HIIT 20 s/10 s × 8)'),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})).min(saveWorkoutBodyContentBlocksMin).max(saveWorkoutBodyContentBlocksMax),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().min(saveWorkoutBodyContentGoalMin).max(saveWorkoutBodyContentGoalMax).optional(),
+  "notes": zod.string().min(saveWorkoutBodyContentNotesMin).max(saveWorkoutBodyContentNotesMax).optional()
+}),
+  "name": zod.string().min(saveWorkoutBodyNameMin).max(saveWorkoutBodyNameMax)
+})
+
+export const SaveWorkout200Response = zod.object({
+  "content": zod.object({
+  "blocks": zod.array(zod.object({
+  "durationSeconds": zod.int().optional(),
+  "exercises": zod.array(zod.object({
+  "exerciseId": zod.uuid(),
+  "exerciseName": zod.string().nullish(),
+  "notes": zod.string().optional(),
+  "primaryMuscle": zod.string().nullish(),
+  "restSeconds": zod.int().optional(),
+  "sets": zod.array(zod.object({
+  "distanceM": zod.int().optional(),
+  "durationSeconds": zod.int().optional(),
+  "loadKg": zod.number().optional().describe('Carga em kg (até 3 casas)'),
+  "repsMax": zod.int().optional(),
+  "repsMin": zod.int().optional().describe('Faixa: 8 a 12 = repsMin 8, repsMax 12'),
+  "restSeconds": zod.int().optional(),
+  "targetRir": zod.int().optional().describe('Repetições em reserva 0 a 10'),
+  "targetRpe": zod.number().optional().describe('Esforço alvo 0 a 10 (use RPE ou RIR)'),
+  "type": zod.enum(['warmup', 'normal', 'drop', 'rest_pause', 'failure']).optional().describe('Padrão: normal')
+})),
+  "trackingType": zod.union([zod.literal('reps_load'),zod.literal('reps_only'),zod.literal('time'),zod.literal('distance_time'),zod.literal(null)]).nullish()
+})),
+  "method": zod.string(),
+  "name": zod.string().optional(),
+  "notes": zod.string().optional(),
+  "preset": zod.string().optional(),
+  "restBetweenRounds": zod.int().optional(),
+  "restSeconds": zod.int().optional(),
+  "rounds": zod.int().optional(),
+  "workSeconds": zod.int().optional()
+})),
+  "estimatedMinutes": zod.int().optional(),
+  "goal": zod.string().optional(),
+  "notes": zod.string().optional()
+}),
+  "id": zod.uuid(),
+  "name": zod.string(),
+  "programId": zod.uuid().nullish(),
+  "revision": zod.int().describe('Mande em If-Match como "r<revision>"'),
+  "sourceTemplateId": zod.uuid().nullish().describe('Modelo de origem da cópia'),
+  "template": zod.boolean().describe('Modelo (sem programa)'),
+  "versionNumber": zod.int().describe('Sobe quando o treino já tinha sessão')
+})
+
+export const SaveWorkout403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const SaveWorkout412Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const SaveWorkout422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const SaveWorkout428Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')

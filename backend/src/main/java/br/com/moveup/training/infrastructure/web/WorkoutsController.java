@@ -18,7 +18,6 @@ import br.com.moveup.training.application.port.in.ManageWorkouts.WorkoutSummary;
 import br.com.moveup.training.application.port.in.ManageWorkouts.WorkoutView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -310,10 +309,7 @@ class WorkoutsController {
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(operationId = "createWorkoutTemplate", summary = "Cria um modelo de treino")
-  @ApiResponse(
-      responseCode = "201",
-      description = "Modelo criado",
-      headers = @Header(name = HttpHeaders.ETAG, description = "Revisão para o If-Match"))
+  @ApiResponse(responseCode = "201", description = "Modelo criado (cabeçalho ETag com a revisão)")
   @ApiResponse(
       responseCode = "422",
       description = "Regra do treino (`block-empty`, `superset-needs-two`, `exercise-unknown`…)",
@@ -338,10 +334,7 @@ class WorkoutsController {
 
   @GetMapping(path = "/v1/workouts/{workoutId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @Operation(operationId = "getWorkout", summary = "Treino com o conteúdo da versão atual")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Treino",
-      headers = @Header(name = HttpHeaders.ETAG, description = "Revisão para o If-Match"))
+  @ApiResponse(responseCode = "200", description = "Treino (cabeçalho ETag com a revisão)")
   @ApiResponse(
       responseCode = "404",
       description = "`resource-not-found` (inexistente, arquivado ou de outra organização)",
@@ -363,10 +356,7 @@ class WorkoutsController {
       description =
           "Se a versão atual já foi usada numa sessão, cria versão nova (a sessão continua"
               + " comparando com o planejado dela); senão, substitui a atual.")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Treino salvo",
-      headers = @Header(name = HttpHeaders.ETAG, description = "Nova revisão"))
+  @ApiResponse(responseCode = "200", description = "Treino salvo (cabeçalho ETag com a revisão)")
   @ApiResponse(
       responseCode = "412",
       description = "`version-mismatch` (salvo em outro aparelho)",
