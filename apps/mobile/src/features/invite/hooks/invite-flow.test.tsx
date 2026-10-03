@@ -120,6 +120,8 @@ function setup() {
       archive: () => Promise.reject(new Error("fora deste teste")),
     },
     training: {} as Repositories["training"],
+    syncApi: {} as Repositories["syncApi"],
+    plannedStore: {} as Repositories["plannedStore"],
   };
   const queryClient = new QueryClient({
     defaultOptions: {

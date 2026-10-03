@@ -27,10 +27,14 @@ export function useSendPasswordReset() {
 
 /** Sai da conta e limpa todo o cache (nenhum dado do usuário fica na memória). */
 export function useSignOut() {
-  const { session } = useRepositories();
+  const { session, plannedStore } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => session.signOut(),
+    // o treino guardado no aparelho é do aluno que saiu: apaga antes de outra conta entrar
+    mutationFn: async () => {
+      await session.signOut();
+      await plannedStore.clear();
+    },
     onSuccess: () => {
       queryClient.clear();
     },

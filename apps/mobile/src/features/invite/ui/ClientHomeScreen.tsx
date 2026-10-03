@@ -12,6 +12,7 @@ import { TextLink } from "../../../shared/ui/TextLink";
 import { Title } from "../../../shared/ui/Title";
 import { palette, radius, spacing, typography } from "../../../shared/ui/theme";
 import { useAuthState, useMe } from "../../auth";
+import { TodayCard, usePlannedSnapshot, useSyncPlanned } from "../../sync";
 import { currentLink, type MyLink } from "../domain/invite";
 import { useEndMyLink, useMyLinks } from "../hooks/use-invite";
 import { InviteFlow } from "./InviteFlow";
@@ -29,6 +30,9 @@ export function ClientHomeScreen() {
   const auth = useAuthState();
   const me = useMe(auth.status === "signed-in" ? auth.user.uid : null);
   const links = useMyLinks();
+  const planned = usePlannedSnapshot();
+  const sync = useSyncPlanned();
+  const [today] = useState(() => new Date());
   const [welcomed, setWelcomed] = useState<string | null>(null);
   const link = links.data === undefined ? null : currentLink(links.data);
   const name = firstName(me.data?.name);
@@ -95,14 +99,19 @@ export function ClientHomeScreen() {
         refreshing: links.isRefetching,
         onRefresh: () => {
           void links.refetch();
+          sync.mutate();
         },
       }}
     >
-      <EmptyState
-        icon="dumbbell"
-        title={strings.home.emptyTitle}
-        text={strings.home.emptyText(link.professionalName)}
-      />
+      {planned.data?.program != null && planned.data.workouts.length > 0 ? (
+        <TodayCard snapshot={planned.data} date={today} />
+      ) : (
+        <EmptyState
+          icon="dumbbell"
+          title={strings.home.emptyTitle}
+          text={strings.home.emptyText(link.professionalName)}
+        />
+      )}
       <LinkCard link={link} />
     </Screen>
   );

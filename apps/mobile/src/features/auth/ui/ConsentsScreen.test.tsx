@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
+import { createMemoryStore } from "../../sync/data/memory-store";
 import { createFakeAccount } from "../data/fakes/fake-account";
 import { createFakeSession } from "../data/fakes/fake-session";
 import { ConsentsScreen } from "./ConsentsScreen";
@@ -49,6 +50,8 @@ async function renderAs(role: "client" | "professional") {
       updateProgram: unused,
       addProgramWorkout: unused,
     },
+    syncApi: { changesSince: unused },
+    plannedStore: createMemoryStore(),
   };
   const queryClient = new QueryClient({
     defaultOptions: {

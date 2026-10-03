@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
+import { createMemoryStore } from "../../sync/data/memory-store";
 import { FAKE_VERSIONS, createFakeAccount } from "../data/fakes/fake-account";
 import { createFakeSession } from "../data/fakes/fake-session";
 import { useSignOut, useSignUp } from "./use-auth-actions";
@@ -47,6 +48,8 @@ function setup() {
       updateProgram: unused,
       addProgramWorkout: unused,
     },
+    syncApi: { changesSince: unused },
+    plannedStore: createMemoryStore(),
   };
   const queryClient = new QueryClient({
     defaultOptions: {

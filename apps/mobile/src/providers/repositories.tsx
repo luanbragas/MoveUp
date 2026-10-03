@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
+import { Platform } from "react-native";
 import { createAccountApiRepository } from "../features/auth/data/api/account-api";
 import { createMeApiRepository } from "../features/auth/data/api/me-api";
 import type { AccountRepository, MeRepository } from "../features/auth/domain/ports";
@@ -7,6 +8,10 @@ import { createClientsApiRepository } from "../features/clients/data/api/clients
 import type { ClientsRepository } from "../features/clients/domain/ports";
 import { createExercisesApiRepository } from "../features/exercise-library/data/api/exercises-api";
 import type { ExercisesRepository } from "../features/exercise-library/domain/ports";
+import { createSyncApi } from "../features/sync/data/api/sync-api";
+import { createMemoryStore } from "../features/sync/data/memory-store";
+import { createSqliteStore } from "../features/sync/data/sqlite/sqlite-store";
+import type { PlannedStore, SyncApi } from "../features/sync/domain/ports";
 import { createTrainingApiRepository } from "../features/training/data/api/training-api";
 import type { TrainingRepository } from "../features/training/domain/ports";
 import { createInviteApiRepository } from "../features/invite/data/api/invite-api";
@@ -21,6 +26,8 @@ export interface Repositories {
   readonly invite: InviteRepository;
   readonly exercises: ExercisesRepository;
   readonly training: TrainingRepository;
+  readonly syncApi: SyncApi;
+  readonly plannedStore: PlannedStore;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -33,6 +40,9 @@ export function createRepositories(session: AuthSession): Repositories {
     invite: createInviteApiRepository(),
     exercises: createExercisesApiRepository(),
     training: createTrainingApiRepository(),
+    syncApi: createSyncApi(),
+    // web (prévia) não tem SQLite nativo: memória
+    plannedStore: Platform.OS === "web" ? createMemoryStore() : createSqliteStore(),
   };
 }
 
