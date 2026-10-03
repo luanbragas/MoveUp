@@ -4,28 +4,70 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#0A0A0B" />
     <title>MoveUp</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: system-ui, sans-serif;
-      }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        padding: 16px;
-      }
-      main {
-        max-width: 32rem;
-      }
-    </style>
+    <link rel="stylesheet" href="/assets/site.css" />
   </head>
   <body>
     <main>
-      <h1>MoveUp</h1>
-      <p>Treinos do seu personal, no seu bolso. O app está em desenvolvimento.</p>
+      <div class="brand" aria-label="MoveUp">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
+          <path
+            d="M3 11 L13 3 L23 11"
+            stroke="#C6FF3D"
+            stroke-width="4"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M3 19 L13 11 L23 19"
+            stroke="#C6FF3D"
+            stroke-width="4"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            opacity="0.6"
+          />
+        </svg>
+        <b>MOVE<span>UP</span></b>
+      </div>
+
+      <svg class="hero-mark" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+        <path
+          d="M14 50 L60 14 L106 50"
+          stroke="#C6FF3D"
+          stroke-width="19"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M14 76 L60 40 L106 76"
+          stroke="#C6FF3D"
+          stroke-width="19"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.72"
+        />
+        <path
+          d="M14 102 L60 66 L106 102"
+          stroke="#C6FF3D"
+          stroke-width="19"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.44"
+        />
+      </svg>
+
+      <h1>Treino do personal <span class="accent">no seu bolso.</span></h1>
+      <p>
+        O personal monta e acompanha. O aluno treina, registra cada série e vê a evolução, mesmo sem
+        internet na academia.
+      </p>
+      <p class="muted">O app está em desenvolvimento. Em breve na App Store e no Google Play.</p>
     </main>
   </body>
 </html>
