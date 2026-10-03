@@ -93,14 +93,16 @@ Tudo o que as outras fases assumem que já existe.
 
 ## Fase 3 — Execução offline-first · G
 
-- [ ] SQLite (Drizzle) com sessões, exercícios e séries realizados + fila local.
-- [ ] Feature `sync`: envio idempotente (`POST /v1/sync`), recebimento com janela de 2 min e tombstones.
-- [ ] Tela de execução: séries pré-preenchidas, pular/substituir exercício, timer por método (funciona com tela bloqueada).
-- [ ] Modo presencial: profissional executa pelo aluno (`performed_by = professional`).
-- [ ] Finalização: resumo, comparação com a última sessão equivalente, feedback (esforço 0–10) e relato de dor.
-- [ ] Edição de sessão finalizada (`edited_after_finish_at`).
+- [x] SQLite com sessões, exercícios e séries realizados + fila local. *(expo-sqlite direto, sem Drizzle: migrations ordenadas em `shared/lib/local-db.ts`.)*
+- [x] Feature `sync`: envio idempotente (`POST /v1/sync`), recebimento com janela de 2 min e tombstones.
+- [ ] Tela de execução: séries pré-preenchidas, pular/substituir exercício, timer por método (funciona com tela bloqueada). *(Feito, menos o aviso com tela bloqueada: o timer usa carimbo de tempo e está certo ao voltar, mas avisar com a tela bloqueada precisa de `expo-notifications`. Resultado de bloco (`block_result`) ainda não é gravado; rodadas do AMRAP vão nas reps.)*
+- [x] Modo presencial: profissional executa pelo aluno (`performed_by = professional`).
+- [x] Finalização: resumo, comparação com a última sessão equivalente, feedback (esforço 0–10) e relato de dor.
+- [x] Edição de sessão finalizada (`edited_after_finish_at`).
 
 **Pronto quando:** em teste com rede desligada, um treino inteiro é registrado, o app é fechado, a rede volta e tudo chega ao servidor **uma vez só**, inclusive após reenvio forçado.
+
+> Critério atendido nos testes: `SessionSyncEndpointTest` (reenvio contado uma vez, outbox uma vez) e `execution.test.tsx` (sem rede fica pendente no aparelho; a rede volta e vai uma vez; reenviar não duplica). Falta só o aviso do timer com tela bloqueada.
 
 ---
 
