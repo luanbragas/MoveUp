@@ -156,12 +156,12 @@ public class JooqSessions implements Sessions {
   }
 
   @Override
-  public void announceFinished(UUID sessionId, UUID clientId) {
+  public void announce(UUID sessionId, UUID clientId, String eventType) {
     // payload só com ids: dado de saúde nunca vai para evento (CLAUDE.md, regra 7)
     dsl.insertInto(OUTBOX_EVENT)
         .set(OUTBOX_EVENT.AGGREGATE_TYPE, "workout_session")
         .set(OUTBOX_EVENT.AGGREGATE_ID, sessionId)
-        .set(OUTBOX_EVENT.TYPE, "session.finished")
+        .set(OUTBOX_EVENT.TYPE, eventType)
         .set(
             OUTBOX_EVENT.PAYLOAD,
             JSONB.valueOf(

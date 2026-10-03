@@ -23,6 +23,8 @@ public final class PostgresTestDatabase {
   private static final String DATABASE = "moveup";
   private static final String API_USER = "app_api";
   private static final String API_PASSWORD = "test-only-api";
+  private static final String WORKER_USER = "app_worker";
+  private static final String WORKER_PASSWORD = "test-only-worker";
 
   @SuppressWarnings("resource") // vive até o fim da JVM de testes (Ryuk derruba o container)
   private static final PostgreSQLContainer CONTAINER =
@@ -66,7 +68,8 @@ public final class PostgresTestDatabase {
       st.execute("create role " + OWNER + " login password '" + OWNER_PASSWORD + "'");
       // app_api com login: os testes de ponta a ponta conectam a aplicação como em produção
       st.execute("create role app_api login password '" + API_PASSWORD + "' nobypassrls");
-      st.execute("create role app_worker nologin nobypassrls");
+      // app_worker com login: os testes do worker conectam como ele (RLS de produção)
+      st.execute("create role app_worker login password '" + WORKER_PASSWORD + "' nobypassrls");
       st.execute("create role app_report nologin nobypassrls");
       st.execute("create database " + DATABASE + " owner " + OWNER);
     } catch (SQLException e) {
@@ -103,6 +106,18 @@ public final class PostgresTestDatabase {
     registry.add("spring.datasource.url", PostgresTestDatabase::jdbcUrl);
     registry.add("spring.datasource.username", PostgresTestDatabase::apiUser);
     registry.add("spring.datasource.password", PostgresTestDatabase::apiPassword);
+    // cada contexto do Spring guardado em cache segura o seu pool: pequeno para não esgotar o
+    // max_connections do Postgres de teste com vários contextos vivos
+    registry.add("spring.datasource.hikari.maximum-pool-size", () -> "4");
+    registry.add("spring.datasource.hikari.minimum-idle", () -> "0");
+  }
+
+  public static String workerUser() {
+    return WORKER_USER;
+  }
+
+  public static String workerPassword() {
+    return WORKER_PASSWORD;
   }
 
   public static String apiUser() {

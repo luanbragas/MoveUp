@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 public class SyncSessionsUseCase implements SyncSessions {
 
+  public static final String SESSION_FINISHED = "session.finished";
+  public static final String SESSION_EDITED = "session.edited";
+
   private final AccountDirectory accounts;
   private final LinkDirectory links;
   private final Sessions sessions;
@@ -53,7 +56,10 @@ public class SyncSessionsUseCase implements SyncSessions {
       }
       sessions.write(session, link.clientId(), userId, outcome.editedAfterFinish());
       if (outcome.justFinished()) {
-        sessions.announceFinished(session.id(), link.clientId());
+        sessions.announce(session.id(), link.clientId(), SESSION_FINISHED);
+      } else if (outcome.editedAfterFinish()) {
+        // recordes recalculados e o personal avisado da correção (Fase 4)
+        sessions.announce(session.id(), link.clientId(), SESSION_EDITED);
       }
       written.add(session.id());
     }

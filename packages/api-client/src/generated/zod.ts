@@ -83,6 +83,218 @@ export const RegisterAccount422Response = zod.object({
 
 
 /**
+ * @summary Configurações de alerta (com padrões)
+ */
+export const GetAlertSettings200ResponseItem = zod.object({
+  "enabled": zod.boolean(),
+  "push": zod.boolean(),
+  "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+})
+export const GetAlertSettings200Response = zod.array(GetAlertSettings200ResponseItem)
+
+export const GetAlertSettings403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Altera configurações de alerta
+ */
+export const updateAlertSettingsBodySettingsMin = 0;
+export const updateAlertSettingsBodySettingsMax = 20;
+
+
+
+export const UpdateAlertSettingsBody = zod.object({
+  "settings": zod.array(zod.object({
+  "enabled": zod.boolean(),
+  "push": zod.boolean(),
+  "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+})).min(updateAlertSettingsBodySettingsMin).max(updateAlertSettingsBodySettingsMax)
+})
+
+export const UpdateAlertSettings200ResponseItem = zod.object({
+  "enabled": zod.boolean(),
+  "push": zod.boolean(),
+  "threshold": zod.int().optional().describe('inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite'),
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+})
+export const UpdateAlertSettings200Response = zod.array(UpdateAlertSettings200ResponseItem)
+
+export const UpdateAlertSettings403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const UpdateAlertSettings422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * status: open (padrão; inclui adiados vencidos), snoozed ou resolved.
+ * @summary Alertas do profissional (mais novos primeiro)
+ */
+export const listAlertsQueryLimitDefault = 30;
+
+export const ListAlertsQueryParams = zod.object({
+  "status": zod.string().optional(),
+  "before": zod.uuid().optional(),
+  "limit": zod.int().default(listAlertsQueryLimitDefault)
+})
+
+export const ListAlerts200Response = zod.object({
+  "items": zod.array(zod.object({
+  "clientId": zod.uuid(),
+  "clientName": zod.string().optional(),
+  "createdAt": zod.iso.datetime({"offset":true}),
+  "facts": zod.record(zod.string(), zod.int()).describe('Só números: days, percent, planned, done, effort, count'),
+  "id": zod.uuid(),
+  "linkId": zod.uuid().optional().describe('Vínculo atual do aluno com o profissional'),
+  "severity": zod.enum(['info', 'warning', 'urgent']),
+  "snoozedUntil": zod.iso.datetime({"offset":true}).optional(),
+  "status": zod.enum(['open', 'snoozed', 'resolved']),
+  "type": zod.enum(['pain_reported', 'high_effort', 'new_feedback', 'session_edited', 'inactive', 'low_adherence'])
+})),
+  "next": zod.uuid().optional().describe('Cursor da próxima página (ausente no fim)'),
+  "openCount": zod.int().describe('Abertos no total (badge)')
+})
+
+export const ListAlerts403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Marca o alerta como resolvido
+ */
+export const ResolveAlertParams = zod.object({
+  "alertId": zod.uuid()
+})
+
+export const ResolveAlert204Response = zod.void()
+
+export const ResolveAlert403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const ResolveAlert404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Adia o alerta por alguns dias
+ */
+export const SnoozeAlertParams = zod.object({
+  "alertId": zod.uuid()
+})
+
+export const SnoozeAlertBody = zod.object({
+  "days": zod.int().describe('1 a 30')
+})
+
+export const SnoozeAlert204Response = zod.void()
+
+export const SnoozeAlert403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const SnoozeAlert422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
  * Pendentes, ativos e inativos, do mais novo ao mais antigo, por cursor.
  * @summary Alunos do profissional
  */
@@ -1393,6 +1605,82 @@ export const AddProgramWorkout201Response = zod.object({
 })
 
 export const AddProgramWorkout404Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Registra o aparelho para push
+ */
+export const registerPushDeviceBodyTokenMin = 0;
+export const registerPushDeviceBodyTokenMax = 200;
+
+
+
+export const RegisterPushDeviceBody = zod.object({
+  "platform": zod.enum(['ios', 'android']),
+  "token": zod.string().min(registerPushDeviceBodyTokenMin).max(registerPushDeviceBodyTokenMax).describe('ExponentPushToken[...]')
+})
+
+export const RegisterPushDevice204Response = zod.void()
+
+export const RegisterPushDevice403Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+export const RegisterPushDevice422Response = zod.object({
+  "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
+  "detail": zod.string(),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "field": zod.string(),
+  "message": zod.string()
+})).optional().describe('Só em erros de validação (400)'),
+  "instance": zod.string().optional(),
+  "status": zod.int(),
+  "title": zod.string(),
+  "traceId": zod.string(),
+  "type": zod.string()
+}).describe('Erro no formato RFC 9457 (application/problem+json)')
+
+
+/**
+ * @summary Tira o aparelho do push (ao sair da conta)
+ */
+export const removePushDeviceBodyTokenMin = 0;
+export const removePushDeviceBodyTokenMax = 200;
+
+
+
+export const RemovePushDeviceBody = zod.object({
+  "token": zod.string().min(removePushDeviceBodyTokenMin).max(removePushDeviceBodyTokenMax)
+})
+
+export const RemovePushDevice204Response = zod.void()
+
+export const RemovePushDevice403Response = zod.object({
   "code": zod.string().describe('Código estável (kebab-case) que o app usa para escolher a mensagem'),
   "detail": zod.string(),
   "errors": zod.array(zod.object({

@@ -1,5 +1,11 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Platform } from "react-native";
+import { createAlertsApiRepository } from "../features/alerts/data/api/alerts-api";
+import {
+  createExpoPushTokenSource,
+  createNoPushTokenSource,
+} from "../features/alerts/data/push-token";
+import type { AlertsRepository, PushTokenSource } from "../features/alerts/domain/ports";
 import { createAccountApiRepository } from "../features/auth/data/api/account-api";
 import { createMeApiRepository } from "../features/auth/data/api/me-api";
 import type { AccountRepository, MeRepository } from "../features/auth/domain/ports";
@@ -43,6 +49,8 @@ export interface Repositories {
   readonly sessionSyncApi: SessionSyncApi;
   readonly restAlarm: RestAlarm;
   readonly workoutDrafts: WorkoutDraftStore;
+  readonly alerts: AlertsRepository;
+  readonly pushTokens: PushTokenSource;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -62,6 +70,8 @@ export function createRepositories(session: AuthSession): Repositories {
     sessionSyncApi: createSessionSyncApi(),
     restAlarm: Platform.OS === "web" ? createNoRestAlarm() : createRestAlarm(),
     workoutDrafts: Platform.OS === "web" ? createMemoryDraftStore() : createSqliteDraftStore(),
+    alerts: createAlertsApiRepository(),
+    pushTokens: Platform.OS === "web" ? createNoPushTokenSource() : createExpoPushTokenSource(),
   };
 }
 

@@ -10,6 +10,101 @@ export interface AcceptedInvite {
   linkId: string;
 }
 
+/**
+ * Só números: days, percent, planned, done, effort, count
+ */
+export type AlertItemFacts = {[key: string]: number};
+
+export type AlertItemSeverity = typeof AlertItemSeverity[keyof typeof AlertItemSeverity];
+
+
+export const AlertItemSeverity = {
+  info: 'info',
+  warning: 'warning',
+  urgent: 'urgent',
+} as const;
+
+export type AlertItemStatus = typeof AlertItemStatus[keyof typeof AlertItemStatus];
+
+
+export const AlertItemStatus = {
+  open: 'open',
+  snoozed: 'snoozed',
+  resolved: 'resolved',
+} as const;
+
+export type AlertItemType = typeof AlertItemType[keyof typeof AlertItemType];
+
+
+export const AlertItemType = {
+  pain_reported: 'pain_reported',
+  high_effort: 'high_effort',
+  new_feedback: 'new_feedback',
+  session_edited: 'session_edited',
+  inactive: 'inactive',
+  low_adherence: 'low_adherence',
+} as const;
+
+export interface AlertItem {
+  clientId: string;
+  clientName?: string;
+  createdAt: string;
+  /** Só números: days, percent, planned, done, effort, count */
+  facts: AlertItemFacts;
+  id: string;
+  /** Vínculo atual do aluno com o profissional */
+  linkId?: string;
+  severity: AlertItemSeverity;
+  snoozedUntil?: string;
+  status: AlertItemStatus;
+  type: AlertItemType;
+}
+
+export interface AlertPage {
+  items: AlertItem[];
+  /** Cursor da próxima página (ausente no fim) */
+  next?: string;
+  /** Abertos no total (badge) */
+  openCount: number;
+}
+
+/**
+ * @minLength 1
+ */
+export type AlertSettingType = typeof AlertSettingType[keyof typeof AlertSettingType];
+
+
+export const AlertSettingType = {
+  pain_reported: 'pain_reported',
+  high_effort: 'high_effort',
+  new_feedback: 'new_feedback',
+  session_edited: 'session_edited',
+  inactive: 'inactive',
+  low_adherence: 'low_adherence',
+} as const;
+
+export interface AlertSetting {
+  enabled: boolean;
+  push: boolean;
+  /** inactive: dias sem treinar (2–60); high_effort: esforço (5–10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite */
+  threshold?: number;
+  /** @minLength 1 */
+  type: AlertSettingType;
+}
+
+export interface AlertSettingsUpdate {
+  /**
+     * @minItems 0
+     * @maxItems 20
+     */
+  settings: AlertSetting[];
+}
+
+export interface AlertSnooze {
+  /** 1 a 30 */
+  days: number;
+}
+
 export interface BlockResultInput {
   /** Posição do bloco na versão do treino (0…) */
   blockIndex: number;
@@ -836,6 +931,36 @@ export interface ProgramUpdate {
 
 /**
  * @minLength 1
+ */
+export type PushDevicePlatform = typeof PushDevicePlatform[keyof typeof PushDevicePlatform];
+
+
+export const PushDevicePlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface PushDevice {
+  /** @minLength 1 */
+  platform: PushDevicePlatform;
+  /**
+     * ExponentPushToken[...]
+     * @minLength 0
+     * @maxLength 200
+     */
+  token: string;
+}
+
+export interface PushDeviceRemoval {
+  /**
+     * @minLength 0
+     * @maxLength 200
+     */
+  token: string;
+}
+
+/**
+ * @minLength 1
  * @pattern professional|client
  */
 export type RegisterAccountRole = typeof RegisterAccountRole[keyof typeof RegisterAccountRole];
@@ -1058,6 +1183,12 @@ export interface WorkoutWrite {
   name: string;
 }
 
+export type ListAlertsParams = {
+status?: string;
+before?: string;
+limit?: number;
+};
+
 export type ListClientsParams = {
 cursor?: string;
 limit?: number;
@@ -1155,6 +1286,273 @@ return apiFetch<registerAccountResponse>(getRegisterAccountUrl(),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(registerAccountBody)
+  }
+);}
+
+
+
+export type getAlertSettingsResponse200 = {
+  data: AlertSetting[]
+  status: 200
+}
+
+export type getAlertSettingsResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type getAlertSettingsResponseSuccess = (getAlertSettingsResponse200) & {
+  headers: Headers;
+};
+export type getAlertSettingsResponseError = (getAlertSettingsResponse403) & {
+  headers: Headers;
+};
+
+export type getAlertSettingsResponse = (getAlertSettingsResponseSuccess | getAlertSettingsResponseError)
+
+export const getGetAlertSettingsUrl = () => {
+
+
+
+
+  return `/v1/alert-settings`
+}
+
+/**
+ * @summary Configurações de alerta (com padrões)
+ */
+export const getAlertSettings = async ( options?: Parameters<typeof apiFetch>[1]): Promise<getAlertSettingsResponse> => {
+
+  return apiFetch<getAlertSettingsResponse>(getGetAlertSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type updateAlertSettingsResponse200 = {
+  data: AlertSetting[]
+  status: 200
+}
+
+export type updateAlertSettingsResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type updateAlertSettingsResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type updateAlertSettingsResponseSuccess = (updateAlertSettingsResponse200) & {
+  headers: Headers;
+};
+export type updateAlertSettingsResponseError = (updateAlertSettingsResponse403 | updateAlertSettingsResponse422) & {
+  headers: Headers;
+};
+
+export type updateAlertSettingsResponse = (updateAlertSettingsResponseSuccess | updateAlertSettingsResponseError)
+
+export const getUpdateAlertSettingsUrl = () => {
+
+
+
+
+  return `/v1/alert-settings`
+}
+
+/**
+ * @summary Altera configurações de alerta
+ */
+export const updateAlertSettings = async (alertSettingsUpdate: AlertSettingsUpdate, options?: Parameters<typeof apiFetch>[1]): Promise<updateAlertSettingsResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<updateAlertSettingsResponse>(getUpdateAlertSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alertSettingsUpdate)
+  }
+);}
+
+
+
+export type listAlertsResponse200 = {
+  data: AlertPage
+  status: 200
+}
+
+export type listAlertsResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type listAlertsResponseSuccess = (listAlertsResponse200) & {
+  headers: Headers;
+};
+export type listAlertsResponseError = (listAlertsResponse403) & {
+  headers: Headers;
+};
+
+export type listAlertsResponse = (listAlertsResponseSuccess | listAlertsResponseError)
+
+export const getListAlertsUrl = (params?: ListAlertsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/alerts?${stringifiedParams}` : `/v1/alerts`
+}
+
+/**
+ * status: open (padrão; inclui adiados vencidos), snoozed ou resolved.
+ * @summary Alertas do profissional (mais novos primeiro)
+ */
+export const listAlerts = async (params?: ListAlertsParams, options?: Parameters<typeof apiFetch>[1]): Promise<listAlertsResponse> => {
+
+  return apiFetch<listAlertsResponse>(getListAlertsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+export type resolveAlertResponse204 = {
+  data: void
+  status: 204
+}
+
+export type resolveAlertResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type resolveAlertResponse404 = {
+  data: Problem
+  status: 404
+}
+
+export type resolveAlertResponseSuccess = (resolveAlertResponse204) & {
+  headers: Headers;
+};
+export type resolveAlertResponseError = (resolveAlertResponse403 | resolveAlertResponse404) & {
+  headers: Headers;
+};
+
+export type resolveAlertResponse = (resolveAlertResponseSuccess | resolveAlertResponseError)
+
+export const getResolveAlertUrl = (alertId: string,) => {
+
+
+
+
+  return `/v1/alerts/${alertId}/resolve`
+}
+
+/**
+ * @summary Marca o alerta como resolvido
+ */
+export const resolveAlert = async (alertId: string, options?: Parameters<typeof apiFetch>[1]): Promise<resolveAlertResponse> => {
+
+  return apiFetch<resolveAlertResponse>(getResolveAlertUrl(alertId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+export type snoozeAlertResponse204 = {
+  data: void
+  status: 204
+}
+
+export type snoozeAlertResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type snoozeAlertResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type snoozeAlertResponseSuccess = (snoozeAlertResponse204) & {
+  headers: Headers;
+};
+export type snoozeAlertResponseError = (snoozeAlertResponse403 | snoozeAlertResponse422) & {
+  headers: Headers;
+};
+
+export type snoozeAlertResponse = (snoozeAlertResponseSuccess | snoozeAlertResponseError)
+
+export const getSnoozeAlertUrl = (alertId: string,) => {
+
+
+
+
+  return `/v1/alerts/${alertId}/snooze`
+}
+
+/**
+ * @summary Adia o alerta por alguns dias
+ */
+export const snoozeAlert = async (alertId: string,
+    alertSnooze: AlertSnooze, options?: Parameters<typeof apiFetch>[1]): Promise<snoozeAlertResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<snoozeAlertResponse>(getSnoozeAlertUrl(alertId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alertSnooze)
   }
 );}
 
@@ -2674,6 +3072,125 @@ return apiFetch<addProgramWorkoutResponse>(getAddProgramWorkoutUrl(programId),
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(newProgramWorkout)
+  }
+);}
+
+
+
+export type registerPushDeviceResponse204 = {
+  data: void
+  status: 204
+}
+
+export type registerPushDeviceResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type registerPushDeviceResponse422 = {
+  data: Problem
+  status: 422
+}
+
+export type registerPushDeviceResponseSuccess = (registerPushDeviceResponse204) & {
+  headers: Headers;
+};
+export type registerPushDeviceResponseError = (registerPushDeviceResponse403 | registerPushDeviceResponse422) & {
+  headers: Headers;
+};
+
+export type registerPushDeviceResponse = (registerPushDeviceResponseSuccess | registerPushDeviceResponseError)
+
+export const getRegisterPushDeviceUrl = () => {
+
+
+
+
+  return `/v1/push-devices`
+}
+
+/**
+ * @summary Registra o aparelho para push
+ */
+export const registerPushDevice = async (pushDevice: PushDevice, options?: Parameters<typeof apiFetch>[1]): Promise<registerPushDeviceResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<registerPushDeviceResponse>(getRegisterPushDeviceUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushDevice)
+  }
+);}
+
+
+
+export type removePushDeviceResponse204 = {
+  data: void
+  status: 204
+}
+
+export type removePushDeviceResponse403 = {
+  data: Problem
+  status: 403
+}
+
+export type removePushDeviceResponseSuccess = (removePushDeviceResponse204) & {
+  headers: Headers;
+};
+export type removePushDeviceResponseError = (removePushDeviceResponse403) & {
+  headers: Headers;
+};
+
+export type removePushDeviceResponse = (removePushDeviceResponseSuccess | removePushDeviceResponseError)
+
+export const getRemovePushDeviceUrl = () => {
+
+
+
+
+  return `/v1/push-devices/remove`
+}
+
+/**
+ * @summary Tira o aparelho do push (ao sair da conta)
+ */
+export const removePushDevice = async (pushDeviceRemoval: PushDeviceRemoval, options?: Parameters<typeof apiFetch>[1]): Promise<removePushDeviceResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<removePushDeviceResponse>(getRemovePushDeviceUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushDeviceRemoval)
   }
 );}
 

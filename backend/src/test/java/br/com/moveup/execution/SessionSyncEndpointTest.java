@@ -163,7 +163,19 @@ class SessionSyncEndpointTest {
             single(
                 "select edited_after_finish_at is not null from workout_session where id = ?", id))
         .isEqualTo(true);
-    assertThat(count("select count(*) from outbox_event where aggregate_id = ?", id)).isEqualTo(1);
+    // um aviso de fim e um de correção (recordes refeitos, personal avisado)
+    assertThat(
+            count(
+                "select count(*) from outbox_event where aggregate_id = ? and type ="
+                    + " 'session.finished'",
+                id))
+        .isEqualTo(1);
+    assertThat(
+            count(
+                "select count(*) from outbox_event where aggregate_id = ? and type ="
+                    + " 'session.edited'",
+                id))
+        .isEqualTo(1);
   }
 
   @Test

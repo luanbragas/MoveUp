@@ -19,6 +19,8 @@ tags:
   name: workouts
 - description: Convite do ponto de vista do aluno
   name: invites
+- description: Central de atenção do profissional e push
+  name: alerts
 - description: Autorização do responsável pelo menor
   name: guardian-authorizations
 - description: Alunos e vínculos do profissional
@@ -64,6 +66,160 @@ paths:
       summary: Cria a conta do usuário logado
       tags:
       - accounts
+  /v1/alert-settings:
+    get:
+      operationId: getAlertSettings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertSetting"
+          description: Uma por tipo
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Configurações de alerta (com padrões)
+      tags:
+      - alerts
+    put:
+      operationId: updateAlertSettings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertSettingsUpdate"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlertSetting"
+          description: Todas as configurações depois da mudança
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`threshold-invalid`, `alert-type-invalid`"
+      summary: Altera configurações de alerta
+      tags:
+      - alerts
+  /v1/alerts:
+    get:
+      description: "status: open (padrão; inclui adiados vencidos), snoozed ou resolved."
+      operationId: listAlerts
+      parameters:
+      - in: query
+        name: status
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: before
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 30
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertPage"
+          description: Uma página de alertas
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Alertas do profissional (mais novos primeiro)
+      tags:
+      - alerts
+  /v1/alerts/{alertId}/resolve:
+    post:
+      operationId: resolveAlert
+      parameters:
+      - in: path
+        name: alertId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "204":
+          description: Resolvido (repetir não muda nada)
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: '`resource-not-found`'
+      summary: Marca o alerta como resolvido
+      tags:
+      - alerts
+  /v1/alerts/{alertId}/snooze:
+    post:
+      operationId: snoozeAlert
+      parameters:
+      - in: path
+        name: alertId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertSnooze"
+        required: true
+      responses:
+        "204":
+          description: Adiado
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`snooze-invalid`, `alert-resolved`"
+      summary: Adia o alerta por alguns dias
+      tags:
+      - alerts
   /v1/clients:
     get:
       description: "Pendentes, ativos e inativos, do mais novo ao mais antigo, por\
@@ -941,6 +1097,54 @@ paths:
       summary: Adiciona um treino ao programa
       tags:
       - programs
+  /v1/push-devices:
+    put:
+      operationId: registerPushDevice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushDevice"
+        required: true
+      responses:
+        "204":
+          description: Registrado (repetir atualiza)
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: "`push-token-invalid`, `platform-invalid`"
+      summary: Registra o aparelho para push
+      tags:
+      - alerts
+  /v1/push-devices/remove:
+    post:
+      operationId: removePushDevice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushDeviceRemoval"
+        required: true
+      responses:
+        "204":
+          description: Removido (ou já não existia)
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+          description: Conta não é de profissional (`forbidden`)
+      summary: Tira o aparelho do push (ao sair da conta)
+      tags:
+      - alerts
   /v1/sync:
     get:
       description: "Programas (com treinos e agenda) alterados desde o cursor, com\
@@ -1190,6 +1394,126 @@ components:
           format: uuid
       required:
       - linkId
+    AlertItem:
+      type: object
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        clientName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        facts:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int32
+          description: "Só números: days, percent, planned, done, effort, count"
+        id:
+          type: string
+          format: uuid
+        linkId:
+          type: string
+          format: uuid
+          description: Vínculo atual do aluno com o profissional
+        severity:
+          type: string
+          enum:
+          - info
+          - warning
+          - urgent
+        snoozedUntil:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - open
+          - snoozed
+          - resolved
+        type:
+          type: string
+          enum:
+          - pain_reported
+          - high_effort
+          - new_feedback
+          - session_edited
+          - inactive
+          - low_adherence
+      required:
+      - clientId
+      - createdAt
+      - facts
+      - id
+      - severity
+      - status
+      - type
+    AlertPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertItem"
+        next:
+          type: string
+          format: uuid
+          description: Cursor da próxima página (ausente no fim)
+        openCount:
+          type: integer
+          format: int32
+          description: Abertos no total (badge)
+      required:
+      - items
+      - openCount
+    AlertSetting:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        push:
+          type: boolean
+        threshold:
+          type: integer
+          format: int32
+          description: "inactive: dias sem treinar (2–60); high_effort: esforço (5–\
+            10); low_adherence: % mínima (10–100). Ausente nos tipos sem limite"
+        type:
+          type: string
+          enum:
+          - pain_reported
+          - high_effort
+          - new_feedback
+          - session_edited
+          - inactive
+          - low_adherence
+          minLength: 1
+      required:
+      - enabled
+      - push
+      - type
+    AlertSettingsUpdate:
+      type: object
+      properties:
+        settings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlertSetting"
+          maxItems: 20
+          minItems: 0
+      required:
+      - settings
+    AlertSnooze:
+      type: object
+      properties:
+        days:
+          type: integer
+          format: int32
+          description: 1 a 30
+      required:
+      - days
     BlockResultInput:
       type: object
       properties:
@@ -2228,6 +2552,32 @@ components:
       - name
       - position
       - weekdays
+    PushDevice:
+      type: object
+      properties:
+        platform:
+          type: string
+          enum:
+          - ios
+          - android
+          minLength: 1
+        token:
+          type: string
+          description: "ExponentPushToken[...]"
+          maxLength: 200
+          minLength: 0
+      required:
+      - platform
+      - token
+    PushDeviceRemoval:
+      type: object
+      properties:
+        token:
+          type: string
+          maxLength: 200
+          minLength: 0
+      required:
+      - token
     RegisterAccount:
       type: object
       properties:

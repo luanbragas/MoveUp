@@ -6,3 +6,8 @@ spring:
   datasource:
     username: ${DB_WORKER_USER:app_worker}
     password: ${DB_WORKER_PASSWORD}
+
+db-scheduler:
+  enabled: true
+  threads: 2
+  polling-interval: PT10S

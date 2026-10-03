@@ -102,6 +102,13 @@ public final class Titles {
           Map.entry("exercise-invalid", "Exercício da sessão inválido"),
           Map.entry("pain-invalid", "Relato de dor inválido"),
           Map.entry("block-result-invalid", "Resultado de bloco inválido"),
+          Map.entry("threshold-invalid", "Limite do alerta inválido"),
+          Map.entry("alert-type-invalid", "Tipo de alerta desconhecido"),
+          Map.entry("alert-status-invalid", "Filtro de alertas inválido"),
+          Map.entry("snooze-invalid", "Prazo para adiar inválido"),
+          Map.entry("alert-resolved", "Alerta já resolvido"),
+          Map.entry("platform-invalid", "Plataforma inválida"),
+          Map.entry("push-token-invalid", "Token de push inválido"),
           Map.entry("comment-invalid", "Comentário inválido"),
           Map.entry("sync-too-big", "Lote de sincronização grande demais"),
           Map.entry("internal-error", "Erro inesperado"));

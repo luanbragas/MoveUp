@@ -15,6 +15,6 @@ public interface Sessions {
   void write(
       PerformedSession session, UUID clientId, UUID performedByUser, boolean editedAfterFinish);
 
-  /** Aviso para o worker (Fase 4): só ids, nunca dado de saúde. */
-  void announceFinished(UUID sessionId, UUID clientId);
+  /** Aviso para o worker ({@code session.finished}, {@code session.edited}): só ids. */
+  void announce(UUID sessionId, UUID clientId, String eventType);
 }

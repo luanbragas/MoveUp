@@ -108,14 +108,16 @@ Tudo o que as outras fases assumem que já existe.
 
 ## Fase 4 — Worker, recordes e alertas · M
 
-- [ ] Poller do outbox (`FOR UPDATE SKIP LOCKED`, backoff, `last_error`) e db-scheduler para jobs recorrentes.
-- [ ] Recordes pessoais com histórico (`is_current`), recalculados quando a sessão é editada.
-- [ ] Alertas por evento (dor, feedback, esforço alto, sessão editada) e por job diário (inatividade, adesão, avaliação atrasada, liberação pendente), com deduplicação.
-- [ ] Central de atenção no app do profissional (resolver, adiar) e configurações de alerta.
-- [ ] Push com texto neutro (Expo Push) e registro de `push_device`.
-- [ ] Adesão calculada a partir da agenda.
+- [x] Poller do outbox (`FOR UPDATE SKIP LOCKED`, backoff, `last_error`) e db-scheduler para jobs recorrentes. *(Um evento por transação, junto com os efeitos no banco; `last_error` guarda só o tipo do erro. db-scheduler 16.12 (starter do Boot 4): alertas diários às 7h e limpezas.)*
+- [x] Recordes pessoais com histórico (`is_current`), recalculados quando a sessão é editada. *(Cálculo determinístico refeito a partir das séries; a correção publica `session.edited`. Ainda não aparecem no app: entram com a evolução do aluno.)*
+- [ ] Alertas por evento (dor, feedback, esforço alto, sessão editada) e por job diário (inatividade, adesão, avaliação atrasada, liberação pendente), com deduplicação. *(Feito (03/10/2026): dor, comentário, esforço alto, sessão editada, inatividade e adesão, com deduplicação e resolução automática quando deixa de valer. Faltam avaliação atrasada e liberação pendente, que dependem das Fases 7 e 5.)*
+- [x] Central de atenção no app do profissional (resolver, adiar) e configurações de alerta.
+- [ ] Push com texto neutro (Expo Push) e registro de `push_device`. *(Código feito (03/10/2026): fila `push_message` com no máximo uma entrega (marcada `sending` antes de chamar o Expo; se o worker cair no meio, vira `failed` sem reenviar), token removido quando o Expo avisa, registro e remoção do aparelho no app. Falta o primeiro build EAS: o token de push exige o `projectId` do EAS e não funciona no Expo Go.)*
+- [x] Adesão calculada a partir da agenda. *(Dias fixos: cada treino agendado no dia conta; sequência: meta semanal proporcional. Usada no alerta de adesão baixa (14 dias).)*
 
 **Pronto quando:** derrubar o worker no meio do processamento e religar não perde nem duplica PR, alerta ou push.
+
+> Critério atendido nos testes (`WorkerPipelineTest`, worker como `app_worker`): a falha no meio desfaz recordes e alertas e o evento é refeito uma vez só; reentregar o mesmo evento não muda nada; push preso no envio não é reenviado. Push é "no máximo uma vez": se o worker cair entre a chamada ao Expo e a confirmação, aquele aviso se perde em vez de duplicar (texto neutro; a central continua com o alerta).
 
 ---
 

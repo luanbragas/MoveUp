@@ -25,6 +25,7 @@
     <jacoco.version>0.8.15</jacoco.version>
     <archunit.version>1.5.1</archunit.version>
     <springdoc.version>3.1.1</springdoc.version>
+    <db-scheduler.version>16.12.0</db-scheduler.version>
     <!-- -Dopenapi.update=true regrava backend/openapi/openapi.yaml (OpenApiContractTest) -->
     <openapi.update>false</openapi.update>
     <postgres.image>postgres:16-alpine</postgres.image>
@@ -103,6 +104,12 @@
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <!-- Jobs recorrentes do worker com trava no banco (uma execução por vez entre instâncias) -->
+    <dependency>
+      <groupId>com.github.kagkarlsson</groupId>
+      <artifactId>db-scheduler-spring-boot-4-starter</artifactId>
+      <version>${db-scheduler.version}</version>
     </dependency>
 
     <!-- Testes -->

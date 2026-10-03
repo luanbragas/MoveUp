@@ -21,6 +21,10 @@ spring:
   flyway:
     enabled: false
 
+# Jobs recorrentes: só o perfil worker liga (a API não roda tarefas).
+db-scheduler:
+  enabled: false
+
 server:
   error:
     include-stacktrace: never
@@ -60,6 +64,16 @@ moveup:
     link-base-url: https://moveup-site.pages.dev/autorizar/
     # Origens que podem chamar /v1/guardian-authorizations do navegador (CORS).
     allowed-origins: https://moveup-site.pages.dev
+  worker:
+    # Laço do outbox: lote por vez e espera quando a fila esvazia.
+    outbox-batch: 20
+    outbox-idle: PT1S
+    push-batch: 50
+    # Push preso em 'sending' por mais que isto (worker caiu no meio) vira 'failed', sem reenviar.
+    push-stale-after: PT10M
+    expo-push-url: https://exp.host/--/api/v2/push/send
+    # Fuso dos jobs diários (inatividade, adesão)
+    zone: America/Sao_Paulo
   auth:
     firebase:
       # Id do projeto do Firebase: o token precisa ter aud = este id e iss = securetoken.google.com/<id>

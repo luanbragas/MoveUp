@@ -35,7 +35,8 @@ export class PendingSessionsError extends Error {
 }
 
 export function useSignOut() {
-  const { session, plannedStore, sessionStore, sessionSyncApi, workoutDrafts } = useRepositories();
+  const { session, plannedStore, sessionStore, sessionSyncApi, workoutDrafts, alerts, pushTokens } =
+    useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
     // o que está no aparelho é de quem saiu: envia o treino pendente e apaga tudo antes de outra
@@ -48,6 +49,15 @@ export function useSignOut() {
         } catch {
           throw new PendingSessionsError();
         }
+      }
+      // o aparelho para de receber push desta conta (melhor esforço: sem rede, o token expira)
+      try {
+        const device = await pushTokens.current(false);
+        if (device !== null) {
+          await alerts.removeDevice(device.token);
+        }
+      } catch {
+        // segue saindo
       }
       await session.signOut();
       await plannedStore.clear();

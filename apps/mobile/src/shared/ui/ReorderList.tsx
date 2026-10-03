@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Animated, PanResponder, Vibration, View } from "react-native";
+import { Animated, PanResponder, View } from "react-native";
 
 interface Layout {
   readonly y: number;
@@ -120,7 +120,6 @@ export function ReorderList<T>({
         g().from = index;
         g().granted = false;
         g().setDrag({ from: index, to: index, step });
-        Vibration.vibrate(15);
         g().onDragChange?.(true);
       },
       cancel() {
