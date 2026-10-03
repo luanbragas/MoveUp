@@ -28,12 +28,23 @@ interface Props {
   readonly header?: ReactNode;
   /** Ações fixas embaixo (botão principal, link): ficam fora da rolagem e acima do teclado. */
   readonly footer?: ReactNode;
+  /** Falso enquanto um item é arrastado (a rolagem não pode roubar o gesto). */
+  readonly scrollEnabled?: boolean;
 }
 
 const OFFLINE = "Sem internet. Mostrando os últimos dados salvos.";
 
 /** Tela base: área segura, rolagem, teclado sem cobrir os campos e rodapé fixo opcional. */
-export function Screen({ title, titleAccent, subtitle, children, refresh, header, footer }: Props) {
+export function Screen({
+  title,
+  titleAccent,
+  subtitle,
+  children,
+  refresh,
+  header,
+  footer,
+  scrollEnabled = true,
+}: Props) {
   // Dentro das abas, a barra flutua por cima: o fim da rolagem (ou o rodapé) fica livre dela.
   const tabBarInset = useTabBarInset();
   const online = useOnline();
@@ -52,6 +63,7 @@ export function Screen({ title, titleAccent, subtitle, children, refresh, header
             footer === undefined && tabBarInset > 0 ? { paddingBottom: tabBarInset } : null,
           ]}
           keyboardShouldPersistTaps="handled"
+          scrollEnabled={scrollEnabled}
           refreshControl={
             refresh === undefined ? undefined : (
               <RefreshControl

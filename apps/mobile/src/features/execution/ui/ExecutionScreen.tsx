@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { uuidV7 } from "../../../shared/lib/uuid-v7";
 import { BodyMap } from "../../../shared/ui/body-map/BodyMap";
 import type { MuscleLevels } from "../../../shared/ui/body-map/muscles";
 import { Button } from "../../../shared/ui/Button";
 import { Chip } from "../../../shared/ui/Chip";
 import { Icon } from "../../../shared/ui/Icon";
+import { BottomSheet } from "../../../shared/ui/BottomSheet";
 import { RoundButton } from "../../../shared/ui/RoundButton";
 import { Screen } from "../../../shared/ui/Screen";
 import { TextField } from "../../../shared/ui/TextField";
@@ -385,92 +385,72 @@ export function ExecutionScreen({ session: initial, exercises, firstName, onClos
         />
       )}
 
-      <Modal
+      <BottomSheet
         visible={sheet !== null}
-        animationType="slide"
-        transparent
-        onRequestClose={() => {
+        title={sheet === "howto" ? t.howTo : t.substituteTitle}
+        subtitle={exercise.name}
+        onClose={() => {
           setSheet(null);
         }}
       >
-        <View style={styles.sheetBackdrop}>
-          <SafeAreaView edges={["bottom"]} style={styles.sheet}>
-            <View style={styles.sheetHead}>
-              <Text style={[typography.headline, { color: palette.text, flex: 1 }]}>
-                {sheet === "howto" ? t.howTo : t.substituteTitle}
+        {sheet === "howto" ? (
+          <>
+            <View style={{ alignItems: "center" }}>
+              <BodyMap levels={levelsOf(exercise)} width={280} height={200} />
+            </View>
+            {info?.instructions == null ? null : (
+              <Text style={[typography.body, { color: palette.textSoft }]}>
+                {info.instructions}
               </Text>
-              <RoundButton
-                icon="close"
-                label={t.close}
+            )}
+            {info?.mediaUrl == null ? null : (
+              <TextLink
+                label={t.video}
                 onPress={() => {
-                  setSheet(null);
+                  if (info.mediaUrl !== null) {
+                    void Linking.openURL(info.mediaUrl);
+                  }
                 }}
               />
-            </View>
-            <ScrollView contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.lg }}>
-              {sheet === "howto" ? (
-                <>
-                  <View style={{ alignItems: "center" }}>
-                    <BodyMap levels={levelsOf(exercise)} width={280} height={200} />
-                  </View>
-                  {info?.instructions == null ? null : (
-                    <Text style={[typography.body, { color: palette.textSoft }]}>
-                      {info.instructions}
-                    </Text>
-                  )}
-                  {info?.mediaUrl == null ? null : (
-                    <TextLink
-                      label={t.video}
-                      onPress={() => {
-                        if (info.mediaUrl !== null) {
-                          void Linking.openURL(info.mediaUrl);
-                        }
-                      }}
-                    />
-                  )}
-                </>
-              ) : candidates.length === 0 ? (
-                <Text style={[typography.body, { color: palette.muted }]}>{t.noSubstitute}</Text>
-              ) : (
-                <>
-                  <Text style={[typography.small, { color: palette.muted }]}>
-                    {session.performedBy === "professional"
-                      ? t.substituteHintLibrary
-                      : t.substituteHint}
-                  </Text>
-                  {candidates.map((c) => (
-                    <Pressable
-                      key={c.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={c.name}
-                      onPress={() => {
-                        commit(
-                          act.substitute(
-                            session,
-                            exercise.id,
-                            {
-                              exerciseId: c.id,
-                              name: c.name,
-                              trackingType: c.trackingType,
-                              primaryMuscle: c.primaryMuscle,
-                              secondaryMuscles: c.secondaryMuscles,
-                            },
-                            new Date(),
-                          ),
-                        );
-                        setSheet(null);
-                      }}
-                      style={styles.candidate}
-                    >
-                      <Text style={[typography.label, { color: palette.text }]}>{c.name}</Text>
-                    </Pressable>
-                  ))}
-                </>
-              )}
-            </ScrollView>
-          </SafeAreaView>
-        </View>
-      </Modal>
+            )}
+          </>
+        ) : candidates.length === 0 ? (
+          <Text style={[typography.body, { color: palette.muted }]}>{t.noSubstitute}</Text>
+        ) : (
+          <>
+            <Text style={[typography.small, { color: palette.muted }]}>
+              {session.performedBy === "professional" ? t.substituteHintLibrary : t.substituteHint}
+            </Text>
+            {candidates.map((c) => (
+              <Pressable
+                key={c.id}
+                accessibilityRole="button"
+                accessibilityLabel={c.name}
+                onPress={() => {
+                  commit(
+                    act.substitute(
+                      session,
+                      exercise.id,
+                      {
+                        exerciseId: c.id,
+                        name: c.name,
+                        trackingType: c.trackingType,
+                        primaryMuscle: c.primaryMuscle,
+                        secondaryMuscles: c.secondaryMuscles,
+                      },
+                      new Date(),
+                    ),
+                  );
+                  setSheet(null);
+                }}
+                style={styles.candidate}
+              >
+                <Text style={[typography.label, { color: palette.text }]}>{c.name}</Text>
+              </Pressable>
+            ))}
+          </>
+        )}
+      </BottomSheet>
     </Screen>
   );
 }
@@ -806,16 +786,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tools: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  sheetBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  sheet: {
-    backgroundColor: palette.surface,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    padding: spacing.md + 4,
-    maxHeight: "80%",
-    gap: spacing.sm,
-  },
-  sheetHead: { flexDirection: "row", alignItems: "center" },
   candidate: {
     minHeight: MIN_TOUCH + 8,
     justifyContent: "center",

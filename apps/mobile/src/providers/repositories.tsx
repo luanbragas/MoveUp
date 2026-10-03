@@ -20,7 +20,11 @@ import { createMemoryStore } from "../features/sync/data/memory-store";
 import { createSqliteStore } from "../features/sync/data/sqlite/sqlite-store";
 import type { PlannedStore, SyncApi } from "../features/sync/domain/ports";
 import { createTrainingApiRepository } from "../features/training/data/api/training-api";
-import type { TrainingRepository } from "../features/training/domain/ports";
+import {
+  createMemoryDraftStore,
+  createSqliteDraftStore,
+} from "../features/training/data/draft-store";
+import type { TrainingRepository, WorkoutDraftStore } from "../features/training/domain/ports";
 import { createInviteApiRepository } from "../features/invite/data/api/invite-api";
 import type { InviteRepository } from "../features/invite/domain/ports";
 
@@ -38,6 +42,7 @@ export interface Repositories {
   readonly sessionStore: SessionStore;
   readonly sessionSyncApi: SessionSyncApi;
   readonly restAlarm: RestAlarm;
+  readonly workoutDrafts: WorkoutDraftStore;
 }
 
 /** Composition root: adaptadores reais (a sessão vem pronta: depende do env). */
@@ -56,6 +61,7 @@ export function createRepositories(session: AuthSession): Repositories {
     sessionStore: Platform.OS === "web" ? createMemorySessionStore() : createSqliteSessionStore(),
     sessionSyncApi: createSessionSyncApi(),
     restAlarm: Platform.OS === "web" ? createNoRestAlarm() : createRestAlarm(),
+    workoutDrafts: Platform.OS === "web" ? createMemoryDraftStore() : createSqliteDraftStore(),
   };
 }
 

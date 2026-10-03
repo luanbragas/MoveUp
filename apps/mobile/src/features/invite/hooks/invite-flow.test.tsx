@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { createMemoryDraftStore } from "../../training/data/draft-store";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
 import { ApiFailure } from "../../../shared/lib/http";
 import { createFakeAccount } from "../../auth/data/fakes/fake-account";
@@ -125,6 +126,7 @@ function setup() {
     sessionStore: {} as Repositories["sessionStore"],
     sessionSyncApi: {} as Repositories["sessionSyncApi"],
     restAlarm: { schedule: () => Promise.resolve(null), cancel: () => Promise.resolve() },
+    workoutDrafts: createMemoryDraftStore(),
   };
   const queryClient = new QueryClient({
     defaultOptions: {

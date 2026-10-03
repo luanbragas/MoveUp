@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import { router } from "expo-router";
+import { createMemoryDraftStore } from "../../training/data/draft-store";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
 import { createMemorySessionStore } from "../../execution/data/session-stores";
 import { createMemoryStore } from "../../sync/data/memory-store";
@@ -56,6 +57,7 @@ async function renderAs(role: "client" | "professional") {
     sessionStore: createMemorySessionStore(),
     sessionSyncApi: { push: unused },
     restAlarm: { schedule: () => Promise.resolve(null), cancel: () => Promise.resolve() },
+    workoutDrafts: createMemoryDraftStore(),
   };
   const queryClient = new QueryClient({
     defaultOptions: {

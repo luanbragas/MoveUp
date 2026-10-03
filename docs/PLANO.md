@@ -84,7 +84,7 @@ Tudo o que as outras fases assumem que já existe.
 - [x] Templates e atribuição (cópia com `source_template_id`).
 - [x] Programa com agenda: dias fixos ou sequência com meta semanal. *Um programa ativo por vínculo: criar outro arquiva o anterior.*
 - [x] Concorrência otimista (`ETag`/`If-Match`) na edição. *V18/V19: revisão no treino e no programa; 412 `version-mismatch`, 428 `if-match-required`.*
-- [ ] Editor de treino no app (celular e tablet): bloco a bloco, folhas inferiores para exercício e séries, reordenar com toque longo, rascunho local se cair a internet. *Feito (03/10/2026): bloco a bloco, biblioteca e séries em telas próprias, subir/descer com botões, conflito 412 e rascunho na tela sem internet. Falta: folhas inferiores, toque longo para arrastar, rascunho que sobrevive a fechar o app e layout de tablet em duas colunas.*
+- [ ] Editor de treino no app (celular e tablet): bloco a bloco, folhas inferiores para exercício e séries, reordenar com toque longo, rascunho local se cair a internet. *Feito (03/10/2026): bloco a bloco, folhas inferiores (método e séries), reordenar segurando e arrastando (com ações de leitor de tela para subir/descer), conflito 412 e rascunho no SQLite que sobrevive a fechar o app. Falta só o layout de tablet em duas colunas.*
 - [x] App: "treino de hoje" e lista do programa, lidos do SQLite após sync. *`GET /v1/sync` por programa (janela de 2 min, tombstones) e expo-sqlite no app.*
 
 **Pronto quando:** editar um treino que já tem sessão cria nova versão e a sessão antiga continua comparando com o planejado original. *Coberto por `ProgramsEndpointTest` (03/10/2026).*
@@ -95,14 +95,14 @@ Tudo o que as outras fases assumem que já existe.
 
 - [x] SQLite com sessões, exercícios e séries realizados + fila local. *(expo-sqlite direto, sem Drizzle: migrations ordenadas em `shared/lib/local-db.ts`.)*
 - [x] Feature `sync`: envio idempotente (`POST /v1/sync`), recebimento com janela de 2 min e tombstones.
-- [ ] Tela de execução: séries pré-preenchidas, pular/substituir exercício, timer por método (funciona com tela bloqueada). *(Feito, menos o aviso com tela bloqueada: o timer usa carimbo de tempo e está certo ao voltar, mas avisar com a tela bloqueada precisa de `expo-notifications`. Resultado de bloco (`block_result`) ainda não é gravado; rodadas do AMRAP vão nas reps.)*
+- [x] Tela de execução: séries pré-preenchidas, pular/substituir exercício, timer por método (funciona com tela bloqueada). *(Aviso do fim do descanso por notificação local (`expo-notifications`); resultado dos blocos por tempo em `block_result`, identificado pela posição do bloco (V20).)*
 - [x] Modo presencial: profissional executa pelo aluno (`performed_by = professional`).
 - [x] Finalização: resumo, comparação com a última sessão equivalente, feedback (esforço 0–10) e relato de dor.
 - [x] Edição de sessão finalizada (`edited_after_finish_at`).
 
 **Pronto quando:** em teste com rede desligada, um treino inteiro é registrado, o app é fechado, a rede volta e tudo chega ao servidor **uma vez só**, inclusive após reenvio forçado.
 
-> Critério atendido nos testes: `SessionSyncEndpointTest` (reenvio contado uma vez, outbox uma vez) e `execution.test.tsx` (sem rede fica pendente no aparelho; a rede volta e vai uma vez; reenviar não duplica). Falta só o aviso do timer com tela bloqueada.
+> Critério atendido nos testes: `SessionSyncEndpointTest` (reenvio contado uma vez, outbox uma vez) e `execution.test.tsx` (sem rede fica pendente no aparelho; a rede volta e vai uma vez; reenviar não duplica).
 
 ---
 

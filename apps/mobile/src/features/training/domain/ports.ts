@@ -25,4 +25,20 @@ export interface TrainingRepository {
   ): Promise<Workout>;
 }
 
+/** Rascunho do editor guardado no celular: sobrevive à queda da internet e ao app fechado. */
+export interface StoredDraft {
+  /** Revisão do treino quando o rascunho começou (outra = alguém salvou depois). */
+  readonly baseRevision: number;
+  readonly draft: WorkoutDraft;
+  readonly savedAt: string;
+}
+
+export interface WorkoutDraftStore {
+  get(workoutId: string): Promise<StoredDraft | null>;
+  save(workoutId: string, stored: StoredDraft): Promise<void>;
+  remove(workoutId: string): Promise<void>;
+  /** Sair da conta. */
+  clear(): Promise<void>;
+}
+
 export type { ScheduleMode };

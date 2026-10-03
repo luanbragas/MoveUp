@@ -3,7 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react-nativ
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { RepositoriesProvider, type Repositories } from "../../../providers/repositories";
 import { ApiFailure } from "../../../shared/lib/http";
-import { defaultSets, type Workout } from "../domain/workout";
+import { targetIndex } from "../../../shared/ui/ReorderList";
+import { createMemoryDraftStore } from "../data/draft-store";
+import type { StoredDraft, WorkoutDraftStore } from "../domain/ports";
+import { defaultSets, edit, type Workout } from "../domain/workout";
 import { WorkoutEditor } from "./WorkoutEditorScreen";
 
 jest.mock("expo-router", () => ({ router: { back: jest.fn(), push: jest.fn() } }));
@@ -53,8 +56,13 @@ const WORKOUT: Workout = {
   },
 };
 
-async function renderEditor(saveWorkout: jest.Mock, reload = jest.fn(() => Promise.resolve({}))) {
-  const repositories = { training: { saveWorkout } } as unknown as Repositories;
+async function renderEditor(
+  saveWorkout: jest.Mock,
+  reload = jest.fn(() => Promise.resolve({})),
+  options: { drafts?: WorkoutDraftStore; recovered?: StoredDraft | null } = {},
+) {
+  const workoutDrafts = options.drafts ?? createMemoryDraftStore();
+  const repositories = { training: { saveWorkout }, workoutDrafts } as unknown as Repositories;
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { gcTime: Number.POSITIVE_INFINITY },
@@ -65,7 +73,7 @@ async function renderEditor(saveWorkout: jest.Mock, reload = jest.fn(() => Promi
     <SafeAreaProvider initialMetrics={METRICS}>
       <QueryClientProvider client={queryClient}>
         <RepositoriesProvider repositories={repositories}>
-          <WorkoutEditor workout={WORKOUT} reload={reload} />
+          <WorkoutEditor workout={WORKOUT} reload={reload} recovered={options.recovered ?? null} />
         </RepositoriesProvider>
       </QueryClientProvider>
     </SafeAreaProvider>,
@@ -121,5 +129,68 @@ describe("editor de treino", () => {
     });
     // o editor fica na tela de conflito até a versão salva chegar (a rota recria o editor)
     expect(screen.getByText(/Alterado em/)).toBeOnTheScreen();
+  });
+
+  it("séries na folha que sobe: fechar sem Pronto não muda nada", async () => {
+    await renderEditor(jest.fn());
+
+    await fireEvent.press(screen.getByRole("button", { name: /Supino reto com barra, 3 séries/ }));
+    expect(screen.getByRole("header", { name: "Supino reto com barra" })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Remover série 3" }));
+    await fireEvent.press(screen.getByRole("button", { name: "Fechar" }));
+
+    expect(screen.getByText("3 séries · 8 a 12 reps · 55 kg · desc. 90 s")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Salvar" })).toBeDisabled();
+  });
+
+  it("rascunho: cada mudança fica no celular; salvar apaga", async () => {
+    const drafts = createMemoryDraftStore();
+    const saveWorkout = jest.fn(() => Promise.resolve({ ...WORKOUT, revision: 4 }));
+    await renderEditor(saveWorkout, undefined, { drafts });
+
+    await fireEvent.changeText(screen.getByLabelText("Nome do treino"), "Treino sem internet");
+    await waitFor(async () => {
+      expect((await drafts.get("w1"))?.draft.name).toBe("Treino sem internet");
+    });
+    expect((await drafts.get("w1"))?.baseRevision).toBe(3);
+
+    await fireEvent.press(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(async () => {
+      expect(await drafts.get("w1")).toBeNull();
+    });
+  });
+
+  it("rascunho da mesma revisão volta ao abrir; o de antes de outra versão pergunta", async () => {
+    const recovered: StoredDraft = {
+      baseRevision: 3,
+      savedAt: "2026-10-03T12:00:00Z",
+      draft: { ...WORKOUT.draft, name: "Treino do rascunho" },
+    };
+    await renderEditor(jest.fn(), undefined, { recovered });
+    expect(screen.getByDisplayValue("Treino do rascunho")).toBeOnTheScreen();
+    expect(screen.getByText("Rascunho recuperado deste celular.")).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Salvar" })).toBeEnabled();
+    await screen.unmount();
+
+    await renderEditor(jest.fn(), undefined, { recovered: { ...recovered, baseRevision: 2 } });
+    expect(screen.getByDisplayValue("Treino A")).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Recuperar rascunho" }));
+    expect(screen.getByDisplayValue("Treino do rascunho")).toBeOnTheScreen();
+  });
+
+  it("arrastar: passa da metade do vizinho e troca de lugar", () => {
+    const rows = [
+      { y: 0, height: 60 },
+      { y: 68, height: 60 },
+      { y: 136, height: 60 },
+    ];
+    expect(targetIndex(rows, 0, 60)).toBe(0);
+    expect(targetIndex(rows, 0, 70)).toBe(1);
+    expect(targetIndex(rows, 0, 140)).toBe(2);
+    expect(targetIndex(rows, 2, -80)).toBe(1);
+
+    const twoBlocks = edit.addBlock(WORKOUT.draft, "amrap");
+    const moved = edit.moveBlockTo(twoBlocks, 1, 0);
+    expect(moved.blocks.map((b) => b.method)).toEqual(["amrap", "sequential"]);
   });
 });

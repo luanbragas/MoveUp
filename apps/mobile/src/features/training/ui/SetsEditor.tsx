@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { BottomSheet } from "../../../shared/ui/BottomSheet";
 import { Button } from "../../../shared/ui/Button";
 import { Icon } from "../../../shared/ui/Icon";
-import { RoundButton } from "../../../shared/ui/RoundButton";
-import { Screen } from "../../../shared/ui/Screen";
 import { TextField } from "../../../shared/ui/TextField";
 import { TextLink } from "../../../shared/ui/TextLink";
 import { MIN_TOUCH, palette, radius, spacing, typography } from "../../../shared/ui/theme";
@@ -20,7 +19,10 @@ interface Props {
   readonly onBack: () => void;
 }
 
-/** Séries do exercício: uma linha por série (pirâmide, drop, aquecimento) e o esforço alvo. */
+/**
+ * Séries do exercício numa folha que sobe sobre o editor: uma linha por série (pirâmide, drop,
+ * aquecimento) e o esforço alvo. Fechar sem "Pronto" descarta o que mudou aqui.
+ */
 export function SetsEditor({ exercise, onDone, onBack }: Props) {
   const [sets, setSets] = useState<readonly SetDraft[]>(exercise.sets);
   const [notes, setNotes] = useState(exercise.notes ?? "");
@@ -32,8 +34,9 @@ export function SetsEditor({ exercise, onDone, onBack }: Props) {
   };
 
   return (
-    <Screen
-      header={<RoundButton icon="back" label={strings.editor.back} onPress={onBack} />}
+    <BottomSheet
+      visible
+      onClose={onBack}
       title={exercise.exerciseName}
       subtitle={t.title}
       footer={
@@ -205,7 +208,7 @@ export function SetsEditor({ exercise, onDone, onBack }: Props) {
         </View>
       )}
       <TextField label={t.notes} value={notes} onChangeText={setNotes} />
-    </Screen>
+    </BottomSheet>
   );
 }
 

@@ -24,6 +24,12 @@ const MIGRATIONS: readonly string[] = [
      data text not null);
    create index if not exists performed_session_status on performed_session (status, started_at);
    create index if not exists performed_session_sync on performed_session (sync_status);`,
+  // 3: rascunho do editor de treino (personal), por treino
+  `create table if not exists workout_draft (
+     workout_id text primary key not null,
+     base_revision integer not null,
+     saved_at text not null,
+     data text not null);`,
 ];
 
 let opening: Promise<SQLite.SQLiteDatabase> | null = null;

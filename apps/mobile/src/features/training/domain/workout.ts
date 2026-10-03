@@ -178,7 +178,26 @@ function move<T>(items: readonly T[], index: number, delta: -1 | 1): readonly T[
   return next;
 }
 
+/** Leva o item de uma posição para outra (arrastar com toque longo). */
+function moveTo<T>(items: readonly T[], from: number, to: number): readonly T[] {
+  if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) {
+    return items;
+  }
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  if (item !== undefined) {
+    next.splice(to, 0, item);
+  }
+  return next;
+}
+
 export const edit = {
+  moveBlockTo(draft: WorkoutDraft, from: number, to: number): WorkoutDraft {
+    return { ...draft, blocks: moveTo(draft.blocks, from, to) };
+  },
+  moveExerciseTo(draft: WorkoutDraft, blockKey: string, from: number, to: number): WorkoutDraft {
+    return mapBlock(draft, blockKey, (b) => ({ ...b, exercises: moveTo(b.exercises, from, to) }));
+  },
   addBlock(draft: WorkoutDraft, method: BlockMethod): WorkoutDraft {
     return { ...draft, blocks: [...draft.blocks, newBlock(method)] };
   },
